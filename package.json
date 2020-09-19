@@ -28,8 +28,8 @@
     "nexus-plugin-prisma": "^0.18.2",
     "nodemailer": "^6.4.11",
     "request": "^2.88.2",
-    "dotenv-cli": "^3.2.0",
-    "uniqid": "^5.2.0"
+    "uniqid": "^5.2.0",
+    "dotenv-cli": "^3.2.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",

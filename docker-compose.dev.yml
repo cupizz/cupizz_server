@@ -3,30 +3,21 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dev.dockerfile
+
     # Overrides default command so things don't shut down after the process ends.
+    volumes:
+      - .:/cubizz
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/data?schema=public
       - JWT_SECRET_KEY=hieren
+      - NODE_ENV=development
     links:
       - db
+    ports:
+      - 1998:1998
     networks:
       - cubizz
-    ports:
-      - '1998:1998'
-  nginx:
-    image: nginx:stable-alpine
-    volumes:
-      - ./nginx/conf/default.conf:/etc/nginx/conf.d/default.conf
-    restart: always
-    ports:
-      - '80:80'
-      - '443:443'
-    networks:
-      - cubizz
-    depends_on:
-      - web
-      - db
   db:
     image: postgres
     restart: unless-stopped

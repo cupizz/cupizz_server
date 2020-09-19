@@ -1,15 +1,21 @@
-FROM node:12
+FROM node:12-alpine as builder
 
+USER root
+
+RUN apk add git
+
+COPY ./package.json ./package.json
+RUN yarn install --silent
+
+FROM node:12-alpine
 WORKDIR /cubizz
 
-COPY package*.json ./
-
-RUN yarn
+COPY --from=builder /node_modules ./node_modules
+ENV PATH ./node_modules/.bin:$PATH
 
 COPY . .
 
-RUN yarn generate
+RUN npm run generate
 
 EXPOSE 1998
-
-CMD ["yarn", "start"]
+CMD ["npm", "start"]
