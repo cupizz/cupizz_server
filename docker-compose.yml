@@ -1,0 +1,25 @@
+version: '3'
+services:
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+    volumes:
+      - .:/cubizz:cached
+    links:
+      - db
+    ports: 
+      - 1998:1998
+  db:
+    image: postgres
+    restart: unless-stopped
+    ports: 
+      - 19981:5432
+    environment:
+      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: user
+      POSTGRES_DB: data
+ 

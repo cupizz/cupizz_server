@@ -1,0 +1,233 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url = "***"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum GenderBorn {
+  male
+  female
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum FileType {
+  image
+  sound
+}
+
+enum SocialProviderType {
+  email
+  facebook
+  google
+  apple
+}
+
+model User {
+  id                       Int                   @default(autoincrement()) @id
+  password                 String
+  nickName                 String
+  birthday                 DateTime
+  genderBorn               GenderBorn
+  gender                   Gender
+  bodies                   String[]
+  personalities            String[]
+  hobbies                  String[]
+  introduction             String
+  agesOtherPerson          String[]
+  genderBornOtherPerson    GenderBorn[]
+  genderOtherPerson        Gender[]
+  bodiesOtherPerson        String[]
+  personalitiesOtherPerson String[]
+  allowMatching            Boolean               @default(true)
+  isPrivate                Boolean               @default(false)
+  showActive               Boolean               @default(true)
+  phoneNumber              String?
+  job                      String?
+  isPrivateJob             Boolean               @default(false)
+  degree                   String?
+  isPrivateDegree          Boolean               @default(false)
+  schedule                 Json?
+  hasFreeTime              Boolean               @default(true)
+  updatedAt                DateTime              @updatedAt
+  createdAt                DateTime              @default(now())
+  deletedAt                DateTime?
+  area                     Area                  @relation(fields: [areaId], references: [id])
+  areaId                   Int
+  city                     City                  @relation(fields: [cityId], references: [id])
+  cityId                   Int
+  identifyImage            File                  @relation("identifyImage", fields: [identifyImageId], references: [id])
+  identifyImageId          Int
+  avatar                   File?                 @relation("avatar", fields: [avatarId], references: [id])
+  avatarId                 Int?
+  role                     Role                  @relation(fields: [roleId], references: [id])
+  roleId                   String
+  userImage                UserImage[]
+  userAreaOtherPerson      UserAreaOtherPerson[] // TODO Sửa chỗ này, không cần thiết phải lưu area, có thể lấy ra từ city
+  userCityOtherPerson      UserCityOtherPerson[]
+  userPurposeUseApp        UserPurposeUseApp[]
+  senderMessage            Message[]             @relation("senderMessage")
+  receiverMessage          Message[]             @relation("receiverMessage")
+  socialProvider           SocialProvider[]
+  senderFriend             Friend[]              @relation("senderFriend")
+  receiverFriend           Friend[]              @relation("receiverFriend")
+}
+
+model SocialProvider {
+  @@id([id, type])
+  id          String
+  type        SocialProviderType
+  user        User               @relation(fields: [userId], references: [id])
+  userId      Int                @unique
+  email       String?
+  phoneNumber String?
+  name        String?
+  avatar      String?
+  gender      Gender?
+  birthday    DateTime?
+}
+
+model Friend {
+  @@id([senderId, receiverId])
+  sender     User      @relation("senderFriend", fields: [senderId], references: [id])
+  receiver   User      @relation("receiverFriend", fields: [receiverId], references: [id])
+  senderId   Int
+  receiverId Int
+  sentAt     DateTime  @default(now())
+  acceptedAt DateTime?
+}
+
+model UserImage {
+  @@id([userId, imageId])
+  user    User @relation(fields: [userId], references: [id])
+  image   File @relation(fields: [imageId], references: [id])
+  userId  Int
+  imageId Int
+}
+
+model UserAreaOtherPerson {
+  @@id([userId, areaId])
+  user   User @relation(fields: [userId], references: [id])
+  area   Area @relation(fields: [areaId], references: [id])
+  userId Int
+  areaId Int
+}
+
+model UserCityOtherPerson {
+  @@id([userId, cityId])
+  user   User @relation(fields: [userId], references: [id])
+  city   City @relation(fields: [cityId], references: [id])
+  userId Int
+  cityId Int
+}
+
+model UserPurposeUseApp {
+  @@id([userId, purposeId])
+  user      User          @relation(fields: [userId], references: [id])
+  purpose   PurposeUseApp @relation(fields: [purposeId], references: [id])
+  userId    Int
+  purposeId Int
+}
+
+model Area {
+  id                  Int                   @default(autoincrement()) @id
+  area                String
+  user                User[]
+  city                City[]
+  userAreaOtherPerson UserAreaOtherPerson[]
+}
+
+model City {
+  id                  Int                   @default(autoincrement()) @id
+  city                String
+  area                Area                  @relation(fields: [areaId], references: [id])
+  user                User[]
+  areaId              Int
+  userCityOtherPerson UserCityOtherPerson[]
+}
+
+model PurposeUseApp {
+  id                Int                 @default(autoincrement()) @id
+  value             String
+  userPurposeUseApp UserPurposeUseApp[]
+}
+
+model File {
+  id                Int                 @default(autoincrement()) @id
+  type              FileType
+  url               String
+  thumbnail         String?
+  userIdentifyImage User[]              @relation("identifyImage")
+  userAvatar        User[]              @relation("avatar")
+  userImage         UserImage[]
+  messageAttachment MessageAttachment[]
+}
+
+model Role {
+  id          String   @unique @id
+  name        String
+  description String?
+  permissions String[]
+  user        User[]
+}
+
+model Message {
+  id                Int                 @default(autoincrement()) @id
+  message           String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  messageAttachment MessageAttachment[]
+  sender            User                @relation("senderMessage", fields: [senderId], references: [id])
+  receiver          User                @relation("receiverMessage", fields: [receiverId], references: [id])
+  senderId          Int
+  receiverId        Int
+}
+
+model MessageAttachment {
+  @@id([messageId, fileId])
+  message   Message @relation(fields: [messageId], references: [id])
+  file      File    @relation(fields: [fileId], references: [id])
+  messageId Int
+  fileId    Int
+}
+
+model PostCategory {
+  id    Int    @default(autoincrement()) @id
+  value String
+  Post  Post[]
+}
+
+model Post {
+  id         Int          @default(autoincrement()) @id
+  category   PostCategory @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  comment    Comment[]
+}
+
+model Comment {
+  id            Int       @default(autoincrement()) @id
+  index         Int
+  parentComment Comment?  @relation("ReplyToComment", fields: [parentId], references: [id])
+  reply         Comment[] @relation("ReplyToComment")
+  parentId      Int?
+  content       String
+  post          Post      @relation(fields: [postId], references: [id])
+  postId        Int
+  createdAt     DateTime  @default(now())
+}
+
+model QnA {
+  id       Int    @default(autoincrement()) @id
+  question String
+  answer   String
+}
