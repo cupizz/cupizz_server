@@ -9,6 +9,9 @@ services:
     command: sleep infinity
     volumes:
       - .:/cubizz:cached
+    environment:
+      - DATABASE_URL=postgresql://user:pass@db:5432/data?schema=public
+      - JWT_SECRET_KEY=hieren
     links:
       - db
     ports: 
