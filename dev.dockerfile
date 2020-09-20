@@ -1,12 +1,12 @@
 FROM node:12
 
-COPY ./package.json /cubizz/package.json
+# set working directory
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 
-WORKDIR /cubizz
-
-USER root
-
-RUN yarn install
+# install and cache app dependencies
+COPY package.json /usr/src/app/package.json
+RUN yarn install --silent
 
 COPY . .
 
