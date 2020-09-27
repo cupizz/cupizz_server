@@ -4,6 +4,7 @@ import { ClientError } from "../../model/error";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
 import { AuthService, UserService } from "../../service";
+import { SocialNetworkService } from "../../service/socialNetwork.service";
 import { Validator } from "../../utils/validator";
 import { FriendStatusEnum } from "../types";
 
@@ -21,7 +22,7 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
-        
+
         Validator.phoneNumber(args.phoneNumber);
 
         const user = await prisma.user.update({
@@ -43,9 +44,9 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
         maxAgePrefer: intArg(),
         minHeightPrefer: intArg(),
         maxHeightPrefer: intArg(),
-        genderPrefer: arg({type: 'Gender', list: true}),
+        genderPrefer: arg({ type: 'Gender', list: true }),
         distancePrefer: intArg(),
-        mustHaveFields: arg({type: 'MustHaveEnum', list: true})
+        mustHaveFields: arg({ type: 'MustHaveEnum', list: true })
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
@@ -58,6 +59,37 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
                 mustHaveFields: { set: args.mustHaveFields }
             }
         })
+        return user;
+    }
+})
+
+export const ConnectSocialNetworkMutation = mutationField('connectSocialNetwork', {
+    type: 'User',
+    args: {
+        type: arg({ type: 'SocialProviderEnumType', nullable: false }),
+        accessToken: stringArg({ nullable: false }),
+    },
+    resolve: async (_root, args, ctx, _info) => {
+        AuthService.authenticate(ctx);
+        const socialData = await SocialNetworkService.login(args.type, args.accessToken);
+
+        const currentSocial = await prisma.socialProvider.findOne({ where: { id_type: socialData } });
+        if (currentSocial) {
+            if (currentSocial.userId === ctx.user.id) {
+                return ctx.user;
+            } else {
+                throw ClientError("Tài khoản mạng xã hội này đã được kết nối với một tài khoản khác.");
+            }
+        }
+
+        const user = (await prisma.socialProvider.create({
+            data: {
+                ...socialData,
+                user: { connect: { id: ctx.user.id } }
+            },
+            include: { user: true }
+        })).user;
+
         return user;
     }
 })

@@ -19,7 +19,7 @@ export const FileTypeType = enumType({
 
 export const SocialProviderEnumType = enumType({
     name: 'SocialProviderEnumType',
-    members: ['email', 'facebook', 'google']
+    members: ['email', 'facebook', 'google', 'instagram']
 })
 
 export const PrivateFieldEnumType = enumType({

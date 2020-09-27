@@ -14,7 +14,7 @@ const nexusPrisma = nexusSchemaPrisma({
   scalars: {
     DateTime: GraphQLDateTime
   },
-  paginationStrategy: "relay",
+  paginationStrategy: 'prisma',
   computedInputs: {
     create: null
   },

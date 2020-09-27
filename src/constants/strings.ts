@@ -1,10 +1,11 @@
 export default class Strings {
+    static inDevelopment = 'Tính năng đang phát triển';
     static error = {
-        incorrectPassword: '入力されたパスワードと確認用パスワードが一致しません。',
+        incorrectPassword: 'Mật khẩu không chính xác.',
         emailNotFound: 'Email not found',
         emailExisted: 'Email existed',
-        emailIncorrectForm: 'メールアドレスの形式に不備があります',
-        otpIncorrect: '入力されたコードが一致しません。',
+        emailIncorrectForm: 'Email không đúng định dạng',
+        otpIncorrect: 'Otp không đúng.',
         unAuthenticate: 'Please login before',
         tokenExpired: 'Token expired',
         tokenIncorrect: 'Token incorrect',

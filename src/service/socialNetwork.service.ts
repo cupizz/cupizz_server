@@ -15,7 +15,7 @@ class SocialNetworkService {
             case 'facebook':
                 return await this._loginFacebook(data);
             default:
-                throw ClientError("In development");       
+                throw ClientError(Strings.inDevelopment);
         }
     }
 

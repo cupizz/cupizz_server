@@ -14,7 +14,8 @@
     "db:save": "dotenv -- prisma migrate save --experimental",
     "db:up": "dotenv -- prisma migrate up --experimental",
     "db:down": "dotenv -- prisma migrate down 1 --experimental",
-    "seed": "dotenv -- ts-node ./prisma/seed"
+    "seed": "dotenv -- ts-node ./prisma/seed",
+    "studio": "dotenv -- prisma studio"
   },
   "dependencies": {
     "@nexus/schema": "^0.15.0",
