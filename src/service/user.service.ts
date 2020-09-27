@@ -1,18 +1,19 @@
 
-import { ArgsValue } from '@nexus/schema/dist/typegenTypeHelpers';
-import { Friend, User } from '@prisma/client';
+import { ResultValue } from '@nexus/schema/dist/core';
+import { Friend, OnlineStatus, User } from '@prisma/client';
 import { AuthService } from '.';
 import { Config } from '../config';
-import { ErrorEmailExisted, ErrorEmailNotFound, ErrorIncorrectPassword, ErrorOtpIncorrect, ErrorTokenIncorrect } from '../model/error';
+import SubscriptionKey from '../constants/subscriptionKey';
+import { ErrorEmailExisted, ErrorEmailNotFound, ErrorIncorrectPassword, ErrorOtpIncorrect, ErrorTokenIncorrect, ValidationError } from '../model/error';
 import { JwtAuthPayload } from '../model/jwtPayload';
 import { JwtRegisterPayload } from '../model/registerPayload';
 import { DefaultRole } from '../model/role';
 import { FriendStatusEnum } from '../schema/types';
-import { prisma } from '../server';
+import { prisma, pubsub } from '../server';
+import { logger } from '../utils/logger';
 import OtpHandler from '../utils/otpHandler';
 import { PasswordHandler } from '../utils/passwordHandler';
 import { Validator } from '../utils/validator';
-import { FileService } from './file.service';
 
 class UserService {
     public async authenticate(email: string, password: string): Promise<{ token: string, info: User }> {
@@ -31,6 +32,7 @@ class UserService {
             if (!PasswordHandler.compare(password, user.password)) {
                 throw ErrorIncorrectPassword;
             }
+            this.updateOnlineStatus(user);
 
             return {
                 token: AuthService.sign({ userId: user.id } as JwtAuthPayload),
@@ -74,13 +76,13 @@ class UserService {
 
         const registerPayload: JwtRegisterPayload = { type: 'email', id: email }
 
-        return AuthService.sign(registerPayload, Config.REGISTER_EXPIRE_TIME);
+        return AuthService.sign(registerPayload, Config.registerExpireTime);
     }
 
-    public async register(token: string, data: ArgsValue<'Mutation', 'register'>): Promise<User> {
-        // Lấy thông tin từ token
-        // TODO get social network info
-
+    public async register(token: string, data: {
+        nickName: string; // String!
+        password?: string; // String
+    }): Promise<User> {
         const payload = AuthService.verify<JwtRegisterPayload>(token);
 
         if (!payload?.type || !payload?.id) {
@@ -94,36 +96,23 @@ class UserService {
             }
         })) {
             throw ErrorEmailExisted
+        } else if (payload.type == 'email') {
+            if (data.password) {
+                Validator.password(data.password);
+            } else {
+                throw ValidationError('Register with email require a password');
+            }
         }
-
-        // Chuẩn bị dữ liệu để tạo user
-        const city = await prisma.city.findOne({ where: { id: data.cityId } })
-        const citysOtherPerson = await prisma.city.findMany({ where: { id: { in: data.cityIdsOtherPerson } } })
-        const identifyImage = await FileService.upload(await data.identifyImage);
-        const images = await Promise.all(data.images ?? [])
+        Validator.nickname(data.nickName);
 
         return prisma.user.create({
             data: {
                 nickName: data.nickName,
                 password: PasswordHandler.encode(data.password),
-                birthday: data.birthday,
-                city: { connect: { id: city.id } },
-                area: { connect: { id: city.areaId } },
-                genderBorn: data.genderBorn,
-                gender: data.gender,
-                bodies: { set: data.bodies },
-                personalities: { set: data.personalities },
-                hobbies: { set: data.hobbies },
-                identifyImage: { create: identifyImage },
-                userImage: { create: (await FileService.uploadMulti(images)).map(e => ({ image: { create: e } })) },
-                introduction: data.introduction,
-                agesOtherPerson: { set: data.agesOtherPerson },
-                userAreaOtherPerson: { create: citysOtherPerson.map(e => ({ area: { connect: { id: e.areaId } } })) },
-                userCityOtherPerson: { create: data.cityIdsOtherPerson.map(e => ({ city: { connect: { id: e } } })) },
-                genderBornOtherPerson: { set: data.genderBornOtherPerson ?? [] },
-                genderOtherPerson: { set: data.genderOtherPerson ?? [] },
-                bodiesOtherPerson: { set: data.bodiesOtherPerson ?? [] },
-                personalitiesOtherPerson: { set: data.personalitiesOtherPerson ?? [] },
+
+                // Load from social network
+                ...(payload?.avatar ? { avatar: { create: { type: 'image', url: payload.avatar } } } : {}),
+                phoneNumber: payload.phoneNumber,
 
                 role: { connect: { id: DefaultRole.trial.id } },
                 socialProvider: { create: payload },
@@ -131,7 +120,7 @@ class UserService {
         });
     }
 
-    public async getFriendStatus(myId: number, otherId: number): Promise<{ status: FriendStatusEnum, data: Friend }> {
+    public async getFriendStatus(myId: string, otherId: string): Promise<{ status: FriendStatusEnum, data: Friend }> {
 
         let status: FriendStatusEnum = FriendStatusEnum.none;
         let friend;
@@ -168,6 +157,26 @@ class UserService {
         return {
             status: status,
             data: friend
+        }
+    }
+
+    /**
+     * Nếu không truyền trạng thái thì chỉ cập nhật lại last online
+     */
+    public async updateOnlineStatus(user: User, status?: OnlineStatus) {
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                lastOnline: new Date(),
+                ...status ? { onlineStatus: status } : {}
+            }
+        })
+        if (status) {
+            pubsub.publish(
+                SubscriptionKey.onlineFriend, {
+                    status: status, user: user
+                } as ResultValue<'Subscription', 'onlineUser'>)
+            logger(`${user.nickName}(${user.id}) ${status}`);
         }
     }
 }

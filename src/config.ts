@@ -1,4 +1,8 @@
 export const Config = {
-    OPT_EXPIRE_TIME: '1m',
-    REGISTER_EXPIRE_TIME: '20m'
+    debugLog: true,
+    otpExpireTime: '1m',
+    registerExpireTime: '20m',
+    tempPath: __dirname + '/../temp/',
+    maxFilesUpload: 10,
+    defaultPageSize: 1,
 }

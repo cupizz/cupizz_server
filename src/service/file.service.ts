@@ -3,14 +3,16 @@ import { FileUpload } from 'graphql-upload';
 import * as fs from 'fs';
 import uniqueId from 'uniqid';
 import { FileCreateInput } from '@prisma/client';
-
-const __tempPath = __dirname + '/../../temp/'
+import { Config } from '../config';
+import { ClientError } from '../model/error';
+import Strings from '../constants/strings';
+import { logger } from '../utils/logger';
 
 class FileService {
 
     public async upload(file: FileUpload): Promise<FileCreateInput> {
         this._validateFile(file);
-        const data = await this._uploadOneImageToImgur(file);
+        const data = await this._uploadOneImageToImgur(await this.uploadTemp(file));
         return {
             type: 'image',
             ...data
@@ -21,27 +23,47 @@ class FileService {
         return Promise.all(files.map(e => this.upload(e)));
     }
 
+    public async uploadFromTemp(fileName: string): Promise<FileCreateInput> {
+        const data = await this._uploadOneImageToImgur(fileName);
+        logger('Uploaded from temp: ' + data.url + ' from ' + fileName);
+        return {
+            type: 'image',
+            ...data
+        };
+    }
+
+    public uploadMultiFromTemp(fileNames: string[]): Promise<FileCreateInput[]> {
+        return Promise.all(fileNames.map(e => this.uploadFromTemp(e)));
+    }
+
     public async uploadTemp(file: FileUpload): Promise<string> {
         this._validateFile(file);
-        const { filename, createReadStream } = file;
+        const { createReadStream } = file;
         const readStream = createReadStream();
-        const tempFileName = uniqueId() + filename;
-        const tempFilePath = __tempPath + tempFileName;
+        const tempFileName = uniqueId();
+        const tempFilePath = Config.tempPath + tempFileName;
 
         let writeTo = fs.createWriteStream(tempFilePath)
         readStream.pipe(writeTo)
 
         await new Promise((resolve, reject) => {
             readStream.on('error', reject);
-            readStream.on('close', resolve);
+            readStream.on('end', resolve);
         })
         writeTo.end();
-
+        logger('Uploaded temp ' + tempFileName);
         return tempFileName;
     }
 
     public async uploadMultiTemp(files: FileUpload[]): Promise<string[]> {
         return Promise.all(files.map(e => this.uploadTemp(e)));
+    }
+
+    public validateTempFiles(fileNames: string[]) {
+        fileNames.forEach(e => {
+            if (!fs.existsSync(Config.tempPath + e))
+                throw ClientError(Strings.error.tempFileNotFound(e));
+        })
     }
 
     private async _validateFile(file: FileUpload) {
@@ -52,24 +74,30 @@ class FileService {
             throw new Error(`File type ${file.mimetype} does not support`);
     }
 
-    private _uploadManyImageToImgur(files: FileUpload[]): Promise<{ url: string, thumbnail: string }[]> {
-        return Promise.all(files.map(e => this._uploadOneImageToImgur(e)))
+    private _uploadManyImageToImgur(tempFileNames: string[]): Promise<{ url: string, thumbnail: string }[]> {
+        return Promise.all(tempFileNames.map(e => this._uploadOneImageToImgur(e)))
     }
 
-    private async _uploadOneImageToImgur(file: FileUpload): Promise<{ url: string, thumbnail: string }> {
+    private async _uploadOneImageToImgur(tempFileName: string): Promise<{ url: string, thumbnail: string }> {
         let tempFilePath = '';
+        // return {thumbnail: 'Test', url: 'Test'};
         const res = await new Promise<request.Response>(async (resolve, reject) => {
             try {
-                tempFilePath = __tempPath + await this.uploadTemp(file);
+                tempFilePath = Config.tempPath + tempFileName;
+                let image;
+                try {
+                    image = fs.createReadStream(tempFilePath);
+                } catch (e) {
+                    logger(e);
+                    reject(new Error('Can not read temp file ' + tempFileName));
+                }
 
                 request.post({
                     url: 'https://api.imgur.com/3/image',
                     headers: {
                         authorization: 'Client-ID eee6fe9fcde03e2'
                     },
-                    formData: {
-                        image: fs.createReadStream(tempFilePath)
-                    },
+                    formData: { image },
                     callback: (e, res) => {
                         if (e) {
                             reject(e);
@@ -80,15 +108,18 @@ class FileService {
                 })
             } catch (e) {
                 reject(e);
-            } finally {
-                fs.unlinkSync(tempFilePath);
             }
         })
 
+        fs.unlinkSync(tempFilePath);
+
         const decoded = JSON.parse(res.body);
 
-        if (decoded.status != 200) throw new Error('Upload image to imgur failed');
-        const url = JSON.parse(res.body)?.data?.link ?? '';
+        if (decoded.status != 200) {
+            logger(decoded?.data?.error?.message);
+            throw new Error('Upload image to imgur failed. ' + decoded?.data?.error?.message);
+        }
+        const url = decoded?.data?.link ?? '';
         return {
             url,
             thumbnail: url // TODO get imgur thumbnail

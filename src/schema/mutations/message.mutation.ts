@@ -8,7 +8,7 @@ export const CreateMessageMutation = mutationField(
         type: 'Message',
         args: {
             message: stringArg({ nullable: false }),
-            receiverId: intArg({ nullable: false }),
+            receiverId: stringArg({ nullable: false }),
             attachment: arg({ type: 'Upload', list: true, nullable: true })
         },
         resolve: async (_root, args, ctx, _info) => {

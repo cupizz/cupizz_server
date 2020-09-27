@@ -1,4 +1,4 @@
-import { arg, enumType, intArg, mutationField, objectType, stringArg } from "@nexus/schema";
+import { arg, mutationField, objectType, stringArg } from "@nexus/schema";
 import { Config } from "../../config";
 import { JwtAuthPayload } from "../../model/jwtPayload";
 import { JwtRegisterPayload } from "../../model/registerPayload";
@@ -19,18 +19,11 @@ export const LoginMutation = mutationField('login', {
     }
 })
 
-export const LoginSocialNetwork = mutationField('loginSocialNetwork', {
+export const LoginSocialNetwork = mutationField('loginSocialNetwork', { 
     type: objectType({
         name: 'LoginSocialOutput',
         definition(t) {
-            t.field('tokenType', {
-                type: enumType({
-                    name: 'LoginSocialTokenType',
-                    members: ['register', 'login']
-                })
-            })
             t.string('token', { nullable: false })
-            t.field('data', { type: 'SocialProvider', nullable: true })
             t.field('info', { type: 'User', nullable: true })
         }
     }),
@@ -48,15 +41,19 @@ export const LoginSocialNetwork = mutationField('loginSocialNetwork', {
 
         if (socialProvider) {
             return {
-                tokenType: 'login',
                 token: AuthService.sign<JwtAuthPayload>({ userId: socialProvider.userId }),
                 info: socialProvider.user
             }
         } else {
+            const user = await UserService.register(
+                AuthService.sign<JwtRegisterPayload>({ ...socialData }, Config.registerExpireTime),
+                {
+                    nickName: socialData.name || ''
+                }
+            )
             return {
-                tokenType: 'register',
-                token: AuthService.sign<JwtRegisterPayload>({ ...socialData }, Config.REGISTER_EXPIRE_TIME),
-                data: socialData
+                token: AuthService.sign<JwtAuthPayload>({ userId: user.id }),
+                info: user
             }
         }
     }
@@ -102,26 +99,10 @@ Trả về token để login`,
     args: {
         token: stringArg({ nullable: false }),
         nickName: stringArg({ nullable: false }),
-        password: stringArg({ nullable: false }),
-        birthday: arg({ type: 'DateTime', nullable: false }),
-        cityId: intArg({ nullable: false, description: "Tự nhận khu vực theo thành phố" }),
-        genderBorn: arg({ type: 'GenderBorn', nullable: false }),
-        gender: arg({ type: 'Gender', nullable: false }),
-        bodies: stringArg({ nullable: false, list: true }),
-        personalities: stringArg({ nullable: false, list: true }),
-        hobbies: stringArg({ nullable: false, list: true }),
-        identifyImage: arg({ type: 'Upload', nullable: false }),
-        images: arg({ type: 'Upload', nullable: false, list: true }),
-        introduction: stringArg({ nullable: false }),
-        agesOtherPerson: stringArg({ nullable: false, list: true }),
-        cityIdsOtherPerson: intArg({ nullable: false, list: true, description: "Tự nhận khu vực theo thành phố" }),
-        genderBornOtherPerson: arg({ type: 'GenderBorn', list: true }),
-        genderOtherPerson: arg({ type: 'Gender', list: true }),
-        bodiesOtherPerson: stringArg({ list: true }),
-        personalitiesOtherPerson: stringArg({ list: true }),
+        password: stringArg({ nullable: true }),
     },
     resolve: async (_root, args, _ctx, _info) => {
-        const user = await UserService.register(args.token, args);
+        const user = await UserService.register(args.token, { ...args });
 
         return {
             token: AuthService.sign({ userId: user.id } as JwtAuthPayload),

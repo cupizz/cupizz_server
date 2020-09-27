@@ -1,8 +1,8 @@
-import { PubSub } from 'apollo-server'
-import { User, PrismaClient } from '@prisma/client'
+import { PrismaClient, Role, User } from '@prisma/client'
+import { PubSub } from 'apollo-server-express'
 
 export interface Context {
   prisma: PrismaClient
   pubsub: PubSub
-  user?: User
+  user?: User & { role: Role }
 }

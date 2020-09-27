@@ -1,4 +1,4 @@
 
 export class JwtAuthPayload {
-    public userId: number;
+    public userId: string;
 }
