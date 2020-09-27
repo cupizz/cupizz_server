@@ -4,12 +4,10 @@ import { PasswordHandler } from "../../src/utils/passwordHandler";
 import { seedRole } from "./role.seed";
 import { DefaultRole } from "../../src/model/role";
 import { seedAppConfig } from "./appConfig.seed";
-import { seedAgeCondition } from "./ageCondition.seed";
 
 const seed = async () => {
     const db = new PrismaClient();
     await seedAppConfig();
-    await seedAgeCondition();
     await seedRole();
     return await db.user.create({
         data: {
@@ -19,8 +17,6 @@ const seed = async () => {
             gender: 'male',
             hobbies: { set: ['asdasda'] },
             introduction: 'Hien Pro',
-            agesOtherPerson: { connect: [] },
-            genderOtherPerson: { set: ['female'] },
             avatar: {
                 create: {
                     type: 'image',
@@ -32,7 +28,6 @@ const seed = async () => {
                 create: {
                     id: 'hienlh1298@gmail.com',
                     type: 'email',
-                    email: 'hienlh1298@gmail.com',
                 }
             }
         }
