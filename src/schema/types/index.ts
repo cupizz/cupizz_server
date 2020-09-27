@@ -1,6 +1,7 @@
 import { enumType, inputObjectType, objectType } from "@nexus/schema";
-import { GraphQLUpload } from "apollo-server";
+import { GraphQLUpload } from "apollo-server-express";
 import { UserService } from "../../service";
+import { Validator } from "../../utils/validator";
 
 export const Json = String;
 
@@ -18,7 +19,30 @@ export const FileTypeType = enumType({
 
 export const SocialProviderEnumType = enumType({
     name: 'SocialProviderEnumType',
-    members: ['email', 'facebook', 'google', 'apple']
+    members: ['email', 'facebook', 'google']
+})
+
+export const PrivateFieldEnumType = enumType({
+    name: 'PrivateFieldEnum',
+    members: [
+        'birthday',
+        'introduction',
+        'gender',
+        'hobbies',
+        'phoneNumber',
+        'job',
+        'height',
+    ]
+})
+
+export const MustHaveEnumType = enumType({
+    name: 'MustHaveEnum',
+    members: [
+        'age',
+        'height',
+        'distance',
+        'gender',
+    ]
 })
 
 export enum FriendStatusEnum {
@@ -34,12 +58,37 @@ export const FriendStatusType = enumType({
     members: Object.keys(FriendStatusEnum)
 })
 
+export const OnlineStatusEnumType = enumType({
+    name: 'OnlineStatus',
+    members: ['online', 'away', 'offline']
+})
+
 export const UserType = objectType({
     name: 'User',
     definition(t) {
         t.model.id()
-        t.model.nickName()
-        t.model.birthday()
+        t.model.updatedAt()
+        t.model.createdAt()
+        t.model.deletedAt()
+        t.field('data', {
+            type: UserDataType,
+            nullable: false,
+            resolve: async (root, _args, ctx, _info): Promise<any> => {
+                const friendType = await UserService.getFriendStatus(ctx.user?.id, root.id);
+                return {
+                    ...root,
+                    friendType,
+                }
+            }
+        })
+    }
+})
+
+export const UserDataType = objectType({
+    name: 'UserData',
+    definition(t) {
+        t.model('User').nickName()
+        t.model('User').birthday()
         t.int('age', {
             nullable: true,
             resolve: (root, _args, _ctx, _info) => {
@@ -53,50 +102,52 @@ export const UserType = objectType({
                 }
             }
         })
-        t.model.genderBorn()
-        t.model.gender()
-        t.model.bodies()
-        t.model.personalities()
-        t.model.hobbies()
-        t.model.introduction()
-        t.model.agesOtherPerson()
-        t.model.genderBornOtherPerson()
-        t.model.genderOtherPerson()
-        t.model.bodiesOtherPerson()
-        t.model.personalitiesOtherPerson()
-        t.model.hasFreeTime()
-        t.model.phoneNumber()
-        t.model.job()
-        t.model.degree()
-        t.model.area()
-        t.model.city()
-        t.model.schedule()
-        t.model.updatedAt()
-        t.model.createdAt()
-        t.model.deletedAt()
-        t.model.identifyImage()
-        t.model.avatar()
-        t.model.role()
-        t.model.userImage({ pagination: false })
-        t.model.userAreaOtherPerson({ pagination: false })
-        t.model.userCityOtherPerson({ pagination: false })
-        t.model.userPurposeUseApp({ pagination: false })
-        t.model.socialProvider({ pagination: false })
+        t.model('User').introduction()
+        t.model('User').gender()
+        t.model('User').hobbies()
+        t.model('User').phoneNumber()
+        t.model('User').job()
+        t.model('User').height()
+        t.model('User').minAgePrefer()
+        t.model('User').maxAgePrefer()
+        t.model('User').genderPrefer()
+        t.model('User').distancePrefer()
+        t.model('User').distancePrefer()
+        t.model('User').avatar()
+        t.model('User').role()
+        t.model('User').userImage({ pagination: false })
+        t.model('User').socialProvider({ pagination: false })
+        t.field('friendType', {
+            type: FriendType,
+            nullable: false,
+            resolve: (root: any, _args, _ctx, _info) => {
+                return root.friendType;
+            },
+        })
+        t.field('onlineStatus', {
+            type: OnlineStatusEnumType,
+            nullable: true,
+            resolve: async (root: any, _args, _ctx, _info) => {
+                if (!Validator.isFriend(root.friendType?.status) || !root.showActive)
+                    return null;
+                return root.onlineStatus;
+            }
+        })
+        t.model('User').lastOnline({
+            resolve: (root: any, args, ctx, info, origin) => {
+                return Validator.isFriend(root.friendType.status)
+                    ? origin(root, args, ctx, info)
+                    : null
+            }
+        })
         t.field('settings', {
             type: UserSettingType,
             description: "Các cài đặt của User",
             nullable: true,
-            resolve: (root, _args, ctx, _info): any => {
+            resolve: (root: any, _args, ctx, _info): any => {
                 if (ctx.user?.id === root.id) return { ...root }
                 return null
             }
-        })
-        t.field('friendType', {
-            type: FriendType,
-            nullable: false,
-            resolve: async (root, _args, ctx, _info) => {
-                return await UserService.getFriendStatus(ctx.user?.id, root.id);
-            },
         })
     }
 })
@@ -121,8 +172,6 @@ export const UserSettingType = objectType({
         t.model("User").allowMatching()
         t.model("User").isPrivate()
         t.model("User").showActive()
-        t.model("User").isPrivateJob()
-        t.model("User").isPrivateDegree()
     }
 })
 
@@ -154,24 +203,7 @@ export const FriendDataType = objectType({
         t.model('Friend').receiver()
         t.model('Friend').sentAt()
         t.model('Friend').acceptedAt()
-    }
-})
-
-export const AreaType = objectType({
-    name: 'Area',
-    definition(t) {
-        t.model.id()
-        t.model.area()
-        t.model.city({ pagination: false, alias: 'cities' })
-    }
-})
-
-export const CityType = objectType({
-    name: 'City',
-    definition(t) {
-        t.model.id()
-        t.model.city()
-        t.model.area({ alias: 'areas' })
+        t.model('Friend').isSuperLike()
     }
 })
 
@@ -204,38 +236,6 @@ export const UserImageType = objectType({
     definition(t) {
         t.model.image()
         t.model.user()
-    }
-})
-
-export const UserAreaOtherPersonType = objectType({
-    name: 'UserAreaOtherPerson',
-    definition(t) {
-        t.model.area()
-        t.model.user()
-    }
-})
-
-export const UserCityOtherPersonType = objectType({
-    name: 'UserCityOtherPerson',
-    definition(t) {
-        t.model.city()
-        t.model.user()
-    }
-})
-
-export const UserPurposeUseAppType = objectType({
-    name: 'UserPurposeUseApp',
-    definition(t) {
-        t.model.purpose()
-        t.model.user()
-    }
-})
-
-export const PurposeUseAppType = objectType({
-    name: 'PurposeUseApp',
-    definition(t) {
-        t.model.id()
-        t.model.value()
     }
 })
 
@@ -324,5 +324,15 @@ export const FileInputType = inputObjectType({
     definition(t) {
         t.field('type', { type: 'FileType', nullable: false })
         t.field('file', { type: 'Upload', nullable: false })
+    }
+})
+
+export const AppConfigType = objectType({
+    name: 'AppConfig',
+    definition(t) {
+        t.model.id()
+        t.model.name()
+        t.model.description()
+        t.model.data()
     }
 })

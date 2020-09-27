@@ -3,6 +3,7 @@ import request from 'request';
 import { ErrorUnAuthenticate, ClientError } from '../model/error';
 import Strings from '../constants/strings';
 import { NexusGenEnums } from '../schema/generated/nexus';
+import { logger } from '../utils/logger';
 
 class SocialNetworkService {
     public async login(type: NexusGenEnums['SocialProviderEnumType'], data: string): Promise<SocialProviderCreateWithoutUserInput> {
@@ -11,10 +12,10 @@ class SocialNetworkService {
                 throw new Error("Please use API registerEmail or login");
             case 'google':
                 return await this._loginGoogle(data);
-            case 'apple':
-                throw ClientError('In development');
             case 'facebook':
                 return await this._loginFacebook(data);
+            default:
+                throw ClientError("In development");       
         }
     }
 
@@ -23,7 +24,7 @@ class SocialNetworkService {
             const res = await new Promise<request.Response>((resolve, reject) => {
                 request.get({
                     url: 'https://people.googleapis.com/v1/people/me?requestMask.includeField=person.emailAddresses,person.phoneNumbers,person.names,person.photos,person.genders,person.birthdays',
-                    headers: { Authorization: accessToken },
+                    headers: { Authorization: 'Bearer ' + accessToken },
                     callback: (e, res) => {
                         if (e) {
                             reject(e);
@@ -34,7 +35,7 @@ class SocialNetworkService {
                 })
             });
 
-            if (res.statusCode != 200) throw new Error();
+            if (res.statusCode != 200) throw new Error(res.body);
 
             const decoded = JSON.parse(res.body);
 
@@ -49,6 +50,7 @@ class SocialNetworkService {
                 phoneNumber: decoded.phoneNumbers?.[0]?.value,
             }
         } catch (e) {
+            logger(e);
             throw ErrorUnAuthenticate(Strings.error.cannotAuthenticateGoogleAccount);
         }
     }

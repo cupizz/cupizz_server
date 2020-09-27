@@ -3,6 +3,7 @@ export * from './user.query';
 
 export const PublicQueries = queryType({
     definition(t) {
+        t.crud.appConfigs({ pagination: false })
         t.field('about', {
             type: objectType({
                 name: 'About',
@@ -21,7 +22,5 @@ export const PublicQueries = queryType({
                 };
             }
         })
-        t.crud.areas({ pagination: false })
-        t.crud.cities({ pagination: false, filtering: { areaId: true } })
     }
 })

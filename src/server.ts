@@ -1,18 +1,22 @@
 import { PrismaClient } from '@prisma/client'
 import { ApolloServer, PubSub } from 'apollo-server-express'
+import bodyParser from 'body-parser'
+import cors from 'cors'
 import express from 'express'
-import { SubscriptionServer } from 'subscriptions-transport-ws'
-import { Context } from './context'
-import { schema } from './schema'
-import { AuthService } from './service'
-import { execute, subscribe } from 'graphql';
-import bodyParser from 'body-parser';
+import { execute, subscribe } from 'graphql'
 import { createServer } from 'http'
-import cors from 'cors';
+import { SubscriptionServer } from 'subscriptions-transport-ws'
+import { Config } from './config'
+import { Context } from './context'
+import { runCronJob } from './cron'
+import { schema } from './schema'
+import { AuthService, UserService } from './service'
+import { logger } from './utils/logger'
 
 const PORT = 1998;
 const app = express();
 
+process.setMaxListeners(0);
 app.use(cors({
   allowedHeaders: '*'
 }));
@@ -21,6 +25,7 @@ app.use('/graphql', bodyParser.json());
 export const pubsub = new PubSub();
 export const prisma = new PrismaClient({
   log: ['error', 'warn'],
+  errorFormat: 'minimal',
 });
 
 const createContext = async (token: string): Promise<Context> => {
@@ -30,10 +35,18 @@ const createContext = async (token: string): Promise<Context> => {
 
 const apolloServer = new ApolloServer({
   schema,
-  uploads: true,
-  context: (context): Promise<Context> => {
+  uploads: {
+    maxFileSize: 10000000,
+    maxFiles: Config.maxFilesUpload
+  },
+  context: async (context): Promise<Context> => {
     const token = context.req?.header('authorization') || '';
-    return createContext(token);
+    const result = await createContext(token);
+
+    if (result.user) {
+      await UserService.updateOnlineStatus(result.user);
+    }
+    return result;
   },
 })
 
@@ -45,13 +58,29 @@ server.listen(PORT, () => {
     execute,
     subscribe,
     schema: schema,
-    onConnect: (header: any) => {
-      return createContext(header.Authorization || header.authorization);
+    keepAlive: 1000,
+    onConnect: async (header: any) => {
+      const authorization = header.Authorization || header.authorization;
+      const context = await createContext(authorization);
+
+      if (context.user) {
+        await UserService.updateOnlineStatus(context.user, 'online');
+      }
+
+      return context;
+    },
+    onDisconnect: async (_: any, initialContext: any) => {
+      const context: Context = await initialContext.initPromise;
+
+      if (context.user) {
+        await UserService.updateOnlineStatus(context.user, 'offline');
+      }
     }
   }, {
     server: server,
     path: '/graphql',
   });
 
-  console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`)
+  runCronJob();
+  logger(`🚀 Server ready at http://localhost:${PORT}/graphql`)
 });

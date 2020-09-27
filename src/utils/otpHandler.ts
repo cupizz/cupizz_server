@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { Config } from '../config';
 import { JwtOtpPayload } from '../model/otpPayload';
 import { AuthService } from '../service';
+import { logger } from './logger';
 import { PasswordHandler } from './passwordHandler';
 import { Validator } from './validator';
 
@@ -30,14 +31,12 @@ export default class OtpHandler {
         });
 
         await transporter.sendMail({
-            from: '"Gonosen" <prostagellc.vn@gmail.com>',
+            from: '"Cubizz" <no-reply@cubizz.cf>',
             to: email,
-            subject: "リバラブ よりお知らせ",
+            subject: "Xác thực email",
             text:
-                `リバラブ事務局です。
-このたびは、アプリ登録お申し込みありがとうございます。
-下記コードをアプリ画面にご入力ください。
-${this._otp.toString()}`,
+                `Mã xác thực của bạn là: ${this._otp.toString()}
+Hãy điền mã này vào ứng dụng để \ntiếp tục quá trình đăng ký thành viên.`,
         });
 
         const otpPayload: JwtOtpPayload = {
@@ -46,11 +45,11 @@ ${this._otp.toString()}`,
         }
 
         if (process.env.NODE_ENV == 'development') {
-            console.log(email, this._otp)
+            logger(email + this._otp)
         }
 
         return {
-            token: AuthService.sign(otpPayload, Config.OPT_EXPIRE_TIME),
+            token: AuthService.sign(otpPayload, Config.otpExpireTime),
             otp: process.env.NODE_ENV == 'development' ? this._otp : null
         }
     }

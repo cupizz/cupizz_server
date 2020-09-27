@@ -10,5 +10,10 @@ export default class Strings {
         tokenIncorrect: 'Token incorrect',
         cannotAuthenticateGoogleAccount: 'Can not authenticate Google account',
         cannotAuthenticateFacebookAccount: 'Can not authenticate Facebook account',
+        tempFileNotFound: (fileName?: string) => `Temp file ${fileName} not found`,
+        cannotDoOnYourself: 'Cannot do on yourself',
+        cannotAddFriendTwice: 'Cannot add friend twice',
+        youWereBothFriendOfEachOther: 'You were both friend of each other',   
+        youWereBothNotFriendOfEachOther: 'You were both not friend of each other',   
     }
 }

@@ -5,6 +5,7 @@
         "strict": true,
         "lib": ["esnext"],
         "esModuleInterop": true,
-        "strictNullChecks": false
+        "strictNullChecks": false,
+        "target": "ES5"
     }
 }

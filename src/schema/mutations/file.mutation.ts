@@ -9,7 +9,7 @@ export const UploadTempFileMutation = mutationField('uploadTempFile', {
     args: {
         files: arg({ type: 'Upload', list: true, nullable: false })
     },
-    resolve: async (_root, args, ctx, _info) => {
+    resolve: async (_root, args, _ctx, _info) => {
         return await FileService.uploadMultiTemp(await Promise.all(args.files ?? []));
     }
 })
