@@ -827,59 +827,6 @@
     {
       "tag": "CreateField",
       "model": "UserAnswer",
-      "field": "createBy",
-      "type": "User",
-      "arity": "Required"
-    },
-    {
-      "tag": "CreateDirective",
-      "location": {
-        "path": {
-          "tag": "Field",
-          "model": "UserAnswer",
-          "field": "createBy"
-        },
-        "directive": "relation"
-      }
-    },
-    {
-      "tag": "CreateArgument",
-      "location": {
-        "tag": "Directive",
-        "path": {
-          "tag": "Field",
-          "model": "UserAnswer",
-          "field": "createBy"
-        },
-        "directive": "relation"
-      },
-      "argument": "fields",
-      "value": "[userId]"
-    },
-    {
-      "tag": "CreateArgument",
-      "location": {
-        "tag": "Directive",
-        "path": {
-          "tag": "Field",
-          "model": "UserAnswer",
-          "field": "createBy"
-        },
-        "directive": "relation"
-      },
-      "argument": "references",
-      "value": "[id]"
-    },
-    {
-      "tag": "CreateField",
-      "model": "UserAnswer",
-      "field": "userId",
-      "type": "String",
-      "arity": "Required"
-    },
-    {
-      "tag": "CreateField",
-      "model": "UserAnswer",
       "field": "question",
       "type": "Question",
       "arity": "Required"
@@ -940,8 +887,15 @@
     {
       "tag": "CreateField",
       "model": "UserAnswer",
-      "field": "background",
-      "type": "File",
+      "field": "content",
+      "type": "String",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserAnswer",
+      "field": "createBy",
+      "type": "User",
       "arity": "Required"
     },
     {
@@ -950,7 +904,7 @@
         "path": {
           "tag": "Field",
           "model": "UserAnswer",
-          "field": "background"
+          "field": "createBy"
         },
         "directive": "relation"
       }
@@ -962,12 +916,12 @@
         "path": {
           "tag": "Field",
           "model": "UserAnswer",
-          "field": "background"
+          "field": "createBy"
         },
         "directive": "relation"
       },
       "argument": "fields",
-      "value": "[backgroundFileId]"
+      "value": "[createById]"
     },
     {
       "tag": "CreateArgument",
@@ -976,7 +930,7 @@
         "path": {
           "tag": "Field",
           "model": "UserAnswer",
-          "field": "background"
+          "field": "createBy"
         },
         "directive": "relation"
       },
@@ -986,7 +940,7 @@
     {
       "tag": "CreateField",
       "model": "UserAnswer",
-      "field": "backgroundFileId",
+      "field": "createById",
       "type": "String",
       "arity": "Required"
     },
@@ -1021,6 +975,199 @@
       },
       "argument": "",
       "value": "now()"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserAnswer",
+      "field": "userImage",
+      "type": "UserImage",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateModel",
+      "model": "UserImage"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserImage",
+      "field": "user",
+      "type": "User",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "UserImage",
+          "field": "user"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserImage",
+          "field": "user"
+        },
+        "directive": "relation"
+      },
+      "argument": "fields",
+      "value": "[userId]"
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserImage",
+          "field": "user"
+        },
+        "directive": "relation"
+      },
+      "argument": "references",
+      "value": "[id]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserImage",
+      "field": "image",
+      "type": "File",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "UserImage",
+          "field": "image"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserImage",
+          "field": "image"
+        },
+        "directive": "relation"
+      },
+      "argument": "fields",
+      "value": "[imageId]"
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserImage",
+          "field": "image"
+        },
+        "directive": "relation"
+      },
+      "argument": "references",
+      "value": "[id]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserImage",
+      "field": "userId",
+      "type": "String",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserImage",
+      "field": "imageId",
+      "type": "String",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserImage",
+      "field": "userAnswer",
+      "type": "UserAnswer",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "UserImage",
+          "field": "userAnswer"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserImage",
+          "field": "userAnswer"
+        },
+        "directive": "relation"
+      },
+      "argument": "fields",
+      "value": "[userAnswerId]"
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserImage",
+          "field": "userAnswer"
+        },
+        "directive": "relation"
+      },
+      "argument": "references",
+      "value": "[id]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserImage",
+      "field": "userAnswerId",
+      "type": "String",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Model",
+          "model": "UserImage"
+        },
+        "directive": "id"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Model",
+          "model": "UserImage"
+        },
+        "directive": "id"
+      },
+      "argument": "",
+      "value": "[userId, imageId]"
     },
     {
       "tag": "CreateModel",
@@ -1368,38 +1515,6 @@
       "value": "false"
     },
     {
-      "tag": "CreateField",
-      "model": "Friend",
-      "field": "isBlocked",
-      "type": "Boolean",
-      "arity": "Required"
-    },
-    {
-      "tag": "CreateDirective",
-      "location": {
-        "path": {
-          "tag": "Field",
-          "model": "Friend",
-          "field": "isBlocked"
-        },
-        "directive": "default"
-      }
-    },
-    {
-      "tag": "CreateArgument",
-      "location": {
-        "tag": "Directive",
-        "path": {
-          "tag": "Field",
-          "model": "Friend",
-          "field": "isBlocked"
-        },
-        "directive": "default"
-      },
-      "argument": "",
-      "value": "false"
-    },
-    {
       "tag": "CreateDirective",
       "location": {
         "path": {
@@ -1421,139 +1536,6 @@
       },
       "argument": "",
       "value": "[senderId, receiverId]"
-    },
-    {
-      "tag": "CreateModel",
-      "model": "UserImage"
-    },
-    {
-      "tag": "CreateField",
-      "model": "UserImage",
-      "field": "user",
-      "type": "User",
-      "arity": "Required"
-    },
-    {
-      "tag": "CreateDirective",
-      "location": {
-        "path": {
-          "tag": "Field",
-          "model": "UserImage",
-          "field": "user"
-        },
-        "directive": "relation"
-      }
-    },
-    {
-      "tag": "CreateArgument",
-      "location": {
-        "tag": "Directive",
-        "path": {
-          "tag": "Field",
-          "model": "UserImage",
-          "field": "user"
-        },
-        "directive": "relation"
-      },
-      "argument": "fields",
-      "value": "[userId]"
-    },
-    {
-      "tag": "CreateArgument",
-      "location": {
-        "tag": "Directive",
-        "path": {
-          "tag": "Field",
-          "model": "UserImage",
-          "field": "user"
-        },
-        "directive": "relation"
-      },
-      "argument": "references",
-      "value": "[id]"
-    },
-    {
-      "tag": "CreateField",
-      "model": "UserImage",
-      "field": "image",
-      "type": "File",
-      "arity": "Required"
-    },
-    {
-      "tag": "CreateDirective",
-      "location": {
-        "path": {
-          "tag": "Field",
-          "model": "UserImage",
-          "field": "image"
-        },
-        "directive": "relation"
-      }
-    },
-    {
-      "tag": "CreateArgument",
-      "location": {
-        "tag": "Directive",
-        "path": {
-          "tag": "Field",
-          "model": "UserImage",
-          "field": "image"
-        },
-        "directive": "relation"
-      },
-      "argument": "fields",
-      "value": "[imageId]"
-    },
-    {
-      "tag": "CreateArgument",
-      "location": {
-        "tag": "Directive",
-        "path": {
-          "tag": "Field",
-          "model": "UserImage",
-          "field": "image"
-        },
-        "directive": "relation"
-      },
-      "argument": "references",
-      "value": "[id]"
-    },
-    {
-      "tag": "CreateField",
-      "model": "UserImage",
-      "field": "userId",
-      "type": "String",
-      "arity": "Required"
-    },
-    {
-      "tag": "CreateField",
-      "model": "UserImage",
-      "field": "imageId",
-      "type": "String",
-      "arity": "Required"
-    },
-    {
-      "tag": "CreateDirective",
-      "location": {
-        "path": {
-          "tag": "Model",
-          "model": "UserImage"
-        },
-        "directive": "id"
-      }
-    },
-    {
-      "tag": "CreateArgument",
-      "location": {
-        "tag": "Directive",
-        "path": {
-          "tag": "Model",
-          "model": "UserImage"
-        },
-        "directive": "id"
-      },
-      "argument": "",
-      "value": "[userId, imageId]"
     },
     {
       "tag": "CreateModel",
@@ -1667,13 +1649,6 @@
       "model": "File",
       "field": "messageAttachment",
       "type": "MessageAttachment",
-      "arity": "List"
-    },
-    {
-      "tag": "CreateField",
-      "model": "File",
-      "field": "UserAnswer",
-      "type": "UserAnswer",
       "arity": "List"
     },
     {

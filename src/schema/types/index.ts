@@ -236,6 +236,29 @@ export const UserImageType = objectType({
     definition(t) {
         t.model.image()
         t.model.user()
+        t.model.userAnswer()
+    }
+})
+
+export const QuestionType = objectType({
+    name: 'Question',
+    definition(t) {
+        t.model.id()
+        t.model.content()
+        t.model.color()
+    }
+})
+
+export const UserAnswerType = objectType({
+    name: 'UserAnswer', 
+    definition(t) {
+        t.model.id()
+        t.model.question()
+        t.model.color()
+        t.model.content()
+        t.model.userImage()
+        t.model.createBy()
+        t.model.createAt()
     }
 })
 

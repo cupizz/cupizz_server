@@ -5,7 +5,7 @@ import { FileService } from "../../service/file.service";
 export const UploadTempFileMutation = mutationField('uploadTempFile', {
     type: 'String',
     list: true,
-    description: '[DOING] Trả về danh sách id của temp file',
+    description: 'Trả về danh sách id của temp file',
     args: {
         files: arg({ type: 'Upload', list: true, nullable: false })
     },

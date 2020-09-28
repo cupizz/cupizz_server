@@ -57,6 +57,7 @@ const permission = {
     user: new PermissionByModule('user'),
     role: new PermissionByModule('role'),
     post: new PermissionByModule('post'),
+    question: new PermissionByModule('question'),
     friend: new FriendPermission(),
     toArray: (): string[] => {
         let array: string[] = [];

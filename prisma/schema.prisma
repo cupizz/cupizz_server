@@ -99,15 +99,25 @@ model Question {
 }
 
 model UserAnswer {
-  id               String   @default(cuid()) @id
-  createBy         User     @relation(fields: [userId], references: [id])
-  userId           String
-  question         Question @relation(fields: [questionId], references: [id])
-  questionId       String
-  color            String
-  background       File     @relation(fields: [backgroundFileId], references: [id])
-  backgroundFileId String
-  createAt         DateTime @default(now())
+  id         String     @default(cuid()) @id
+  question   Question   @relation(fields: [questionId], references: [id])
+  questionId String
+  color      String
+  content    String
+  createBy   User       @relation(fields: [createById], references: [id])
+  createById String
+  createAt   DateTime   @default(now())
+  userImage  UserImage?
+}
+
+model UserImage {
+  @@id([userId, imageId])
+  user         User        @relation(fields: [userId], references: [id])
+  image        File        @relation(fields: [imageId], references: [id])
+  userId       String
+  imageId      String
+  userAnswer   UserAnswer? @relation(fields: [userAnswerId], references: [id])
+  userAnswerId String?
 }
 
 model SocialProvider {
@@ -133,15 +143,6 @@ model Friend {
   sentAt      DateTime  @default(now())
   acceptedAt  DateTime?
   isSuperLike Boolean   @default(false)
-  isBlocked   Boolean   @default(false)
-}
-
-model UserImage {
-  @@id([userId, imageId])
-  user    User   @relation(fields: [userId], references: [id])
-  image   File   @relation(fields: [imageId], references: [id])
-  userId  String
-  imageId String
 }
 
 model File {
@@ -152,7 +153,6 @@ model File {
   userAvatar        User[]              @relation("avatar")
   userImage         UserImage[]
   messageAttachment MessageAttachment[]
-  UserAnswer        UserAnswer[]
 }
 
 model Role {
