@@ -1,18 +1,17 @@
 import { PrismaClient } from "@prisma/client";
+import { Config } from "../../src/config";
 
 export const seedAppConfig = async () => {
     const db = new PrismaClient();
     return await Promise.all(
-        [
-            db.appConfig.create({
+        Object.keys(Config).map(async (e, i) => {
+            return await db.appConfig.create({
                 data: {
-                    id: 'default_hobbies',
-                    name: 'Default Hobbies',
-                    data: [
-                        'Bay',
-                    ]
+                    id: e,
+                    name: e,
+                    data: Object.values(Config)[i]
                 }
-            }),
-        ]
+            })
+        })
     )
 };

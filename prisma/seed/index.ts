@@ -1,21 +1,24 @@
 import { PrismaClient } from "@prisma/client";
 import { exit } from "process";
-import { PasswordHandler } from "../../src/utils/passwordHandler";
-import { seedRole } from "./role.seed";
 import { DefaultRole } from "../../src/model/role";
+import { PasswordHandler } from "../../src/utils/passwordHandler";
 import { seedAppConfig } from "./appConfig.seed";
+import { seedRole } from "./role.seed";
+import { seedUser } from "./user.seed";
 
 const seed = async () => {
     const db = new PrismaClient();
     await seedAppConfig();
+    console.log('Seeded App configs');
     await seedRole();
-    return await db.user.create({
+    console.log('Seeded Roles');
+    await db.user.create({
         data: {
             nickName: 'Hien',
             password: PasswordHandler.encode('abc123456'),
             birthday: new Date(1998, 1, 1),
             gender: 'male',
-            hobbies: { set: ['asdasda'] },
+            hobbies: '',
             introduction: 'Hien Pro',
             avatar: {
                 create: {
@@ -32,6 +35,9 @@ const seed = async () => {
             }
         }
     });
+    console.log('Seeded Admin User');
+
+    await seedUser();
 }
 
 seed().then(() => {

@@ -58,7 +58,7 @@ model User {
   introduction    String?
   birthday        DateTime?
   gender          Gender?
-  hobbies         String[]
+  hobbies         String?
   phoneNumber     String?
   job             String?
   height          Int?
@@ -73,9 +73,6 @@ model User {
   allowMatching   Boolean          @default(true)
   isPrivate       Boolean          @default(false)
   showActive      Boolean          @default(true)
-  updatedAt       DateTime         @updatedAt
-  createdAt       DateTime         @default(now())
-  deletedAt       DateTime?
   avatar          File?            @relation("avatar", fields: [avatarId], references: [id])
   avatarId        String?
   role            Role             @relation(fields: [roleId], references: [id])
@@ -89,6 +86,9 @@ model User {
   onlineStatus    OnlineStatus     @default(offline)
   lastOnline      DateTime?
   userAnswer      UserAnswer[]
+  updatedAt       DateTime         @updatedAt
+  createdAt       DateTime         @default(now())
+  deletedAt       DateTime?
 }
 
 model Question {

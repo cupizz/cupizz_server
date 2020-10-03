@@ -1,5 +1,6 @@
 import { enumType, inputObjectType, objectType } from "@nexus/schema";
 import { GraphQLUpload } from "apollo-server-express";
+import { Config } from "../../config";
 import { UserService } from "../../service";
 import { Validator } from "../../utils/validator";
 
@@ -104,7 +105,13 @@ export const UserDataType = objectType({
         })
         t.model('User').introduction()
         t.model('User').gender()
-        t.model('User').hobbies()
+        t.field('hobbies', {
+            type: 'String',
+            list: true,
+            resolve: (root: any, args, ctx, info) => {
+                return root.hobbies.split(Config.listSeparateSymbol);
+            }
+        })
         t.model('User').phoneNumber()
         t.model('User').job()
         t.model('User').height()

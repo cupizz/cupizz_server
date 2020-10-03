@@ -9,6 +9,7 @@ import { SocialNetworkService } from "../../service/socialNetwork.service";
 import { Validator } from "../../utils/validator";
 import { FriendStatusEnum } from "../types";
 import { FileCreateInput } from '@prisma/client';
+import { Config } from "../../config";
 
 export const UpdateProfileMutation = mutationField('updateProfile', {
     type: 'User',
@@ -37,7 +38,7 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
             where: { id: ctx.user.id },
             data: {
                 ...args,
-                hobbies: { set: args.hobbies },
+                hobbies: args.hobbies.join(Config.listSeparateSymbol),
                 privateFields: { set: args.privateFields },
                 ...avatar ? { avatar: { create: avatar } } : {}
             }
