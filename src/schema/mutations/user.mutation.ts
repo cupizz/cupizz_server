@@ -104,85 +104,6 @@ export const ConnectSocialNetworkMutation = mutationField('connectSocialNetwork'
     }
 })
 
-export const AddFriendMutation = mutationField('addFriend', {
-    type: 'FriendType',
-    args: {
-        userId: stringArg({ nullable: false, description: 'Id của user muốn kết bạn' }),
-        isSuperLike: booleanArg({ nullable: true })
-    },
-    resolve: async (_root, args, ctx, _info) => {
-        AuthService.authorize(ctx, { values: [Permission.friend.create] });
-
-        const friendData = await UserService.getFriendStatus(ctx.user.id, args.userId);
-        switch (friendData.status) {
-            case FriendStatusEnum.me:
-                throw ClientError(Strings.error.cannotDoOnYourself);
-            case FriendStatusEnum.none:
-                return {
-                    status: 'sent',
-                    data: await prisma.friend.create({
-                        data: {
-                            receiver: { connect: { id: args.userId } },
-                            sender: { connect: { id: ctx.user.id } },
-                            isSuperLike: args.isSuperLike
-                        }
-                    })
-                }
-            case FriendStatusEnum.sent:
-                throw ClientError(Strings.error.cannotAddFriendTwice);
-            case FriendStatusEnum.received:
-                return {
-                    status: 'friend',
-                    data: await prisma.friend.update({
-                        where: {
-                            senderId_receiverId: {
-                                receiverId: ctx.user.id,
-                                senderId: args.userId
-                            }
-                        },
-                        data: { acceptedAt: new Date() }
-                    })
-                }
-            case FriendStatusEnum.friend:
-                throw new Error(Strings.error.youWereBothFriendOfEachOther);
-        }
-    }
-})
-
-export const AcceptFriendMutation = mutationField('removeFriend', {
-    type: 'FriendType',
-    args: {
-        userId: stringArg({ nullable: false, description: 'Id của user muốn remove' })
-    },
-    resolve: async (_root, args, ctx, _info) => {
-        AuthService.authorize(ctx, { values: [Permission.friend.create] });
-
-        const friendData = await UserService.getFriendStatus(ctx.user.id, args.userId);
-        switch (friendData.status) {
-            case FriendStatusEnum.me:
-                throw ClientError(Strings.error.cannotDoOnYourself);
-            case FriendStatusEnum.none:
-                throw ClientError(Strings.error.youWereBothNotFriendOfEachOther);
-            default:
-                await prisma.friend.deleteMany({
-                    where: {
-                        OR: [
-                            {
-                                senderId: ctx.user.id,
-                                receiverId: args.userId,
-                            },
-                            {
-                                senderId: args.userId,
-                                receiverId: ctx.user.id,
-                            },
-                        ]
-                    }
-                })
-                return friendData;
-        }
-    }
-})
-
 export const AddUserImageMutation = mutationField('addUserImage', {
     type: 'UserImage',
     args: {
@@ -254,5 +175,29 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
                 } : {}
             }
         })
+    }
+})
+
+export const AddFriendMutation = mutationField('addFriend', {
+    type: 'FriendType',
+    args: {
+        userId: idArg({ nullable: false, description: 'Id của user muốn kết bạn' }),
+        isSuperLike: booleanArg({ nullable: true })
+    },
+    resolve: async (_root, args, ctx, _info) => {
+        AuthService.authorize(ctx, { values: [Permission.friend.create] });
+
+        return await UserService.addFriend(ctx.user.id, args.userId, args.isSuperLike)
+    }
+})
+
+export const RemoveFriendMutation = mutationField('removeFriend', {
+    type: 'FriendType',
+    args: {
+        userId: idArg({ nullable: false, description: 'Id của user muốn remove' })
+    },
+    resolve: async (_root, args, ctx, _info) => {
+        AuthService.authorize(ctx, { values: [Permission.friend.create] });
+        return await UserService.removeFriend(ctx.user.id, args.userId);
     }
 })

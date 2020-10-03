@@ -3,11 +3,13 @@ import { ResultValue } from '@nexus/schema/dist/core';
 import { Friend, OnlineStatus, User } from '@prisma/client';
 import { AuthService } from '.';
 import { Config } from '../config';
+import Strings from '../constants/strings';
 import SubscriptionKey from '../constants/subscriptionKey';
-import { ErrorEmailExisted, ErrorEmailNotFound, ErrorIncorrectPassword, ErrorOtpIncorrect, ErrorTokenIncorrect, ValidationError } from '../model/error';
+import { ClientError, ErrorEmailExisted, ErrorEmailNotFound, ErrorIncorrectPassword, ErrorOtpIncorrect, ErrorTokenIncorrect, ValidationError } from '../model/error';
 import { JwtAuthPayload } from '../model/jwtPayload';
 import { JwtRegisterPayload } from '../model/registerPayload';
 import { DefaultRole } from '../model/role';
+import { NexusGenAllTypes } from '../schema/generated/nexus';
 import { FriendStatusEnum } from '../schema/types';
 import { prisma, pubsub } from '../server';
 import { logger } from '../utils/logger';
@@ -177,6 +179,68 @@ class UserService {
                     status: status, user: user
                 } as ResultValue<'Subscription', 'onlineUser'>)
             logger(`${user.nickName}(${user.id}) ${status}`);
+        }
+    }
+
+    public async addFriend(currentUserId: string, otherUserId: string, isSuperLike: boolean = false): Promise<NexusGenAllTypes['FriendType']> {
+        const friendData = await this.getFriendStatus(currentUserId, otherUserId);
+        switch (friendData.status) {
+            case FriendStatusEnum.me:
+                throw ClientError(Strings.error.cannotDoOnYourself);
+            case FriendStatusEnum.none:
+                return {
+                    status: 'sent',
+                    data: await prisma.friend.create({
+                        data: {
+                            receiver: { connect: { id: otherUserId } },
+                            sender: { connect: { id: currentUserId } },
+                            isSuperLike: isSuperLike
+                        }
+                    })
+                }
+            case FriendStatusEnum.sent:
+                throw ClientError(Strings.error.cannotAddFriendTwice);
+            case FriendStatusEnum.received:
+                return {
+                    status: 'friend',
+                    data: await prisma.friend.update({
+                        where: {
+                            senderId_receiverId: {
+                                receiverId: currentUserId,
+                                senderId: otherUserId
+                            }
+                        },
+                        data: { acceptedAt: new Date() }
+                    })
+                }
+            case FriendStatusEnum.friend:
+                throw new Error(Strings.error.youWereBothFriendOfEachOther);
+        }
+    }
+
+    public async removeFriend(currentUserId: string, otherUserId: string): Promise<NexusGenAllTypes['FriendType']> {
+        const friendData = await this.getFriendStatus(currentUserId, otherUserId);
+        switch (friendData.status) {
+            case FriendStatusEnum.me:
+                throw ClientError(Strings.error.cannotDoOnYourself);
+            case FriendStatusEnum.none:
+                throw ClientError(Strings.error.youWereBothNotFriendOfEachOther);
+            default:
+                await prisma.friend.deleteMany({
+                    where: {
+                        OR: [
+                            {
+                                senderId: currentUserId,
+                                receiverId: otherUserId,
+                            },
+                            {
+                                senderId: otherUserId,
+                                receiverId: currentUserId,
+                            },
+                        ]
+                    }
+                })
+                return friendData;
         }
     }
 }
