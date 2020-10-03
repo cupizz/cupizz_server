@@ -6,7 +6,7 @@ const _Config = {
     registerExpireTime: '20m',
     tempPath: __dirname + '/../temp/',
     maxFilesUpload: 10,
-    defaultPageSize: 1,
+    defaultPageSize: 10,
     listSeparateSymbol: '|',
     minAge: 18,
     maxAge: 100,

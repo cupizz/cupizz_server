@@ -1,6 +1,6 @@
 
 import { ResultValue } from '@nexus/schema/dist/core';
-import { Friend, OnlineStatus, User } from '@prisma/client';
+import { Friend, OnlineStatus, User, UserWhereInput, Gender } from '@prisma/client';
 import { AuthService } from '.';
 import { Config } from '../config';
 import Strings from '../constants/strings';
@@ -242,6 +242,61 @@ class UserService {
                 })
                 return friendData;
         }
+    }
+
+    public async generateRecommendableUsers(userId: string, saveToDb: boolean = true): Promise<User[]> {
+        const user = await prisma.user.findOne({
+            where: { id: userId },
+            include: {
+                senderFriend: true,
+                receiverFriend: true,
+                dislikedUsers: true,
+            }
+        });
+        const friendIds: string[] = [];
+        friendIds.push(
+            ...user.senderFriend.map(e => e.receiverId),
+            ...user.receiverFriend.map(e => e.senderId)
+        );
+
+        const now = new Date();
+        const birthdayCondition: { min: Date, max: Date } =
+        {
+            min: new Date(now.getUTCFullYear() - (user.maxAgePrefer || Config.maxAge), 0, 1),
+            max: new Date(now.getUTCFullYear() - (user.minAgePrefer || Config.minAge), 11, 31),
+        };
+
+
+        const where: UserWhereInput = {
+            NOT: { OR: [userId, ...friendIds].map(e => ({ id: { equals: e } })) },
+            birthday: { lte: birthdayCondition.max, gte: birthdayCondition.min },
+            height: { lte: user.maxHeightPrefer || Config.maxHeight, gte: user.minHeightPrefer || Config.minHeight },
+            gender: { in: user.genderPrefer.length > 0 ? user.genderPrefer : Object.values(Gender) },
+            id: { notIn: user.dislikedUsers.map(e => e.dislikedUserId) },
+            allowMatching: true,
+            isPrivate: false,
+            deletedAt: null,
+        }
+
+        const result = await prisma.user.findMany({ where, take: 20 });
+
+        if (saveToDb) {
+            let currentCount = 0;
+            if (await prisma.recommendableUser.count({ where: { userId } }) > 0) {
+                await prisma.recommendableUser.deleteMany({ where: { userId, sortOrder: { not: 1 } } });
+                currentCount = 1;
+            }
+
+            await Promise.all(result.map(async (e, i) => await prisma.recommendableUser.create({
+                data: {
+                    user: { connect: { id: userId } },
+                    sortOrder: i + currentCount + 1,
+                    recommendableUser: { connect: { id: e.id } }
+                }
+            })))
+        }
+
+        return result;
     }
 }
 
