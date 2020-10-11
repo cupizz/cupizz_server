@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: dev.dockerfile
+
     volumes:
       - .:/cubizz:cached
     command: sleep infinity

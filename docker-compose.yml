@@ -4,7 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # Overrides default command so things don't shut down after the process ends.
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/data?schema=public
       - JWT_SECRET_KEY=hieren
@@ -36,8 +35,14 @@ services:
       POSTGRES_PASSWORD: pass
       POSTGRES_USER: user
       POSTGRES_DB: data
+    volumes:
+        - database:/var/lib/postgresql/data
     networks:
       - cubizz
 
 networks:
   cubizz:
+
+volumes:
+  database:
+    

@@ -11,11 +11,10 @@ FROM node:12-alpine
 WORKDIR /cubizz
 
 COPY --from=builder /node_modules ./node_modules
+COPY . .
 ENV PATH ./node_modules/.bin:$PATH
 
-COPY . .
-
-RUN npm run generate
+RUN yarn generate
 
 EXPOSE 1998
-CMD ["npm", "start"]
+CMD ["yarn", "start"]

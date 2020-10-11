@@ -6,7 +6,7 @@
   "author": "Hieren <hienlh1298@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "dotenv -- ts-node --transpile-only src/server.ts",
+    "start": "yarn db:up && dotenv -- ts-node --transpile-only src/server.ts",
     "clean": "rm -rf dist",
     "build": "dotenv -- npm -s run clean && npm -s run generate && tsc",
     "generate": "dotenv -- prisma generate",
