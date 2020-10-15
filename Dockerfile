@@ -1,4 +1,4 @@
-FROM node:12-alpine as builder
+FROM node:14-alpine as builder
 
 USER root
 
@@ -7,7 +7,7 @@ RUN apk add git
 COPY ./package.json ./package.json
 RUN yarn install --silent
 
-FROM node:12-alpine
+FROM node:14-alpine
 WORKDIR /cubizz
 
 COPY --from=builder /node_modules ./node_modules
