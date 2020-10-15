@@ -6,6 +6,7 @@ export default class Strings {
         emailExisted: 'Email existed',
         emailIncorrectForm: 'Email không đúng định dạng',
         otpIncorrect: 'Otp không đúng.',
+        unAuthorize: 'Unauthorize',
         unAuthenticate: 'Please login before',
         tokenExpired: 'Token expired',
         tokenIncorrect: 'Token incorrect',

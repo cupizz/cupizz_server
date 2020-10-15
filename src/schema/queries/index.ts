@@ -1,5 +1,6 @@
 import { queryType, objectType } from '@nexus/schema';
 export * from './user.query';
+export * from './message.query';
 
 export const PublicQueries = queryType({
     definition(t) {

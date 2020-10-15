@@ -1,39 +1,23 @@
-import { arg, intArg, mutationField, mutationType, stringArg } from "@nexus/schema";
-import SubscriptionKey from "../../constants/subscriptionKey";
-import { AuthService } from "../../service";
+import { arg, intArg, mutationField, stringArg } from "@nexus/schema";
+import { MessageService } from "../../service/message.service";
 
 export const CreateMessageMutation = mutationField(
-    'createMessage',
+    'sendMessage',
     {
         type: 'Message',
+        // description: 'Bắt buộc truyền vào `conversationId` hoặc `receiverId`',
         args: {
+            receiverId: intArg({ nullable: false }),
             message: stringArg({ nullable: false }),
-            receiverId: stringArg({ nullable: false }),
-            attachment: arg({ type: 'Upload', list: true, nullable: true })
+            attachments: arg({ type: 'Upload', list: true, nullable: true })
         },
         resolve: async (_root, args, ctx, _info) => {
-            AuthService.authenticate(ctx);
-            // TODO authorize the user can message the other
-            // TODO create attachment
-            // TODO notification to other
-
-            const res = await ctx.prisma.message.create({
-                data: {
-                    message: args.message,
-                    sender: { connect: { id: ctx.user.id } },
-                    receiver: { connect: { id: args.receiverId } },
-                },
-                include: {
-                    sender: true,
-                    receiver: true,
-                    messageAttachment: true
-                }
+            return await MessageService.sendMessage(ctx, {
+                ...args,
+                ...args.attachments ? {
+                    attachments: await Promise.all(args.attachments)
+                } : {}
             });
-
-            // TODO Nếu gửi được tin nhắn cho client bằng realtime thì đánh dấu là đã đọc, không thì gửi thông báo
-            await ctx.pubsub.publish(SubscriptionKey.newMessage, res);
-
-            return res;
         }
     }
 )
