@@ -1,9 +1,15 @@
+import { SocialProviderType, User } from "@prisma/client";
 import { ForbiddenError } from "apollo-server-express";
 import jwt, { TokenExpiredError } from 'jsonwebtoken';
+import { Config } from "../config";
+import Strings from "../constants/strings";
 import { Context } from '../context';
-import { ErrorTokenExpired, ErrorUnAuthenticate } from '../model/error';
+import { ClientError, ErrorEmailNotFound, ErrorIncorrectPassword, ErrorTokenExpired, ErrorUnAuthenticate } from '../model/error';
 import { JwtAuthPayload } from "../model/jwtPayload";
 import { prisma } from '../server';
+import { PasswordHandler } from "../utils/passwordHandler";
+import { Validator } from "../utils/validator";
+import { UserService } from "./user.service";
 
 class PermissionFilter {
     values?: string[];
@@ -12,40 +18,95 @@ class PermissionFilter {
 }
 
 class AuthService {
-    public authorize(ctx: Context, requiredPermissions: PermissionFilter) {
-        this.authenticate(ctx);
-        if (!this._authorize(ctx.user.role.permissions, requiredPermissions)) {
-            throw new ForbiddenError('Forbidden');
-        }
-    }
+    public async login(type: SocialProviderType, id: string, password?: string, deviceId?: string): Promise<{ token: string, info: User }> {
+        let user = (await prisma.socialProvider.findOne({
+            where: { id_type: { id, type } },
+            include: { user: true }
+        }))?.user;
 
-    private _authorize(userPermissions: string[], requiredPermissions: PermissionFilter): boolean {
-        if (requiredPermissions.type != 'or') {
-            if (requiredPermissions.values.every(e => userPermissions.includes(e))) {
-                for (let nested of (requiredPermissions.nesteds ?? [])) {
-                    if (!this._authorize(userPermissions, nested)) {
-                        return false;
+        if (user) {
+            if (user.deletedAt !== null) {
+                throw ClientError(Strings.error.accountHasBeenDeleted);
+            }
+
+            if (type === 'email') {
+                Validator.email(id);
+                Validator.password(password);
+                if (!PasswordHandler.compare(password || '', user.password)) {
+                    throw ErrorIncorrectPassword;
+                }
+            }
+            UserService.updateOnlineStatus(user);
+
+            const token = this.sign({ userId: user.id } as JwtAuthPayload);
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    userDeviceTokens: {
+                        // Xóa các device bị trùng, và token hết hạn
+                        deleteMany: {
+                            OR: [
+                                deviceId ? { userId: user.id, deviceId } : {},
+                                { expireAt: { lt: new Date() } }
+                            ]
+                        },
+                        create: {
+                            token, deviceId,
+                            expireAt: new Date(Config.loginTokenExpireTime.value * 60 * 1000 + Date.now()),
+                        }
                     }
                 }
-                return true;
+            })
+
+            return { token, info: user };
+        }
+        throw ErrorEmailNotFound;
+    }
+
+    public authorize(ctx: Context, requiredPermissions: PermissionFilter, throwError: boolean = true): boolean {
+        if (!this.authenticate(ctx, throwError)) return false;
+        const missingPermissions = this._authorize(ctx.user.role.permissions, requiredPermissions);
+        if (missingPermissions.length > 0) {
+            if (throwError) {
+                throw new ForbiddenError('Missing permissions: ' + missingPermissions.join(', '));
             }
             return false;
-        } else {
-            if (!requiredPermissions.values.some(e => userPermissions.includes(e))) {
-                for (let nested of (requiredPermissions.nesteds ?? [])) {
-                    if (this._authorize(userPermissions, nested)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-            return true;
         }
+        return true;
     }
 
-    public authenticate(ctx: Context) {
-        if (!ctx.user)
-            throw ErrorUnAuthenticate();
+    /**
+     * @returns missing permistions
+     */
+    private _authorize(userPermissions: string[], requiredPermissions: PermissionFilter): string[] {
+        const missingPermissions: string[] = [];
+        if (requiredPermissions.type == 'or') {
+            if (requiredPermissions.values?.every(e => !userPermissions.includes(e))) {
+                requiredPermissions.nesteds?.forEach(nested =>
+                    missingPermissions.push(...this._authorize(userPermissions, nested)))
+                if (missingPermissions.length == 0) {
+                    missingPermissions.push(requiredPermissions.values[0]);
+                }
+            }
+        } else {
+            requiredPermissions.values?.forEach(e => {
+                if (!userPermissions.includes(e)) missingPermissions.push(e);
+            })
+
+            requiredPermissions.nesteds?.forEach(nested =>
+                missingPermissions.push(...this._authorize(userPermissions, nested)))
+        }
+
+        return missingPermissions;
+    }
+
+    public authenticate(ctx: Context, throwError: boolean = true): boolean {
+        if (!ctx.user) {
+            if (throwError) throw ErrorUnAuthenticate();
+            return false;
+        }
+        return true;
     }
 
     public sign<T extends object>(payload: T, expiresIn?: string): string {

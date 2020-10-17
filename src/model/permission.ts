@@ -1,9 +1,25 @@
-interface IPermission {
+export interface IToArrayable {
     toArray(): string[];
 }
 
-class PermissionByModule implements IPermission {
-    private _name: string;
+export abstract class ByModule {
+    public abstract toArray(): string[];
+    public validate(values: string[]): string[] {
+        const result: string[] = [];
+        const allValue = this.toArray();
+        values.forEach(e => {
+            if (!allValue.includes(e)) {
+                result.push(e);
+            }
+        })
+        return result;
+    }
+}
+
+enum PermissionEnum { list, create, update, delete, import, export }
+
+class PermissionByModule implements IToArrayable {
+    protected _name: string;
 
     constructor(name: string) {
         this._name = name;
@@ -33,42 +49,53 @@ class PermissionByModule implements IPermission {
         return this._name + '.export';
     }
 
+    get name(): string {
+        return this._name;
+    }
+
     public toArray() {
         return [this.list, this.create, this.update, this.delete, this.import, this.export];
     }
 }
 
-class FriendPermission implements IPermission {
-    get create(): string {
-        return 'friend' + '.create';
+class FriendPermission extends PermissionByModule {
+    constructor() {
+        super('friend')
     }
-
-    get delete(): string {
-        return 'friend' + '.delete';
-    }
-
     toArray(): string[] {
         return [this.create, this.delete];
     };
 }
 
-const permission = {
-    config: new PermissionByModule('config'),
-    user: new PermissionByModule('user'),
-    role: new PermissionByModule('role'),
-    post: new PermissionByModule('post'),
-    question: new PermissionByModule('question'),
-    friend: new FriendPermission(),
-    toArray: (): string[] => {
+class ChatPermission extends PermissionByModule {
+    constructor() {
+        super('chat')
+    }
+    toArray(): string[] {
+        return [this.create];
+    };
+}
+
+class Permission extends ByModule {
+    public config = new PermissionByModule('config');
+    public user = new PermissionByModule('user');
+    public role = new PermissionByModule('role');
+    public hobby = new PermissionByModule('hobby');
+    public friend = new FriendPermission();
+    public chat = new ChatPermission();
+
+    public toArray(): string[] {
         let array: string[] = [];
-        Object.values(permission).forEach((value) => {
-            if ('toArray' in value) {
+        Object.values(this).forEach((value) => {
+            if (typeof value === 'object' && 'toArray' in value) {
                 array.push(...value.toArray());
             }
         });
- 
+
         return array;
     }
 };
+
+const permission = new Permission();
 
 export { permission as Permission };

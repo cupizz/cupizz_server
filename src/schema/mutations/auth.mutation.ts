@@ -1,5 +1,5 @@
-import { arg, mutationField, objectType, stringArg } from "@nexus/schema";
-import { Config } from "../../config";
+import { arg, enumType, mutationField, objectType, stringArg } from "@nexus/schema";
+import { Config, ConstConfig } from "../../config";
 import { JwtAuthPayload } from "../../model/jwtPayload";
 import { JwtRegisterPayload } from "../../model/registerPayload";
 import { prisma } from "../../server";
@@ -11,25 +11,34 @@ export const LoginMutation = mutationField('login', {
     type: LoginOutputType,
     description: '[DONE]',
     args: {
-        email: stringArg(),
-        password: stringArg(),
+        email: stringArg({ nullable: true }),
+        password: stringArg({ nullable: true }),
+        deviceId: stringArg(),
     },
     resolve: async (_root, args, _ctx, _info) => {
-        return await UserService.authenticate(args.email, args.password);
+        return await AuthService.login('email', args.email, args.password, args.deviceId);
     }
 })
 
-export const LoginSocialNetwork = mutationField('loginSocialNetwork', { 
+export const LoginSocialNetwork = mutationField('loginSocialNetwork', {
     type: objectType({
         name: 'LoginSocialOutput',
         definition(t) {
+            t.field('tokenType', {
+                type: enumType({
+                    name: 'LoginSocialTokenType',
+                    members: ['register', 'login']
+                })
+            })
             t.string('token', { nullable: false })
+            t.field('data', { type: 'SocialProvider', nullable: true })
             t.field('info', { type: 'User', nullable: true })
         }
     }),
     args: {
         type: arg({ type: 'SocialProviderEnumType', nullable: false }),
         accessToken: stringArg({ nullable: false }),
+        deviceId: stringArg(),
     },
     resolve: async (_root, args, _ctx, _info) => {
         const socialData = await SocialNetworkService.login(args.type, args.accessToken);
@@ -40,20 +49,16 @@ export const LoginSocialNetwork = mutationField('loginSocialNetwork', {
         })
 
         if (socialProvider) {
+            const loginData = await AuthService.login(args.type, socialData.id, args.deviceId);
             return {
-                token: AuthService.sign<JwtAuthPayload>({ userId: socialProvider.userId }),
-                info: socialProvider.user
+                tokenType: 'login',
+                ...loginData
             }
         } else {
-            const user = await UserService.register(
-                AuthService.sign<JwtRegisterPayload>({ ...socialData }, Config.registerExpireTime),
-                {
-                    nickName: socialData.name || ''
-                }
-            )
             return {
-                token: AuthService.sign<JwtAuthPayload>({ userId: user.id }),
-                info: user
+                tokenType: 'register',
+                token: AuthService.sign<JwtRegisterPayload>({ ...socialData }, Config.registerExpireTime.value),
+                data: socialData
             }
         }
     }

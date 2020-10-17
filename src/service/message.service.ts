@@ -8,9 +8,10 @@ import Strings from '../constants/strings';
 import { FileUpload } from 'graphql-upload';
 import { FileService } from './file.service';
 import { OnesignalService } from './onesignal.service';
+import { Config } from '../config';
 
 class MessageService {
-    public async getConversation(ctx: Context, receiverId: number, include?: ConversationInclude) {
+    public async getConversation(ctx: Context, receiverId: string, include?: ConversationInclude) {
         AuthService.authenticate(ctx);
         let conversation = await prisma.conversation.findFirst({
             where: {
@@ -46,7 +47,25 @@ class MessageService {
         return conversation;
     }
 
-    public async getMessages(ctx: Context, otherUserId: number, pagination?: { take: number, skip?: number }) {
+    public async searchConversation(ctx: Context, keyword: string, page?: number) {
+        AuthService.authenticate(ctx);
+        const pageSize: number = Config.defaultPageSize.value || 10;
+        return await prisma.conversation.findMany({
+            where: {
+                messages: { some: { message: { contains: keyword } } }
+            },
+            include: {
+                messages: {
+                    where: { message: { contains: keyword } },
+                    take: 1
+                }
+            },
+            take: pageSize,
+            skip: pageSize * ((page ?? 1) - 1)
+        })
+    }
+
+    public async getMessages(ctx: Context, otherUserId: string, pagination?: { take: number, skip?: number }) {
         const conversation = await this.getConversation(ctx, otherUserId);
         return await prisma.message.findMany({
             where: { conversationId: conversation.id },
@@ -56,7 +75,7 @@ class MessageService {
     }
 
     public async sendMessage(ctx: Context, data: {
-        receiverId: number,
+        receiverId: string,
         message: string,
         attachments?: FileUpload[],
     }) {
@@ -129,7 +148,7 @@ class MessageService {
         }))
     }
 
-    private async _getUnreadMessageCount(conversationId: string, userId: number, lastReadMessage?: Message) {
+    private async _getUnreadMessageCount(conversationId: string, userId: string, lastReadMessage?: Message) {
         const _lastReadMessage: Message = lastReadMessage
             || (await prisma.conversationMember.findOne({
                 where: { conversationId_userId: { conversationId, userId } },
@@ -140,7 +159,7 @@ class MessageService {
             where: {
                 conversationId,
                 senderId: { not: userId },
-                createdAt: { gt: _lastReadMessage.createdAt }
+                ..._lastReadMessage ? { createdAt: { gt: _lastReadMessage.createdAt } } : {}
             }
         })
     }

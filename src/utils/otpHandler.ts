@@ -49,7 +49,7 @@ Hãy điền mã này vào ứng dụng để \ntiếp tục quá trình đăng 
         }
 
         return {
-            token: AuthService.sign(otpPayload, Config.otpExpireTime),
+            token: AuthService.sign(otpPayload, Config.otpExpireTime.value),
             otp: process.env.NODE_ENV == 'development' ? this._otp : null
         }
     }

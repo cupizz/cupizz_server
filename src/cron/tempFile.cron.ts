@@ -6,7 +6,7 @@ export default () => {
     var CronJob = require('cron').CronJob;
     // Hourly
     var job = new CronJob('0 * * * *', async () => {
-        fs.readdir(Config.tempPath, (err, fileNames) => {
+        fs.readdir(Config.tempPath.value, (err, fileNames) => {
             if (err) {
                 console.error('CronJob remove temp file Error:', err);
                 return;

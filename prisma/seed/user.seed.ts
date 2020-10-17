@@ -1,9 +1,9 @@
-import { PrismaClient, PrivateField, Gender, MustHaveField } from "@prisma/client";
+import { Gender, MustHaveField, PrismaClient, PrivateField } from "@prisma/client";
+import cliProgress from 'cli-progress';
 import faker from 'faker';
 import { Config } from "../../src/config";
 import { DefaultRole } from "../../src/model/role";
 import { PasswordHandler } from "../../src/utils/passwordHandler";
-import cliProgress from 'cli-progress';
 
 export const seedUser = async () => {
     const db = new PrismaClient();
@@ -14,10 +14,11 @@ export const seedUser = async () => {
 
     await Promise.all(Array.from(Array(200).keys())
         .map(async (_) => {
-            const minAgePrefer = faker.random.number({ min: Config.minAge, max: Config.maxAge });
-            const maxAgePrefer = faker.random.number({ min: minAgePrefer, max: Config.maxAge });
-            const minHeightPrefer = faker.random.number({ min: Config.minHeight, max: Config.maxHeight });
-            const maxHeightPrefer = faker.random.number({ min: minHeightPrefer, max: Config.maxHeight });
+            const minAgePrefer = faker.random.number({ min: Config.minAge.value, max: Config.maxAge.value });
+            const maxAgePrefer = faker.random.number({ min: minAgePrefer, max: Config.maxAge.value });
+            const minHeightPrefer = faker.random.number({ min: Config.minHeight.value, max: Config.maxHeight.value });
+            const maxHeightPrefer = faker.random.number({ min: minHeightPrefer, max: Config.maxHeight.value });
+            const allHobbies = await db.hobbyValue.findMany();
 
             await db.user.create({
                 data: {
@@ -26,7 +27,9 @@ export const seedUser = async () => {
                     password: PasswordHandler.encode('123456789'),
                     birthday: faker.date.between(1920, "2010"),
                     gender: getRandomSubarray(Object.values(Gender), 1)[0],
-                    hobbies: Array.from(Array(faker.random.number(10)).keys()).map(_ => faker.lorem.word()).join(Config.listSeparateSymbol),
+                    hobbies: {
+                        connect: getRandomSubarray(allHobbies, faker.random.number(allHobbies.length - 1)).map(e => ({ id: e.id }))
+                    },
                     phoneNumber: faker.phone.phoneNumber(),
                     job: faker.name.jobTitle(),
                     height: faker.random.number({ min: 150, max: 200 }),
@@ -36,7 +39,7 @@ export const seedUser = async () => {
                     minHeightPrefer,
                     maxHeightPrefer,
                     genderPrefer: { set: getRandomSubarray(Object.values(Gender), faker.random.number({ min: 1, max: Object.values(Gender).length })) },
-                    distancePrefer: faker.random.number({ min: Config.minDistance, max: Config.maxDistance }),
+                    distancePrefer: faker.random.number({ min: Config.minDistance.value, max: Config.maxDistance.value }),
                     mustHaveFields: { set: getRandomSubarray(Object.values(MustHaveField), faker.random.number(Object.values(MustHaveField).length)) },
                     allowMatching: faker.random.boolean(),
                     isPrivate: faker.random.boolean(),

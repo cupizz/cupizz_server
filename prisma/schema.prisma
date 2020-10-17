@@ -52,58 +52,67 @@ enum MustHaveField {
 }
 
 model User {
-  id                String              @default(uuid()) @id
-  password          String?
-  nickName          String
-  introduction      String?
-  birthday          DateTime?
-  gender            Gender?
-  hobbies           String?
-  phoneNumber       String?
-  job               String?
-  height            Int?
-  privateFields     PrivateField[]
-  minAgePrefer      Int?
-  maxAgePrefer      Int?
-  minHeightPrefer   Int?
-  maxHeightPrefer   Int?
-  genderPrefer      Gender[]
-  distancePrefer    Int?
-  mustHaveFields    MustHaveField[]
-  allowMatching     Boolean             @default(true)
-  isPrivate         Boolean             @default(false)
-  showActive        Boolean             @default(true)
-  avatar            File?               @relation("avatar", fields: [avatarId], references: [id])
-  avatarId          String?
-  role              Role                @relation(fields: [roleId], references: [id])
-  roleId            String
-  userImage         UserImage[]
-  senderMessage     Message[]           @relation("senderMessage")
-  socialProvider    SocialProvider[]
-  senderFriend      Friend[]            @relation("senderFriend")
-  receiverFriend    Friend[]            @relation("receiverFriend")
-  onlineStatus      OnlineStatus        @default(offline)
-  lastOnline        DateTime?
-  userAnswer        UserAnswer[]
-  dislikedUsers     DislikedUser[]      @relation("dislikedUser")
-  beDislikedByUsers DislikedUser[]      @relation("beDislikedByUser")
-  recommendableUser RecommendableUser[] @relation("recommendableUser")
-  recommendToUser   RecommendableUser[] @relation("recommendToUser")
-  conversationMembers      ConversationMember[]
-  updatedAt         DateTime            @updatedAt
-  createdAt         DateTime            @default(now())
-  deletedAt         DateTime?
+  id                  String               @id @default(uuid())
+  password            String?
+  nickName            String
+  introduction        String?
+  birthday            DateTime?
+  gender              Gender?
+  hobbies             HobbyValue[]
+  phoneNumber         String?
+  job                 String?
+  height              Int?
+  privateFields       PrivateField[]
+  minAgePrefer        Int?
+  maxAgePrefer        Int?
+  minHeightPrefer     Int?
+  maxHeightPrefer     Int?
+  genderPrefer        Gender[]
+  distancePrefer      Int?
+  mustHaveFields      MustHaveField[]
+  allowMatching       Boolean              @default(true)
+  isPrivate           Boolean              @default(false)
+  showActive          Boolean              @default(true)
+  avatar              File?                @relation("avatar", fields: [avatarId], references: [id])
+  avatarId            String?
+  role                Role                 @relation(fields: [roleId], references: [id])
+  roleId              String
+  userImage           UserImage[]
+  senderMessage       Message[]            @relation("senderMessage")
+  socialProvider      SocialProvider[]
+  senderFriend        Friend[]             @relation("senderFriend")
+  receiverFriend      Friend[]             @relation("receiverFriend")
+  onlineStatus        OnlineStatus         @default(offline)
+  lastOnline          DateTime?
+  userAnswer          UserAnswer[]
+  dislikedUsers       DislikedUser[]       @relation("dislikedUser")
+  beDislikedByUsers   DislikedUser[]       @relation("beDislikedByUser")
+  recommendableUser   RecommendableUser[]  @relation("recommendableUser")
+  recommendToUser     RecommendableUser[]  @relation("recommendToUser")
+  conversationMembers ConversationMember[]
+  updatedAt           DateTime             @updatedAt
+  createdAt           DateTime             @default(now())
+  deletedAt           DateTime?
+  userDeviceTokens    UserDeviceToken[]
+}
+
+model UserDeviceToken {
+  token    String   @id
+  user     User     @relation(fields: [userId], references: [id])
+  deviceId String?
+  userId   String
+  expireAt DateTime
 }
 
 model Question {
-  id         String       @default(cuid()) @id
+  id         String       @id @default(cuid())
   content    String
   userAnswer UserAnswer[]
   color      String
 }
 
 model UserAnswer {
-  id         String     @default(cuid()) @id
+  id         String     @id @default(cuid())
   question   Question   @relation(fields: [questionId], references: [id])
   questionId String
   color      String
@@ -115,17 +124,17 @@ model UserAnswer {
 }
 
 model UserImage {
-  @@id([userId, imageId])
   user         User        @relation(fields: [userId], references: [id])
   image        File        @relation(fields: [imageId], references: [id])
   userId       String
   imageId      String
   userAnswer   UserAnswer? @relation(fields: [userAnswerId], references: [id])
   userAnswerId String?
+
+  @@id([userId, imageId])
 }
 
 model SocialProvider {
-  @@id([id, type])
   id          String
   type        SocialProviderType
   user        User               @relation(fields: [userId], references: [id])
@@ -136,10 +145,11 @@ model SocialProvider {
   avatar      String?
   gender      Gender?
   birthday    DateTime?
+
+  @@id([id, type])
 }
 
 model Friend {
-  @@id([senderId, receiverId])
   sender      User      @relation("senderFriend", fields: [senderId], references: [id])
   receiver    User      @relation("receiverFriend", fields: [receiverId], references: [id])
   senderId    String
@@ -147,20 +157,24 @@ model Friend {
   sentAt      DateTime  @default(now())
   acceptedAt  DateTime?
   isSuperLike Boolean   @default(false)
+
+  @@id([senderId, receiverId])
 }
 
 model File {
-  id                String              @default(cuid()) @id
+  id                String              @id @default(cuid())
   type              FileType
   url               String
   thumbnail         String?
   userAvatar        User[]              @relation("avatar")
   userImage         UserImage[]
   messageAttachment MessageAttachment[]
+  Message           Message?            @relation(fields: [messageId], references: [id])
+  messageId         String?
 }
 
 model Role {
-  id          String   @unique @id
+  id          String   @id
   name        String
   description String?
   permissions String[]
@@ -201,24 +215,26 @@ model Message {
   createdAt               DateTime             @default(now())
   updatedAt               DateTime             @updatedAt
   lastReadMessageOfMember ConversationMember[]
+  MessageAttachment       MessageAttachment[]
 }
 
 model MessageAttachment {
-  @@id([messageId, fileId])
   message   Message @relation(fields: [messageId], references: [id])
   file      File    @relation(fields: [fileId], references: [id])
   messageId String
   fileId    String
+
+  @@id([messageId, fileId])
 }
 
 model PostCategory {
-  id    String @default(cuid()) @id
+  id    String @id @default(cuid())
   value String
   Post  Post[]
 }
 
 model Post {
-  id         Int          @default(autoincrement()) @id
+  id         Int          @id @default(autoincrement())
   category   PostCategory @relation(fields: [categoryId], references: [id])
   categoryId String
   comment    Comment[]
@@ -226,8 +242,7 @@ model Post {
 }
 
 model Comment {
-  @@unique([postId, index])
-  id            String    @default(cuid()) @id
+  id            String    @id @default(cuid())
   index         Int
   parentComment Comment?  @relation("ReplyToComment", fields: [parentId], references: [id])
   reply         Comment[] @relation("ReplyToComment")
@@ -237,10 +252,12 @@ model Comment {
   postId        Int
   createdAt     DateTime  @default(now())
   deletedAt     DateTime?
+
+  @@unique([postId, index])
 }
 
 model QnA {
-  id       Int    @default(autoincrement()) @id
+  id       Int    @id @default(autoincrement())
   question String
   answer   String
 }
@@ -258,6 +275,7 @@ model DislikedUser {
   userId         String
   dislikedUserId String
   dislikedAt     DateTime @default(now())
+
   @@id([userId, dislikedUserId])
 }
 
@@ -267,6 +285,14 @@ model RecommendableUser {
   recommendableUser   User   @relation("recommendToUser", fields: [recommendableUserId], references: [id])
   userId              String
   recommendableUserId String
+
   @@id([userId, recommendableUserId])
   @@unique([userId, sortOrder])
+}
+
+model HobbyValue {
+  id      String  @id @default(cuid())
+  value   String
+  isValid Boolean @default(true)
+  user    User[]
 }

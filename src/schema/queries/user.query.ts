@@ -45,7 +45,7 @@ export const FriendsQuery = queryField('friends', {
     },
     resolve: async (root, args, ctx, info) => {
         AuthService.authenticate(ctx);
-        const pageSize = Config.defaultPageSize;
+        const pageSize = Config.defaultPageSize.value;
         let where: FriendWhereInput;
 
         switch (args.type) {
@@ -94,7 +94,7 @@ export const RecommendableUsersQuery = queryField('recommendableUsers', {
     description: '[DONE]',
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
-        const pageSize = Config.defaultPageSize;
+        const pageSize = Config.defaultPageSize.value;
 
         const total = await prisma.recommendableUser.count({ where: { userId: ctx.user.id } });
         if (total == 0) {

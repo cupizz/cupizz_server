@@ -1,6 +1,8 @@
 import { enumType, inputObjectType, objectType } from "@nexus/schema";
+import { ConversationMember, User } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
-import { Config } from "../../config";
+import { Config, ConstConfig } from "../../config";
+import { prisma } from "../../server";
 import { UserService } from "../../service";
 import { Validator } from "../../utils/validator";
 
@@ -105,13 +107,7 @@ export const UserDataType = objectType({
         })
         t.model('User').introduction()
         t.model('User').gender()
-        t.field('hobbies', {
-            type: 'String',
-            list: true,
-            resolve: (root: any, args, ctx, info) => {
-                return root.hobbies.split(Config.listSeparateSymbol);
-            }
-        })
+        t.model('User').hobbies({ pagination: false, ordering: true })
         t.model('User').phoneNumber()
         t.model('User').job()
         t.model('User').height()
@@ -164,12 +160,12 @@ export const SocialProvider = objectType({
     definition(t) {
         t.model.id()
         t.model.type()
-        t.model.email()
-        t.model.phoneNumber()
-        t.model.name()
-        t.model.avatar()
-        t.model.gender()
-        t.model.birthday()
+        // t.model.email()
+        // t.model.phoneNumber()
+        // t.model.name()
+        // t.model.avatar()
+        // t.model.gender()
+        // t.model.birthday()
     }
 })
 
@@ -257,7 +253,7 @@ export const QuestionType = objectType({
 })
 
 export const UserAnswerType = objectType({
-    name: 'UserAnswer', 
+    name: 'UserAnswer',
     definition(t) {
         t.model.id()
         t.model.question()
@@ -269,15 +265,93 @@ export const UserAnswerType = objectType({
     }
 })
 
+export const ConversationType = objectType({
+    name: 'Conversation',
+    definition(t) {
+        t.model.id()
+        t.model.members()
+        t.field('data', {
+            type: 'ConversationData',
+            resolve: async (root, _args, _ctx, _info) => {
+                return await prisma.conversation.findOne({
+                    where: { id: root.id },
+                    include: { members: { include: { user: true } } }
+                });
+            }
+        })
+        t.field('personalData', {
+            type: 'PersonalConversationData',
+            resolve: async (root, _args, ctx, _info) => {
+                return await prisma.conversationMember.findOne({
+                    where: {
+                        conversationId_userId: {
+                            conversationId: root.id,
+                            userId: ctx.user.id
+                        }
+                    }
+                });
+            }
+        })
+        t.model.messages({ pagination: true, ordering: true })
+    }
+})
+
+export const ConversationDataType = objectType({
+    name: 'ConversationData',
+    definition(t) {
+        t.model("Conversation").name({
+            resolve: async (root: any, args, ctx, info, origin) => {
+                const data = await origin(root, args, ctx, info);
+                return data || (root.members as (ConversationMember & { user: User })[])
+                    .filter(e => e.userId !== ctx.user.id)
+                    .map(e => e.user.nickName)
+                    .join(', ') || 'Me';
+            }
+        })
+        t.field('newestMessage', {
+            type: 'Message',
+            nullable: true,
+            resolve: async (root: any, _args, _ctx, _info) => {
+                return await prisma.message.findFirst({
+                    where: { conversationId: root.id },
+                    orderBy: { createdAt: 'desc' }
+                })
+            }
+        })
+    }
+})
+
+export const PersonalConversationDataType = objectType({
+    name: 'PersonalConversationData',
+    definition(t) {
+        t.model("ConversationMember").unreadMessageCount({
+            resolve: async (root, args, ctx, info, origin) => {
+                const data = await origin(root, args, ctx, info);
+                return data || 0;
+            }
+        })
+        t.model("ConversationMember").lastReadMessage()
+    }
+})
+
+export const ConversationMemberType = objectType({
+    name: 'ConversationMember',
+    definition(t) {
+        t.model.user()
+        t.model.createdAt()
+        t.model.lastReadMessage()
+    }
+})
+
 export const MessageType = objectType({
     name: 'Message',
     definition(t) {
         t.model.id()
+        t.model.conversation()
         t.model.message()
         t.model.createdAt()
         t.model.updatedAt()
-        t.model.messageAttachment({ pagination: false })
-        t.model.receiver()
+        t.model.attachments({ pagination: false })
         t.model.sender()
     }
 })
@@ -366,3 +440,12 @@ export const AppConfigType = objectType({
         t.model.data()
     }
 })
+
+export const HobbyValuType = objectType({
+    name: 'HobbyValue',
+    definition(t) {
+        t.model.id()
+        t.model.value()
+    }
+})
+

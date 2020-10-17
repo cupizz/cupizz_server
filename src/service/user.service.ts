@@ -1,12 +1,11 @@
 
 import { ResultValue } from '@nexus/schema/dist/core';
-import { Friend, OnlineStatus, User, UserWhereInput, Gender } from '@prisma/client';
+import { Friend, Gender, OnlineStatus, User, UserWhereInput } from '@prisma/client';
 import { AuthService } from '.';
 import { Config } from '../config';
 import Strings from '../constants/strings';
 import SubscriptionKey from '../constants/subscriptionKey';
-import { ClientError, ErrorEmailExisted, ErrorEmailNotFound, ErrorIncorrectPassword, ErrorOtpIncorrect, ErrorTokenIncorrect, ValidationError } from '../model/error';
-import { JwtAuthPayload } from '../model/jwtPayload';
+import { ClientError, ErrorEmailExisted, ErrorOtpIncorrect, ErrorTokenIncorrect, ValidationError } from '../model/error';
 import { JwtRegisterPayload } from '../model/registerPayload';
 import { DefaultRole } from '../model/role';
 import { NexusGenAllTypes } from '../schema/generated/nexus';
@@ -18,32 +17,6 @@ import { PasswordHandler } from '../utils/passwordHandler';
 import { Validator } from '../utils/validator';
 
 class UserService {
-    public async authenticate(email: string, password: string): Promise<{ token: string, info: User }> {
-        Validator.email(email);
-        Validator.password(password);
-        let user = (await prisma.socialProvider.findOne({
-            where: {
-                id_type: {
-                    id: email,
-                    type: 'email'
-                }
-            }, include: { user: true }
-        }))?.user;
-
-        if (user) {
-            if (!PasswordHandler.compare(password, user.password)) {
-                throw ErrorIncorrectPassword;
-            }
-            this.updateOnlineStatus(user);
-
-            return {
-                token: AuthService.sign({ userId: user.id } as JwtAuthPayload),
-                info: user
-            };
-        }
-        throw ErrorEmailNotFound;
-    }
-
     /**
      * @returns OTP chỉ được trả về trong môi trường dev, vì thế sử dụng cẩn thận
      */
@@ -78,7 +51,7 @@ class UserService {
 
         const registerPayload: JwtRegisterPayload = { type: 'email', id: email }
 
-        return AuthService.sign(registerPayload, Config.registerExpireTime);
+        return AuthService.sign(registerPayload, Config.registerExpireTime.value);
     }
 
     public async register(token: string, data: {
@@ -262,15 +235,15 @@ class UserService {
         const now = new Date();
         const birthdayCondition: { min: Date, max: Date } =
         {
-            min: new Date(now.getUTCFullYear() - (user.maxAgePrefer || Config.maxAge), 0, 1),
-            max: new Date(now.getUTCFullYear() - (user.minAgePrefer || Config.minAge), 11, 31),
+            min: new Date(now.getUTCFullYear() - (user.maxAgePrefer || Config.maxAge.value), 0, 1),
+            max: new Date(now.getUTCFullYear() - (user.minAgePrefer || Config.minAge.value), 11, 31),
         };
 
 
         const where: UserWhereInput = {
             NOT: { OR: [userId, ...friendIds].map(e => ({ id: { equals: e } })) },
             birthday: { lte: birthdayCondition.max, gte: birthdayCondition.min },
-            height: { lte: user.maxHeightPrefer || Config.maxHeight, gte: user.minHeightPrefer || Config.minHeight },
+            height: { lte: user.maxHeightPrefer || Config.maxHeight.value, gte: user.minHeightPrefer || Config.minHeight.value },
             gender: { in: user.genderPrefer.length > 0 ? user.genderPrefer : Object.values(Gender) },
             id: { notIn: user.dislikedUsers.map(e => e.dislikedUserId) },
             allowMatching: true,

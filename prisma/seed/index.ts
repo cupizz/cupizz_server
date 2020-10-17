@@ -11,14 +11,14 @@ const seed = async () => {
     await seedAppConfig();
     console.log('Seeded App configs');
     await seedRole();
-    console.log('Seeded Roles');
+    const allHobbies = await db.hobbyValue.findMany();
     await db.user.create({
         data: {
             nickName: 'Hien',
             password: PasswordHandler.encode('abc123456'),
             birthday: new Date(1998, 1, 1),
             gender: 'male',
-            hobbies: '',
+            allowMatching: false,
             introduction: 'Hien Pro',
             avatar: {
                 create: {

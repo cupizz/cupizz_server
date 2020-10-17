@@ -1,10 +1,10 @@
-import { intArg, objectType, queryField, stringArg } from "@nexus/schema";
+import { idArg, intArg, objectType, queryField, stringArg } from "@nexus/schema";
 import { Message } from "@prisma/client";
 import { ForbiddenError } from "apollo-server-express";
 import { Config } from "../../config";
 import Strings from "../../constants/strings";
 import { prisma } from "../../server";
-import { AuthService } from "../../service";
+import { AuthService, MessageService } from "../../service";
 
 export const MyConversationsQuery = queryField('myConversations', {
     type: 'Conversation',
@@ -20,21 +20,32 @@ export const MyConversationsQuery = queryField('myConversations', {
 
 export const conversationQuery = queryField('conversation', {
     type: 'Conversation',
+    description: 'Truyền 1 trong 2: conversationId hoặc otherUserId',
     args: {
-        conversationId: stringArg({ nullable: false })
+        conversationId: idArg(),
+        otherUserId: idArg(),
     },
-    resolve: async (_root, _args, ctx, _info) => {
+    resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
-        const conversation = await prisma.conversation.findOne({
-            where: { id: _args.conversationId },
-            include: { members: true }
-        })
-
-        if (!conversation.members.map(e => e.userId).includes(ctx.user.id)) {
-            throw new ForbiddenError(Strings.error.unAuthorize);
+        if(!args.conversationId && !args.otherUserId) {
+            throw new Error("Please provide conversationId or otherUserId.")
         }
 
-        return conversation;
+        if (args.conversationId) {
+            const conversation = await prisma.conversation.findOne({
+                where: { id: args.conversationId },
+                include: { members: true }
+            })
+
+            if (!conversation.members.map(e => e.userId).includes(ctx.user.id)) {
+                throw new ForbiddenError(Strings.error.unAuthorize);
+            }
+
+            return conversation;
+        } else {
+            return await MessageService.getConversation(ctx, args.otherUserId);
+        }
+
     }
 })
 
@@ -53,7 +64,7 @@ export const messagesQuery = queryField('messages', {
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
-        const pageSize = Config.defaultPageSize;
+        const pageSize = Config.defaultPageSize.value;
         let messages: Message[] = [];
         let currentPage = args.page ?? 1;
         let focusMessage = !args.focusMessageId

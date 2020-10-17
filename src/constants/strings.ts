@@ -15,7 +15,9 @@ export default class Strings {
         tempFileNotFound: (fileName?: string) => `Temp file ${fileName} not found`,
         cannotDoOnYourself: 'Cannot do on yourself',
         cannotAddFriendTwice: 'Cannot add friend twice',
-        youWereBothFriendOfEachOther: 'You were both friend of each other',   
-        youWereBothNotFriendOfEachOther: 'You were both not friend of each other',   
+        youWereBothFriendOfEachOther: 'You were both friend of each other',
+        youWereBothNotFriendOfEachOther: 'You were both not friend of each other',
+        accountHasBeenDeleted: 'Account has been deleted',
+        cannotSendMessageToThisConversation: 'Cannot send message to this conversation'
     }
 }
