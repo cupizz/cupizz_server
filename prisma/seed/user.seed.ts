@@ -13,7 +13,7 @@ export const seedUser = async () => {
     userProcessBar.start(200, seededUser);
 
     await Promise.all(Array.from(Array(200).keys())
-        .map(async (_) => {
+        .map(async (_, i) => {
             const minAgePrefer = faker.random.number({ min: Config.minAge.value, max: Config.maxAge.value });
             const maxAgePrefer = faker.random.number({ min: minAgePrefer, max: Config.maxAge.value });
             const minHeightPrefer = faker.random.number({ min: Config.minHeight.value, max: Config.maxHeight.value });
@@ -47,15 +47,21 @@ export const seedUser = async () => {
                     avatar: {
                         create: {
                             type: 'image',
-                            url: faker.image.avatar()
+                            url: getRandomImage(0.5)
                         }
                     },
-                    userImage: { create: Array.from(Array(faker.random.number(9)).keys()).map(_ => ({ image: { create: { type: 'image', url: faker.image.people() } } })) },
+                    cover: {
+                        create: {
+                            type: 'image',
+                            url: getRandomImage()
+                        }
+                    },
+                    userImages: { create: Array.from(Array(faker.random.number(9)).keys()).map(_ => ({ image: { create: { type: 'image', url: faker.image.people() } } })) },
                     lastOnline: faker.date.recent(),
                     role: { connect: { id: faker.random.boolean() ? DefaultRole.normal.id : DefaultRole.trial.id } },
                     socialProvider: {
                         create: {
-                            id: faker.internet.email(faker.random.word()),
+                            id: `test${i}@gmail.com`,
                             type: 'email',
                         }
                     },
@@ -110,4 +116,10 @@ function getRandomSubarray<T>(arr: T[], size: number): T[] {
         shuffled[i] = temp;
     }
     return shuffled.slice(min);
+}
+
+function getRandomImage(scale: number = 1): string {
+    const height = faker.random.number({ min: 640 * scale, max: 1280 * scale });
+    const width = faker.random.number({ min: 640 * scale, max: 1280 * scale });
+    return `https://loremflickr.com/${height}/${width}/girl?lock=${faker.random.number(10000)}`
 }

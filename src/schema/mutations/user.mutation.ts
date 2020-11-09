@@ -1,5 +1,6 @@
 import { arg, booleanArg, idArg, intArg, mutationField, stringArg } from "@nexus/schema";
-import Strings from "../../constants/strings";
+import { FileCreateInput } from '@prisma/client';
+import { ConstConfig } from "../../config";
 import { ClientError, ErrorNotFound } from "../../model/error";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
@@ -7,9 +8,6 @@ import { AuthService, UserService } from "../../service";
 import { FileService } from "../../service/file.service";
 import { SocialNetworkService } from "../../service/socialNetwork.service";
 import { Validator } from "../../utils/validator";
-import { FriendStatusEnum } from "../types";
-import { FileCreateInput } from '@prisma/client';
-import { Config, ConstConfig } from "../../config";
 
 export const UpdateProfileMutation = mutationField('updateProfile', {
     type: 'User',
@@ -17,7 +15,7 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         nickname: stringArg(),
         introduction: stringArg(),
         gender: arg({ type: 'Gender' }),
-        hobbies: stringArg({ list: true }),
+        hobbieIds: stringArg({ list: true }),
         phoneNumber: stringArg(),
         job: stringArg(),
         height: intArg(),
@@ -38,8 +36,8 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
             where: { id: ctx.user.id },
             data: {
                 ...args,
-                hobbies: args.hobbies.join(ConstConfig.listSeparateSymbol),
-                privateFields: { set: args.privateFields },
+                ...args.hobbieIds ? { hobbies: { connect: args.hobbieIds.map(e => ({ id: e })) } } : {},
+                ...args.privateFields ? { privateFields: { set: args.privateFields } } : {},
                 ...avatar ? { avatar: { create: avatar } } : {}
             }
         })
@@ -155,7 +153,7 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
 
-        if(!await prisma.question.findOne({where: {id: args.questionId}})) {
+        if (!await prisma.question.findOne({ where: { id: args.questionId } })) {
             throw ErrorNotFound('Question not found');
         }
 

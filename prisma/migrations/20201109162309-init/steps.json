@@ -414,6 +414,73 @@
     {
       "tag": "CreateField",
       "model": "User",
+      "field": "cover",
+      "type": "File",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "cover"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "cover"
+        },
+        "directive": "relation"
+      },
+      "argument": "",
+      "value": "\"cover\""
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "cover"
+        },
+        "directive": "relation"
+      },
+      "argument": "fields",
+      "value": "[coverId]"
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "cover"
+        },
+        "directive": "relation"
+      },
+      "argument": "references",
+      "value": "[id]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "coverId",
+      "type": "String",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
       "field": "role",
       "type": "Role",
       "arity": "Required"
@@ -467,7 +534,7 @@
     {
       "tag": "CreateField",
       "model": "User",
-      "field": "userImage",
+      "field": "userImages",
       "type": "UserImage",
       "arity": "List"
     },
@@ -1902,6 +1969,38 @@
       "field": "messageId",
       "type": "String",
       "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "File",
+      "field": "userCover",
+      "type": "User",
+      "arity": "List"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "File",
+          "field": "userCover"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "File",
+          "field": "userCover"
+        },
+        "directive": "relation"
+      },
+      "argument": "",
+      "value": "\"cover\""
     },
     {
       "tag": "CreateModel",

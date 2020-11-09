@@ -75,9 +75,11 @@ model User {
   showActive          Boolean              @default(true)
   avatar              File?                @relation("avatar", fields: [avatarId], references: [id])
   avatarId            String?
+  cover               File?                @relation("cover", fields: [coverId], references: [id])
+  coverId             String?
   role                Role                 @relation(fields: [roleId], references: [id])
   roleId              String
-  userImage           UserImage[]
+  userImages          UserImage[]
   senderMessage       Message[]            @relation("senderMessage")
   socialProvider      SocialProvider[]
   senderFriend        Friend[]             @relation("senderFriend")
@@ -171,6 +173,7 @@ model File {
   messageAttachment MessageAttachment[]
   Message           Message?            @relation(fields: [messageId], references: [id])
   messageId         String?
+  userCover         User[]              @relation("cover")
 }
 
 model Role {
