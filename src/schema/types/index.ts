@@ -117,8 +117,9 @@ export const UserDataType = objectType({
         t.model('User').distancePrefer()
         t.model('User').distancePrefer()
         t.model('User').avatar()
+        t.model('User').cover()
         t.model('User').role()
-        t.model('User').userImage({ pagination: false })
+        t.model('User').userImages({ pagination: false })
         t.model('User').socialProvider({ pagination: false })
         t.field('friendType', {
             type: FriendType,
