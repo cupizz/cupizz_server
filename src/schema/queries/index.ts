@@ -23,5 +23,6 @@ export const PublicQueries = queryType({
                 };
             }
         })
+        t.crud.hobbyValues({ alias: 'hobbies', pagination: { take: true, skip: true } })
     }
 })
