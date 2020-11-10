@@ -12,7 +12,7 @@ import { Validator } from "../../utils/validator";
 export const UpdateProfileMutation = mutationField('updateProfile', {
     type: 'User',
     args: {
-        nickname: stringArg(),
+        nickName: stringArg(),
         introduction: stringArg(),
         gender: arg({ type: 'Gender' }),
         hobbieIds: stringArg({ list: true }),
