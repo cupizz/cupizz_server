@@ -63,8 +63,8 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
             where: { id: ctx.user.id },
             data: {
                 ...args,
-                genderPrefer: { set: args.genderPrefer },
-                mustHaveFields: { set: args.mustHaveFields }
+                genderPrefer: args.genderPrefer ? { set: args.genderPrefer } : undefined,
+                mustHaveFields: args.mustHaveFields ? { set: args.mustHaveFields } : undefined
             }
         })
         return user;
