@@ -1,11 +1,13 @@
 
 import { ResultValue } from '@nexus/schema/dist/core';
 import { Friend, Gender, OnlineStatus, User, UserWhereInput } from '@prisma/client';
-import { AuthService } from '.';
+import { AuthService, NotificationService } from '.';
 import { Config } from '../config';
 import Strings from '../constants/strings';
 import SubscriptionKey from '../constants/subscriptionKey';
+import { Context } from '../context';
 import { ClientError, ErrorEmailExisted, ErrorOtpIncorrect, ErrorTokenIncorrect, ValidationError } from '../model/error';
+import { Permission } from '../model/permission';
 import { JwtRegisterPayload } from '../model/registerPayload';
 import { DefaultRole } from '../model/role';
 import { NexusGenAllTypes } from '../schema/generated/nexus';
@@ -15,6 +17,7 @@ import { logger } from '../utils/logger';
 import OtpHandler from '../utils/otpHandler';
 import { PasswordHandler } from '../utils/passwordHandler';
 import { Validator } from '../utils/validator';
+import { RecommendService } from './recommend.service';
 
 class UserService {
     /**
@@ -161,115 +164,62 @@ class UserService {
             case FriendStatusEnum.me:
                 throw ClientError(Strings.error.cannotDoOnYourself);
             case FriendStatusEnum.none:
-                return {
-                    status: 'sent',
-                    data: await prisma.friend.create({
-                        data: {
-                            receiver: { connect: { id: otherUserId } },
-                            sender: { connect: { id: currentUserId } },
-                            isSuperLike: isSuperLike
-                        }
-                    })
-                }
+                const sentData = await prisma.friend.create({
+                    data: {
+                        receiver: { connect: { id: otherUserId } },
+                        sender: { connect: { id: currentUserId } },
+                        isSuperLike: isSuperLike
+                    },
+                    include: { sender: true, receiver: true }
+                });
+                RecommendService.regenerateRecommendableUsers(currentUserId)
+                NotificationService.sendLikeOrMatchingNotify('like', sentData.sender, sentData.receiver)
+                return { status: 'sent', data: sentData }
             case FriendStatusEnum.sent:
+                RecommendService.regenerateRecommendableUsers(currentUserId)
                 throw ClientError(Strings.error.cannotAddFriendTwice);
             case FriendStatusEnum.received:
-                return {
-                    status: 'friend',
-                    data: await prisma.friend.update({
-                        where: {
-                            senderId_receiverId: {
-                                receiverId: currentUserId,
-                                senderId: otherUserId
-                            }
-                        },
-                        data: { acceptedAt: new Date() }
-                    })
-                }
+                const friendData = await prisma.friend.update({
+                    where: {
+                        senderId_receiverId: {
+                            receiverId: currentUserId,
+                            senderId: otherUserId
+                        }
+                    },
+                    data: { acceptedAt: new Date() },
+                    include: { sender: true, receiver: true }
+                })
+                NotificationService.sendLikeOrMatchingNotify('matching', friendData.receiver, friendData.sender)
+                return { status: 'friend', data: sentData }
             case FriendStatusEnum.friend:
                 throw new Error(Strings.error.youWereBothFriendOfEachOther);
         }
     }
 
-    public async removeFriend(currentUserId: string, otherUserId: string): Promise<NexusGenAllTypes['FriendType']> {
-        const friendData = await this.getFriendStatus(currentUserId, otherUserId);
+    public async removeFriend(ctx: Context, targetUserId: string): Promise<void> {
+        AuthService.authenticate(ctx);
+        const friendData = await this.getFriendStatus(ctx.user.id, targetUserId);
         switch (friendData.status) {
             case FriendStatusEnum.me:
                 throw ClientError(Strings.error.cannotDoOnYourself);
             case FriendStatusEnum.none:
-                throw ClientError(Strings.error.youWereBothNotFriendOfEachOther);
+                await RecommendService.dislikeUser(ctx, targetUserId);
             default:
                 await prisma.friend.deleteMany({
                     where: {
                         OR: [
                             {
-                                senderId: currentUserId,
-                                receiverId: otherUserId,
+                                senderId: ctx.user.id,
+                                receiverId: targetUserId,
                             },
                             {
-                                senderId: otherUserId,
-                                receiverId: currentUserId,
+                                senderId: targetUserId,
+                                receiverId: ctx.user.id,
                             },
                         ]
                     }
                 })
-                return friendData;
         }
-    }
-
-    public async generateRecommendableUsers(userId: string, saveToDb: boolean = true): Promise<User[]> {
-        const user = await prisma.user.findOne({
-            where: { id: userId },
-            include: {
-                senderFriend: true,
-                receiverFriend: true,
-                dislikedUsers: true,
-            }
-        });
-        const friendIds: string[] = [];
-        friendIds.push(
-            ...user.senderFriend.map(e => e.receiverId),
-            ...user.receiverFriend.map(e => e.senderId)
-        );
-
-        const now = new Date();
-        const birthdayCondition: { min: Date, max: Date } =
-        {
-            min: new Date(now.getUTCFullYear() - (user.maxAgePrefer || Config.maxAge.value), 0, 1),
-            max: new Date(now.getUTCFullYear() - (user.minAgePrefer || Config.minAge.value), 11, 31),
-        };
-
-
-        const where: UserWhereInput = {
-            NOT: { OR: [userId, ...friendIds].map(e => ({ id: { equals: e } })) },
-            birthday: { lte: birthdayCondition.max, gte: birthdayCondition.min },
-            height: { lte: user.maxHeightPrefer || Config.maxHeight.value, gte: user.minHeightPrefer || Config.minHeight.value },
-            gender: { in: user.genderPrefer.length > 0 ? user.genderPrefer : Object.values(Gender) },
-            id: { notIn: user.dislikedUsers.map(e => e.dislikedUserId) },
-            allowMatching: true,
-            isPrivate: false,
-            deletedAt: null,
-        }
-
-        const result = await prisma.user.findMany({ where, take: 20 });
-
-        if (saveToDb) {
-            let currentCount = 0;
-            if (await prisma.recommendableUser.count({ where: { userId } }) > 0) {
-                await prisma.recommendableUser.deleteMany({ where: { userId, sortOrder: { not: 1 } } });
-                currentCount = 1;
-            }
-
-            await Promise.all(result.map(async (e, i) => await prisma.recommendableUser.create({
-                data: {
-                    user: { connect: { id: userId } },
-                    sortOrder: i + currentCount + 1,
-                    recommendableUser: { connect: { id: e.id } }
-                }
-            })))
-        }
-
-        return result;
     }
 }
 

@@ -4,3 +4,4 @@ export * from './onesignal.service';
 export * from './message.service';
 export * from './socialNetwork.service';
 export * from './file.service';
+export * from './notification.service';

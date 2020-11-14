@@ -7,7 +7,8 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["transactionApi"]
 }
 
 enum Gender {
@@ -51,51 +52,63 @@ enum MustHaveField {
   gender
 }
 
+enum NotificationType {
+  like
+  matching
+  newMessage
+  other
+}
+
 model User {
-  id                  String               @id @default(uuid())
-  password            String?
-  nickName            String
-  introduction        String?
-  birthday            DateTime?
-  gender              Gender?
-  hobbies             HobbyValue[]
-  phoneNumber         String?
-  job                 String?
-  height              Int?
-  privateFields       PrivateField[]
-  minAgePrefer        Int?
-  maxAgePrefer        Int?
-  minHeightPrefer     Int?
-  maxHeightPrefer     Int?
-  genderPrefer        Gender[]
-  distancePrefer      Int?
-  mustHaveFields      MustHaveField[]
-  allowMatching       Boolean              @default(true)
-  isPrivate           Boolean              @default(false)
-  showActive          Boolean              @default(true)
-  avatar              File?                @relation("avatar", fields: [avatarId], references: [id])
-  avatarId            String?
-  cover               File?                @relation("cover", fields: [coverId], references: [id])
-  coverId             String?
-  role                Role                 @relation(fields: [roleId], references: [id])
-  roleId              String
-  userImages          UserImage[]
-  senderMessage       Message[]            @relation("senderMessage")
-  socialProvider      SocialProvider[]
-  senderFriend        Friend[]             @relation("senderFriend")
-  receiverFriend      Friend[]             @relation("receiverFriend")
-  onlineStatus        OnlineStatus         @default(offline)
-  lastOnline          DateTime?
-  userAnswer          UserAnswer[]
-  dislikedUsers       DislikedUser[]       @relation("dislikedUser")
-  beDislikedByUsers   DislikedUser[]       @relation("beDislikedByUser")
-  recommendableUser   RecommendableUser[]  @relation("recommendableUser")
-  recommendToUser     RecommendableUser[]  @relation("recommendToUser")
-  conversationMembers ConversationMember[]
-  updatedAt           DateTime             @updatedAt
-  createdAt           DateTime             @default(now())
-  deletedAt           DateTime?
-  userDeviceTokens    UserDeviceToken[]
+  id                      String                 @id @default(uuid())
+  password                String?
+  nickName                String
+  introduction            String?
+  birthday                DateTime?
+  gender                  Gender?
+  hobbies                 HobbyValue[]
+  phoneNumber             String?
+  job                     String?
+  height                  Int?
+  longitude               Float?
+  latitude                Float?
+  privateFields           PrivateField[]
+  minAgePrefer            Int                    @default(18)
+  maxAgePrefer            Int                    @default(30)
+  minHeightPrefer         Int                    @default(150)
+  maxHeightPrefer         Int                    @default(180)
+  genderPrefer            Gender[]
+  distancePrefer          Int                    @default(100)
+  mustHaveFields          MustHaveField[]
+  allowMatching           Boolean                @default(true)
+  isPrivate               Boolean                @default(false)
+  showActive              Boolean                @default(true)
+  pushNotiSetting         NotificationType[]
+  avatar                  File?                  @relation("avatar", fields: [avatarId], references: [id])
+  avatarId                String?
+  cover                   File?                  @relation("cover", fields: [coverId], references: [id])
+  coverId                 String?
+  role                    Role                   @relation(fields: [roleId], references: [id])
+  roleId                  String
+  userImages              UserImage[]
+  senderMessage           Message[]              @relation("senderMessage")
+  socialProvider          SocialProvider[]
+  senderFriend            Friend[]               @relation("senderFriend")
+  receiverFriend          Friend[]               @relation("receiverFriend")
+  onlineStatus            OnlineStatus           @default(offline)
+  lastOnline              DateTime?
+  userAnswer              UserAnswer[]
+  dislikedUsers           DislikedUser[]         @relation("dislikedUser")
+  beDislikedByUsers       DislikedUser[]         @relation("beDislikedByUser")
+  recommendableUser       RecommendableUser[]    @relation("recommendableUser")
+  recommendToUser         RecommendableUser[]    @relation("recommendToUser")
+  conversationMembers     ConversationMember[]
+  updatedAt               DateTime               @updatedAt
+  createdAt               DateTime               @default(now())
+  deletedAt               DateTime?
+  userDeviceTokens        UserDeviceToken[]
+  refUserInNotifications  Notification[]         @relation("refUser")
+  receiverOfNotifications NotificationReceiver[]
 }
 
 model UserDeviceToken {
@@ -189,6 +202,7 @@ model Conversation {
   name      String?
   members   ConversationMember[]
   messages  Message[]
+  isHidden  Boolean              @default(true)
   createdAt DateTime             @default(now())
   updatedAt DateTime             @default(now()) @updatedAt
 }
@@ -203,13 +217,14 @@ model ConversationMember {
   messageId          String?
   unreadMessageCount Int          @default(0)
   isAdmin            Boolean      @default(false)
+  isCurrentlyInChat  Boolean      @default(false)
 
   @@id([conversationId, userId])
 }
 
 model Message {
   id                      String               @id @default(cuid())
-  message                 String
+  message                 String?
   attachments             File[]
   sender                  User                 @relation("senderMessage", fields: [senderId], references: [id])
   senderId                String
@@ -217,6 +232,7 @@ model Message {
   conversationId          String
   createdAt               DateTime             @default(now())
   updatedAt               DateTime             @updatedAt
+  deletedAt               DateTime?
   lastReadMessageOfMember ConversationMember[]
   MessageAttachment       MessageAttachment[]
 }
@@ -283,14 +299,14 @@ model DislikedUser {
 }
 
 model RecommendableUser {
-  sortOrder           Int
-  user                User   @relation("recommendableUser", fields: [userId], references: [id])
-  recommendableUser   User   @relation("recommendToUser", fields: [recommendableUserId], references: [id])
+  user                User     @relation("recommendableUser", fields: [userId], references: [id])
+  recommendableUser   User     @relation("recommendToUser", fields: [recommendableUserId], references: [id])
   userId              String
   recommendableUserId String
+  createdAt           DateTime @default(now())
+  index               Int      @default(0)
 
   @@id([userId, recommendableUserId])
-  @@unique([userId, sortOrder])
 }
 
 model HobbyValue {
@@ -298,4 +314,26 @@ model HobbyValue {
   value   String
   isValid Boolean @default(true)
   user    User[]
+}
+
+model Notification {
+  id        String                 @id @default(cuid())
+  type      NotificationType
+  refUser   User?                  @relation("refUser", fields: [refUserId], references: [id])
+  refUserId String?
+  title     String?
+  subtitle  String?
+  content   String?
+  receivers NotificationReceiver[]
+  createdAt DateTime               @default(now())
+}
+
+model NotificationReceiver {
+  notification   Notification @relation(fields: [notificationId], references: [id])
+  notificationId String
+  receiver       User         @relation(fields: [receiverId], references: [id])
+  receiverId     String
+  readAt         DateTime?
+
+  @@id([notificationId, receiverId])
 }

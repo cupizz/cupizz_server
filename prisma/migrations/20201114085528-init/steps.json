@@ -61,6 +61,16 @@
       ]
     },
     {
+      "tag": "CreateEnum",
+      "enum": "NotificationType",
+      "values": [
+        "like",
+        "matching",
+        "newMessage",
+        "other"
+      ]
+    },
+    {
       "tag": "CreateSource",
       "source": "db"
     },
@@ -195,6 +205,20 @@
     {
       "tag": "CreateField",
       "model": "User",
+      "field": "longitude",
+      "type": "Float",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "latitude",
+      "type": "Float",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
       "field": "privateFields",
       "type": "PrivateField",
       "arity": "List"
@@ -204,28 +228,128 @@
       "model": "User",
       "field": "minAgePrefer",
       "type": "Int",
-      "arity": "Optional"
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "minAgePrefer"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "minAgePrefer"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "18"
     },
     {
       "tag": "CreateField",
       "model": "User",
       "field": "maxAgePrefer",
       "type": "Int",
-      "arity": "Optional"
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "maxAgePrefer"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "maxAgePrefer"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "30"
     },
     {
       "tag": "CreateField",
       "model": "User",
       "field": "minHeightPrefer",
       "type": "Int",
-      "arity": "Optional"
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "minHeightPrefer"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "minHeightPrefer"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "150"
     },
     {
       "tag": "CreateField",
       "model": "User",
       "field": "maxHeightPrefer",
       "type": "Int",
-      "arity": "Optional"
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "maxHeightPrefer"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "maxHeightPrefer"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "180"
     },
     {
       "tag": "CreateField",
@@ -239,7 +363,32 @@
       "model": "User",
       "field": "distancePrefer",
       "type": "Int",
-      "arity": "Optional"
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "distancePrefer"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "distancePrefer"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "100"
     },
     {
       "tag": "CreateField",
@@ -343,6 +492,13 @@
       },
       "argument": "",
       "value": "true"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "pushNotiSetting",
+      "type": "NotificationType",
+      "arity": "List"
     },
     {
       "tag": "CreateField",
@@ -884,6 +1040,45 @@
       "model": "User",
       "field": "userDeviceTokens",
       "type": "UserDeviceToken",
+      "arity": "List"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "refUserInNotifications",
+      "type": "Notification",
+      "arity": "List"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "refUserInNotifications"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "User",
+          "field": "refUserInNotifications"
+        },
+        "directive": "relation"
+      },
+      "argument": "",
+      "value": "\"refUser\""
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "receiverOfNotifications",
+      "type": "NotificationReceiver",
       "arity": "List"
     },
     {
@@ -2123,6 +2318,38 @@
     {
       "tag": "CreateField",
       "model": "Conversation",
+      "field": "isHidden",
+      "type": "Boolean",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Conversation",
+          "field": "isHidden"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Conversation",
+          "field": "isHidden"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "true"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Conversation",
       "field": "createdAt",
       "type": "DateTime",
       "arity": "Required"
@@ -2455,6 +2682,38 @@
       "value": "false"
     },
     {
+      "tag": "CreateField",
+      "model": "ConversationMember",
+      "field": "isCurrentlyInChat",
+      "type": "Boolean",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "ConversationMember",
+          "field": "isCurrentlyInChat"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "ConversationMember",
+          "field": "isCurrentlyInChat"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "false"
+    },
+    {
       "tag": "CreateDirective",
       "location": {
         "path": {
@@ -2529,7 +2788,7 @@
       "model": "Message",
       "field": "message",
       "type": "String",
-      "arity": "Required"
+      "arity": "Optional"
     },
     {
       "tag": "CreateField",
@@ -2707,6 +2966,13 @@
         },
         "directive": "updatedAt"
       }
+    },
+    {
+      "tag": "CreateField",
+      "model": "Message",
+      "field": "deletedAt",
+      "type": "DateTime",
+      "arity": "Optional"
     },
     {
       "tag": "CreateField",
@@ -3602,13 +3868,6 @@
     {
       "tag": "CreateField",
       "model": "RecommendableUser",
-      "field": "sortOrder",
-      "type": "Int",
-      "arity": "Required"
-    },
-    {
-      "tag": "CreateField",
-      "model": "RecommendableUser",
       "field": "user",
       "type": "User",
       "arity": "Required"
@@ -3741,6 +4000,70 @@
       "arity": "Required"
     },
     {
+      "tag": "CreateField",
+      "model": "RecommendableUser",
+      "field": "createdAt",
+      "type": "DateTime",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "RecommendableUser",
+          "field": "createdAt"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "RecommendableUser",
+          "field": "createdAt"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "now()"
+    },
+    {
+      "tag": "CreateField",
+      "model": "RecommendableUser",
+      "field": "index",
+      "type": "Int",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "RecommendableUser",
+          "field": "index"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "RecommendableUser",
+          "field": "index"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "0"
+    },
+    {
       "tag": "CreateDirective",
       "location": {
         "path": {
@@ -3762,22 +4085,6 @@
       },
       "argument": "",
       "value": "[userId, recommendableUserId]"
-    },
-    {
-      "tag": "CreateDirective",
-      "location": {
-        "path": {
-          "tag": "Model",
-          "model": "RecommendableUser",
-          "arguments": [
-            {
-              "name": "",
-              "value": "[userId, sortOrder]"
-            }
-          ]
-        },
-        "directive": "unique"
-      }
     },
     {
       "tag": "CreateModel",
@@ -3871,6 +4178,327 @@
       "field": "user",
       "type": "User",
       "arity": "List"
+    },
+    {
+      "tag": "CreateModel",
+      "model": "Notification"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Notification",
+      "field": "id",
+      "type": "String",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Notification",
+          "field": "id"
+        },
+        "directive": "id"
+      }
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Notification",
+          "field": "id"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Notification",
+          "field": "id"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "cuid()"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Notification",
+      "field": "type",
+      "type": "NotificationType",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Notification",
+      "field": "refUser",
+      "type": "User",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Notification",
+          "field": "refUser"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Notification",
+          "field": "refUser"
+        },
+        "directive": "relation"
+      },
+      "argument": "",
+      "value": "\"refUser\""
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Notification",
+          "field": "refUser"
+        },
+        "directive": "relation"
+      },
+      "argument": "fields",
+      "value": "[refUserId]"
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Notification",
+          "field": "refUser"
+        },
+        "directive": "relation"
+      },
+      "argument": "references",
+      "value": "[id]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Notification",
+      "field": "refUserId",
+      "type": "String",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Notification",
+      "field": "title",
+      "type": "String",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Notification",
+      "field": "subtitle",
+      "type": "String",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Notification",
+      "field": "content",
+      "type": "String",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Notification",
+      "field": "receivers",
+      "type": "NotificationReceiver",
+      "arity": "List"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Notification",
+      "field": "createdAt",
+      "type": "DateTime",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Notification",
+          "field": "createdAt"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Notification",
+          "field": "createdAt"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "now()"
+    },
+    {
+      "tag": "CreateModel",
+      "model": "NotificationReceiver"
+    },
+    {
+      "tag": "CreateField",
+      "model": "NotificationReceiver",
+      "field": "notification",
+      "type": "Notification",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "NotificationReceiver",
+          "field": "notification"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "NotificationReceiver",
+          "field": "notification"
+        },
+        "directive": "relation"
+      },
+      "argument": "fields",
+      "value": "[notificationId]"
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "NotificationReceiver",
+          "field": "notification"
+        },
+        "directive": "relation"
+      },
+      "argument": "references",
+      "value": "[id]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "NotificationReceiver",
+      "field": "notificationId",
+      "type": "String",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateField",
+      "model": "NotificationReceiver",
+      "field": "receiver",
+      "type": "User",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "NotificationReceiver",
+          "field": "receiver"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "NotificationReceiver",
+          "field": "receiver"
+        },
+        "directive": "relation"
+      },
+      "argument": "fields",
+      "value": "[receiverId]"
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "NotificationReceiver",
+          "field": "receiver"
+        },
+        "directive": "relation"
+      },
+      "argument": "references",
+      "value": "[id]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "NotificationReceiver",
+      "field": "receiverId",
+      "type": "String",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateField",
+      "model": "NotificationReceiver",
+      "field": "readAt",
+      "type": "DateTime",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Model",
+          "model": "NotificationReceiver"
+        },
+        "directive": "id"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Model",
+          "model": "NotificationReceiver"
+        },
+        "directive": "id"
+      },
+      "argument": "",
+      "value": "[notificationId, receiverId]"
     }
   ]
 }

@@ -41,8 +41,12 @@ async function main() {
     schema,
     uploads: {
       maxFileSize: 10000000,
-      maxFiles: Config.maxFilesUpload.value
+      maxFiles: Config.maxFilesUpload.value || 10
     },
+    formatError: (error) => ({
+      ...error,
+      message: error.message?.replace('Context creation failed: ', '')
+    }),
     context: async (context): Promise<Context> => {
       const token = context.req?.header('authorization') || '';
       const hostUrl = context.req.protocol + '://' + context.req.get('host')

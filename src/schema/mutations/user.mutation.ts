@@ -6,6 +6,7 @@ import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
 import { AuthService, UserService } from "../../service";
 import { FileService } from "../../service/file.service";
+import { RecommendService } from "../../service/recommend.service";
 import { SocialNetworkService } from "../../service/socialNetwork.service";
 import { Validator } from "../../utils/validator";
 
@@ -67,6 +68,7 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
                 mustHaveFields: args.mustHaveFields ? { set: args.mustHaveFields } : undefined
             }
         })
+        await RecommendService.regenerateRecommendableUsers(ctx.user.id);
         return user;
     }
 })
@@ -184,18 +186,25 @@ export const AddFriendMutation = mutationField('addFriend', {
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authorize(ctx, { values: [Permission.friend.create] });
-
         return await UserService.addFriend(ctx.user.id, args.userId, args.isSuperLike)
     }
 })
 
 export const RemoveFriendMutation = mutationField('removeFriend', {
-    type: 'FriendType',
+    type: 'Boolean',
     args: {
         userId: idArg({ nullable: false, description: 'Id của user muốn remove' })
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authorize(ctx, { values: [Permission.friend.create] });
-        return await UserService.removeFriend(ctx.user.id, args.userId);
+        await UserService.removeFriend(ctx, args.userId);
+        return true;
+    }
+})
+
+export const UndoLastDislikedUserMutation = mutationField('undoLastDislikedUser', {
+    type: 'User',
+    resolve: async (_root, _args, ctx, _info) => {
+        return await RecommendService.undoDislike(ctx);
     }
 })

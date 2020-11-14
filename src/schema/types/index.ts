@@ -1,9 +1,10 @@
-import { enumType, inputObjectType, objectType } from "@nexus/schema";
+import { arg, enumType, inputObjectType, objectType } from "@nexus/schema";
 import { ConversationMember, User } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
 import { Config, ConstConfig } from "../../config";
 import { prisma } from "../../server";
 import { UserService } from "../../service";
+import { calculateDistance, DistanceUnit } from "../../utils/helper";
 import { Validator } from "../../utils/validator";
 
 export const Json = String;
@@ -18,6 +19,11 @@ export const GenderType = enumType({
 export const FileTypeType = enumType({
     members: ['image', 'sound'],
     name: 'FileType'
+})
+
+export const DistanceUnitEnum = enumType({
+    name: 'DistanceUnitEnum',
+    members: Object.values(DistanceUnit)
 })
 
 export const SocialProviderEnumType = enumType({
@@ -124,6 +130,18 @@ export const UserDataType = objectType({
         t.model('User').role()
         t.model('User').userImages({ pagination: false })
         t.model('User').socialProvider({ pagination: false })
+        t.field('distance', {
+            type: 'String',
+            args: {
+                unit: arg({ type: 'DistanceUnitEnum' })
+            },
+            resolve: (root: any, args, ctx) => {
+                if (!ctx.user || !ctx.user.latitude || !ctx.user.longitude || !root.longitude || !root.latitude) {
+                    return null;
+                }
+                return calculateDistance(ctx.user.latitude, ctx.user.longitude, root.latitude, root.longitude, args.unit) + ' ' + (args.unit ?? 'Km')
+            }
+        })
         t.field('friendType', {
             type: FriendType,
             nullable: false,

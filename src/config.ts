@@ -17,7 +17,6 @@ export type ConfigField = 'debugLog'
     | 'trialTime'
     | 'onesignalAppId'
     | 'onesignalApiKey'
-    | 'cmSmsToken'
     | 'ngWords'
     | 'minAge'
     | 'maxAge'
@@ -39,9 +38,8 @@ const _Config: ConfigType = {
     maxPaginationSize: { value: 100, description: 'Số lượng phần tử tối đa trên 1 trang' },
     maxUserImage: { value: 9, description: 'Số lượng hình ảnh tối đa của mỗi người dùng' },
     trialTime: { value: 24 * 60 * 60, description: 'Thời gian dùng thử. (Tính theo phút)' },
-    onesignalAppId: { value: '3603c295-5e26-444b-9fce-afbb9135ac6e', description: '' },
-    onesignalApiKey: { value: 'MGQ4NjQwMjktNzUxNS00NjdjLWI0NDQtZTAyMmRlNGJjOTg3', description: '' },
-    cmSmsToken: { value: '422A724B-8ED6-4C48-9717-7A687AF97600', description: '' },
+    onesignalAppId: { value: process.env.ONESIGNAL_APP_ID, description: '' },
+    onesignalApiKey: { value: process.env.ONESIGNAL_API_KEY, description: '' },
     ngWords: { value: ["死ね", "殺す"].join(ConstConfig.listSeparateSymbol), description: 'Từ cấm' },
     minAge: { value: 18, description: '' },
     maxAge: { value: 100, description: '' },

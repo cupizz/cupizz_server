@@ -3,6 +3,7 @@ import { Config } from "../../config";
 import { prisma } from "../../server";
 import { AuthService, UserService } from "../../service";
 import { FriendWhereInput } from '@prisma/client'
+import { RecommendService } from "../../service/recommend.service";
 
 export const MeQuery = queryField('me', {
     type: 'User',
@@ -92,24 +93,7 @@ export const RecommendableUsersQuery = queryField('recommendableUsers', {
     type: 'User',
     list: true,
     description: '[DONE]',
-    resolve: async (_root, args, ctx, _info) => {
-        AuthService.authenticate(ctx);
-        const pageSize = Config.defaultPageSize.value;
-
-        const total = await prisma.recommendableUser.count({ where: { userId: ctx.user.id } });
-        if (total == 0) {
-            await UserService.generateRecommendableUsers(ctx.user.id);
-        } else if (total < 3) {
-            UserService.generateRecommendableUsers(ctx.user.id);
-        }
-
-        const data = await prisma.recommendableUser.findMany({
-            where: { userId: ctx.user.id },
-            take: pageSize,
-            include: { recommendableUser: true },
-            orderBy: { sortOrder: 'asc' }
-        });
-
-        return data.map(e => e.recommendableUser);
+    resolve: async (_root, _args, ctx, _info) => {
+        return await RecommendService.getRecommendableUsers(ctx);
     }
 })

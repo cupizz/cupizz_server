@@ -18,7 +18,7 @@
     "studio": "dotenv -- prisma studio"
   },
   "dependencies": {
-    "@nexus/schema": "^0.15.0",
+    "@nexus/schema": "^0.18.0",
     "@types/node-fetch": "2.5.7",
     "@prisma/cli": "2.8.1",
     "@prisma/client": "2.8.1",

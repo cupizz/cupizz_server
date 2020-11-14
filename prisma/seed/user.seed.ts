@@ -1,6 +1,6 @@
 import { Gender, MustHaveField, PrismaClient, PrivateField } from "@prisma/client";
 import cliProgress from 'cli-progress';
-import faker from 'faker';
+import faker from 'faker/locale/vi';
 import { Config } from "../../src/config";
 import { DefaultRole } from "../../src/model/role";
 import { PasswordHandler } from "../../src/utils/passwordHandler";
@@ -22,10 +22,10 @@ export const seedUser = async () => {
 
             await db.user.create({
                 data: {
-                    nickName: faker.name.firstName(),
+                    nickName: faker.name.findName(),
                     introduction: faker.lorem.sentence(),
                     password: PasswordHandler.encode('123456789'),
-                    birthday: faker.date.between(1920, "2010"),
+                    birthday: faker.date.between("1980", "2010"),
                     gender: getRandomSubarray(Object.values(Gender), 1)[0],
                     hobbies: {
                         connect: getRandomSubarray(allHobbies, faker.random.number(allHobbies.length - 1)).map(e => ({ id: e.id }))
@@ -33,6 +33,8 @@ export const seedUser = async () => {
                     phoneNumber: faker.phone.phoneNumber(),
                     job: faker.name.jobTitle(),
                     height: faker.random.number({ min: 150, max: 200 }),
+                    longitude: parseFloat(faker.address.longitude(109.461634, 102.14394)),
+                    latitude: parseFloat(faker.address.latitude(23.392505, 8.562441)),
                     privateFields: { set: getRandomSubarray(Object.values(PrivateField), faker.random.number(Object.values(PrivateField).length)) },
                     minAgePrefer,
                     maxAgePrefer,
@@ -41,7 +43,7 @@ export const seedUser = async () => {
                     genderPrefer: { set: getRandomSubarray(Object.values(Gender), faker.random.number({ min: 1, max: Object.values(Gender).length })) },
                     distancePrefer: faker.random.number({ min: Config.minDistance.value, max: Config.maxDistance.value }),
                     mustHaveFields: { set: getRandomSubarray(Object.values(MustHaveField), faker.random.number(Object.values(MustHaveField).length)) },
-                    allowMatching: faker.random.boolean(),
+                    allowMatching: true,
                     isPrivate: faker.random.boolean(),
                     showActive: faker.random.boolean(),
                     avatar: {
@@ -79,7 +81,7 @@ export const seedUser = async () => {
 
     for (const user of allUser) {
         await Promise.all(
-            getRandomSubarray(allUser, faker.random.number(allUser.length / 2))
+            getRandomSubarray(allUser, faker.random.number(20))
                 .map(async other => {
                     try {
                         if ((await db.friend.findMany({

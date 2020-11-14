@@ -1,5 +1,12 @@
 export default class Strings {
     static inDevelopment = 'Tính năng đang phát triển';
+    
+    static notification = {
+        newLikeContent: (fromUserName: string) => `${fromUserName} đã thích bạn`,
+        newMatchContent: (fromUserName: string) => `Bạn và ${fromUserName} đã ghép đôi thành công`,
+        newMessageTitle: (fromUserName: string) => `Tin nhắn mới từ ${fromUserName}`
+    }
+    
     static error = {
         incorrectPassword: 'Mật khẩu không chính xác.',
         emailNotFound: 'Email not found',
@@ -18,6 +25,8 @@ export default class Strings {
         youWereBothFriendOfEachOther: 'You were both friend of each other',
         youWereBothNotFriendOfEachOther: 'You were both not friend of each other',
         accountHasBeenDeleted: 'Account has been deleted',
-        cannotSendMessageToThisConversation: 'Cannot send message to this conversation'
+        cannotSendMessageToThisConversation: 'Cannot send message to this conversation',
+        noUserToUndo: 'Không còn ai để quay lại',
+        notificationIsNotBelongToYou: 'Thông báo này không phải của bạn'
     }
 }

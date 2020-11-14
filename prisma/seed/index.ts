@@ -11,7 +11,6 @@ const seed = async () => {
     await seedAppConfig();
     console.log('Seeded App configs');
     await seedRole();
-    const allHobbies = await db.hobbyValue.findMany();
     await db.user.create({
         data: {
             nickName: 'Hien',
