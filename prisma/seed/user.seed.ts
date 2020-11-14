@@ -44,7 +44,7 @@ export const seedUser = async () => {
                     distancePrefer: faker.random.number({ min: Config.minDistance.value, max: Config.maxDistance.value }),
                     mustHaveFields: { set: getRandomSubarray(Object.values(MustHaveField), faker.random.number(Object.values(MustHaveField).length)) },
                     allowMatching: true,
-                    isPrivate: faker.random.boolean(),
+                    isPrivate: false,
                     showActive: faker.random.boolean(),
                     avatar: {
                         create: {

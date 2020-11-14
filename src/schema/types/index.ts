@@ -129,7 +129,7 @@ export const UserDataType = objectType({
         t.model('User').cover()
         t.model('User').role()
         t.model('User').userImages({ pagination: false })
-        t.model('User').socialProvider({ pagination: false })
+        t.model('User').socialProvider({ pagination: false, alias: 'socialProviders' })
         t.field('distance', {
             type: 'String',
             args: {
