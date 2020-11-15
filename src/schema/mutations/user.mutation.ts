@@ -32,12 +32,15 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         if (args.avatar) {
             avatar = await FileService.upload(await args.avatar);
         }
+        const hobbieIds = args.hobbieIds;
+        delete args.hobbieIds;
+        delete args.avatar;
 
         const user = await prisma.user.update({
             where: { id: ctx.user.id },
             data: {
                 ...args,
-                ...args.hobbieIds ? { hobbies: { connect: args.hobbieIds.map(e => ({ id: e })) } } : {},
+                ...hobbieIds ? { hobbies: { connect: hobbieIds.map(e => ({ id: e })) } } : {},
                 ...args.privateFields ? { privateFields: { set: args.privateFields } } : {},
                 ...avatar ? { avatar: { create: avatar } } : {}
             }

@@ -9,14 +9,17 @@ import Strings from '../constants/strings';
 import { logger } from '../utils/logger';
 
 class FileService {
-
     public async upload(file: FileUpload): Promise<FileCreateInput> {
         this._validateFile(file);
-        const data = await this._uploadOneImageToImgur(await this.uploadTemp(file));
-        return {
-            type: 'image',
-            ...data
-        };
+        const fileType = file.mimetype.split('/')[0];
+        if (fileType === 'image') {
+            const tempFile = await this.uploadTemp(file);
+            let data = await this._uploadOneImageToImgur(tempFile);
+            return {
+                type: 'image',
+                ...data
+            };
+        }
     }
 
     public async uploadMulti(files: FileUpload[]): Promise<FileCreateInput[]> {
@@ -37,11 +40,11 @@ class FileService {
     }
 
     public async uploadTemp(file: FileUpload): Promise<string> {
-        this._validateFile(file);
+        await this._validateFile(file);
         const { createReadStream } = file;
         const readStream = createReadStream();
-        const tempFileName = uniqueId();
-        const tempFilePath = Config.tempPath + tempFileName;
+        const tempFileName = uniqueId() + '.' + file.mimetype.split('/')[1];
+        const tempFilePath = Config.tempPath.value + tempFileName;
 
         let writeTo = fs.createWriteStream(tempFilePath)
         readStream.pipe(writeTo)
@@ -61,14 +64,14 @@ class FileService {
 
     public validateTempFiles(fileNames: string[]) {
         fileNames.forEach(e => {
-            if (!fs.existsSync(Config.tempPath + e))
+            if (!fs.existsSync(Config.tempPath.value + e))
                 throw ClientError(Strings.error.tempFileNotFound(e));
         })
     }
 
     private async _validateFile(file: FileUpload) {
-        const fileType = file.mimetype.split('/')[0];
-        const fileExt = file.mimetype.split('/')[1];
+        const fileType = file?.mimetype?.split('/')?.[0];
+        const fileExt = file?.mimetype?.split('/')?.[1];
 
         if (fileType != 'image')
             throw new Error(`File type ${file.mimetype} does not support`);
@@ -83,14 +86,12 @@ class FileService {
         // return {thumbnail: 'Test', url: 'Test'};
         const res = await new Promise<request.Response>(async (resolve, reject) => {
             try {
-                tempFilePath = Config.tempPath + tempFileName;
-                let image;
-                try {
-                    image = fs.createReadStream(tempFilePath);
-                } catch (e) {
-                    logger(e);
+                tempFilePath = Config.tempPath.value + tempFileName;
+                if (!fs.existsSync(tempFilePath)) {
                     reject(new Error('Can not read temp file ' + tempFileName));
                 }
+                let image;
+                image = fs.createReadStream(tempFilePath);
 
                 request.post({
                     url: 'https://api.imgur.com/3/image',
@@ -111,19 +112,32 @@ class FileService {
             }
         })
 
-        fs.unlinkSync(tempFilePath);
-
         const decoded = JSON.parse(res.body);
 
         if (decoded.status != 200) {
-            logger(decoded?.data?.error?.message);
-            throw new Error('Upload image to imgur failed. ' + decoded?.data?.error?.message);
+            logger(decoded);
+            throw new Error('Upload image to imgur failed. ' + decoded?.data?.error?.message || decoded?.data?.error);
         }
         const url = decoded?.data?.link ?? '';
+
+        fs.unlinkSync(tempFilePath);
+        
         return {
             url,
-            thumbnail: url // TODO get imgur thumbnail
+            thumbnail: this._getImgurThumbnail(url)
         };
+    }
+
+    private _getImgurThumbnail(url: string): string {
+        try {
+            const id = url.split('/').pop().split('.')[0];
+            if (id.length !== 7) {
+                throw 'Id incorrect';
+            }
+            return `https://i.imgur.com/${id}m.jpg`;
+        } catch (_) {
+            return url;
+        }
     }
 }
 
