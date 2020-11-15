@@ -229,6 +229,16 @@ export const FriendDataType = objectType({
         t.model('Friend').sentAt()
         t.model('Friend').acceptedAt()
         t.model('Friend').isSuperLike()
+        t.field('friend', {
+            type: 'User',
+            resolve: async (root: any, _args, ctx, _info) => {
+                if (root.senderId === ctx.user.id) {
+                    return await prisma.user.findOne({ where: { id: root.receiverId } });
+                } else {
+                    return await prisma.user.findOne({ where: { id: root.senderId } });
+                }
+            }
+        })
     }
 })
 
