@@ -4,15 +4,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - DATABASE_URL=postgresql://user:pass@db:5432/data?schema=public
-      - JWT_SECRET_KEY=hieren
+    env_file:
+      - .env
     links:
       - db
     networks:
       - cubizz
     ports:
       - '1998:1998'
+      - '5555:5555'
   nginx:
     image: nginx:stable-alpine
     volumes:
@@ -30,7 +30,7 @@ services:
     image: postgres
     restart: unless-stopped
     ports:
-      - 19981:5432
+      - 5432:5432
     environment:
       POSTGRES_PASSWORD: pass
       POSTGRES_USER: user
