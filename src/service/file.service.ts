@@ -96,7 +96,7 @@ class FileService {
                 request.post({
                     url: 'https://api.imgur.com/3/image',
                     headers: {
-                        authorization: 'Client-ID eee6fe9fcde03e2'
+                        authorization: 'Client-ID 2e284addcc9fff2'
                     },
                     formData: { image },
                     callback: (e, res) => {
