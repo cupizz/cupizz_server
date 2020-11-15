@@ -14,8 +14,8 @@ export const seedUser = async () => {
 
     await Promise.all(Array.from(Array(200).keys())
         .map(async (_, i) => {
-            const minAgePrefer = faker.random.number({ min: Config.minAge.value, max: Config.maxAge.value });
-            const maxAgePrefer = faker.random.number({ min: minAgePrefer, max: Config.maxAge.value });
+            const minAgePrefer = faker.random.number({ min: Config.minAge.value, max: 40});
+            const maxAgePrefer = faker.random.number({ min: minAgePrefer, max: 40 });
             const minHeightPrefer = faker.random.number({ min: Config.minHeight.value, max: Config.maxHeight.value });
             const maxHeightPrefer = faker.random.number({ min: minHeightPrefer, max: Config.maxHeight.value });
             const allHobbies = await db.hobbyValue.findMany();
