@@ -81,7 +81,7 @@ export const seedUser = async () => {
 
     for (const user of allUser) {
         await Promise.all(
-            getRandomSubarray(allUser, faker.random.number(20))
+            getRandomSubarray(allUser, faker.random.number(2))
                 .map(async other => {
                     try {
                         if ((await db.friend.findMany({
