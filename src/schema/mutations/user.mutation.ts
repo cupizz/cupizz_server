@@ -33,8 +33,6 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
             avatar = await FileService.upload(await args.avatar);
         }
 
-
-
         const user = await prisma.user.update({
             where: { id: ctx.user.id },
             data: {
@@ -49,6 +47,10 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
                 ...avatar ? { avatar: { create: avatar } } : {}
             }
         })
+
+        if (args.hobbyIds) {
+            await RecommendService.regenerateRecommendableUsers(ctx.user.id);
+        }
         return user;
     }
 })
