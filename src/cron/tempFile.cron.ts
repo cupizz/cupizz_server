@@ -14,9 +14,9 @@ export default () => {
 
             // Chỉ xóa các file cách đây 1h
             fileNames.forEach(e => {
-                const fileCreatedAt = new Date(fs.statSync(Config.tempPath + e).birthtime);
+                const fileCreatedAt = new Date(fs.statSync(Config.tempPath.value + e).birthtime);
                 if (Date.now() - fileCreatedAt.getTime() >= 60 * 60 * 1000) {
-                    fs.unlinkSync(Config.tempPath + e);
+                    fs.unlinkSync(Config.tempPath.value + e);
                 }
             });
 

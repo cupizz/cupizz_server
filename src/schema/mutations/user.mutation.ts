@@ -16,7 +16,7 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         nickName: stringArg(),
         introduction: stringArg(),
         gender: arg({ type: 'Gender' }),
-        hobbieIds: stringArg({ list: true }),
+        hobbyIds: stringArg({ list: true }),
         phoneNumber: stringArg(),
         job: stringArg(),
         height: intArg(),
@@ -32,16 +32,20 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         if (args.avatar) {
             avatar = await FileService.upload(await args.avatar);
         }
-        const hobbieIds = args.hobbieIds;
-        delete args.hobbieIds;
-        delete args.avatar;
+
+
 
         const user = await prisma.user.update({
             where: { id: ctx.user.id },
             data: {
-                ...args,
-                ...hobbieIds ? { hobbies: { connect: hobbieIds.map(e => ({ id: e })) } } : {},
+                ...args.nickName ? { nickName: { set: args.nickName } } : {},
+                ...args.introduction ? { introduction: { set: args.introduction } } : {},
+                ...args.gender ? { gender: { set: args.gender } } : {},
+                ...args.phoneNumber ? { phoneNumber: { set: args.phoneNumber } } : {},
+                ...args.job ? { job: { set: args.job } } : {},
+                ...args.height ? { height: { set: args.height } } : {},
                 ...args.privateFields ? { privateFields: { set: args.privateFields } } : {},
+                ...args.hobbyIds ? { hobbies: { set: args.hobbyIds?.map(e => ({ id: e })) } } : {},
                 ...avatar ? { avatar: { create: avatar } } : {}
             }
         })
