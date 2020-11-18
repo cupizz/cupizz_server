@@ -4,6 +4,7 @@ import { prisma } from "../../server";
 import { AuthService, UserService } from "../../service";
 import { FriendWhereInput } from '@prisma/client'
 import { RecommendService } from "../../service/recommend.service";
+import { FriendService } from "../../service/friend.service";
 
 export const MeQuery = queryField('me', {
     type: 'User',
@@ -41,51 +42,21 @@ export const FriendsQuery = queryField('friends', {
     list: true,
     args: {
         type: enumType({ name: 'FriendTypeEnumInput', members: ['all', 'friend', 'sent', 'received'] }),
-        isSuperLike: booleanArg({ nullable: true, description: 'Nếu không truyền sẽ lấy cả 2' }),
+        orderBy: enumType({ name: 'FriendSortEnumInput', members: ['new', 'login', 'age'] }),
         page: intArg({ nullable: true })
     },
-    resolve: async (root, args, ctx, info) => {
+    resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
         const pageSize = Config.defaultPageSize.value;
-        let where: FriendWhereInput;
 
-        switch (args.type) {
-            case 'all':
-                where = {
-                    OR: [
-                        { senderId: { equals: ctx.user.id } },
-                        { receiverId: { equals: ctx.user.id } },
-                    ],
-                };
-                break;
-            case 'friend':
-                where = {
-                    OR: [
-                        { senderId: { equals: ctx.user.id } },
-                        { receiverId: { equals: ctx.user.id } },
-                    ],
-                    NOT: [{ acceptedAt: null }]
-                }
-                break;
-            case 'received':
-                where = {
-                    receiverId: { equals: ctx.user.id },
-                    acceptedAt: null
-                }
-                break;
-            case 'sent':
-                where = {
-                    senderId: { equals: ctx.user.id },
-                    acceptedAt: null
-                }
-                break;
+        switch (args.orderBy) {
+            case 'login':
+                return await FriendService.getFriendsSortLogin(ctx, args.type, args.page, pageSize);
+            case 'age':
+                return await FriendService.getFriendsSortAge(ctx, args.type, args.page, pageSize);
+            default:
+                return await FriendService.getFriendsSortNew(ctx, args.type, args.page, pageSize);
         }
-
-        return prisma.friend.findMany({
-            where,
-            take: pageSize,
-            skip: pageSize * (args.page ?? 0)
-        })
     }
 })
 
