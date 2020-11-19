@@ -152,15 +152,14 @@ export const UserDataType = objectType({
         t.field('onlineStatus', {
             type: OnlineStatusEnumType,
             nullable: true,
-            resolve: async (root: any, _args, _ctx, _info) => {
-                if (!Validator.isFriend(root.friendType?.status) || !root.showActive)
-                    return null;
-                return root.onlineStatus;
+            resolve: async (root: any, _args, ctx, _info) => {
+                return ctx.user?.showActive && root.showActive
+                    ? root.onlineStatus : null;
             }
         })
         t.model('User').lastOnline({
             resolve: (root: any, args, ctx, info, origin) => {
-                return Validator.isFriend(root.friendType.status)
+                return ctx.user.showActive && root.showActive
                     ? origin(root, args, ctx, info)
                     : null
             }
@@ -228,6 +227,7 @@ export const FriendDataType = objectType({
         t.model('Friend').receiver()
         t.model('Friend').sentAt()
         t.model('Friend').acceptedAt()
+        t.model('Friend').updatedAt()
         t.model('Friend').isSuperLike()
         t.field('friend', {
             type: 'User',

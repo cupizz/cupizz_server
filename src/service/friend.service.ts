@@ -79,21 +79,34 @@ class FriendService {
                 break;
         }
 
-        const friendIds = (await prisma.user.findMany({
+        const friends = (await prisma.user.findMany({
             where,
             orderBy: { lastOnline: 'desc' },
             take: pageSize,
-            skip: pageSize * ((page ?? 1) - 1)
-        })).map(e => e.id);
+            skip: pageSize * ((page ?? 1) - 1),
+        }));
+        const friendIds = friends.map(e => e.id);
 
-        return prisma.friend.findMany({
+        const friendsData = await prisma.friend.findMany({
             where: {
                 OR: [
                     { senderId: { equals: ctx.user.id }, receiverId: { in: friendIds } },
                     { receiverId: { equals: ctx.user.id }, senderId: { in: friendIds } },
                 ]
             },
-        })
+            include: { receiver: true, sender: true },
+        });
+
+        console.log(friends.sort((a, b) => a.showActive === b.showActive ? 0 : a.showActive ? -1 : 1).map(e => ({a: e.showActive, b: e.lastOnline})))
+
+        return friends.sort((a, b) => a.showActive === b.showActive ? 0 : a.showActive ? -1 : 1)
+            .map(e => friendsData.find(f => {
+                if (f.senderId === ctx.user.id) {
+                    return f.receiverId === e.id;
+                } else {
+                    return f.senderId === e.id;
+                }
+            }))
     }
 
     public async getFriendsSortNew(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number): Promise<Friend[]> {
@@ -142,4 +155,4 @@ class FriendService {
 }
 
 const _ = new FriendService();
-export { _ as FriendService }
+export { _ as FriendService };
