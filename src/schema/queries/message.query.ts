@@ -1,35 +1,47 @@
 import { idArg, intArg, objectType, queryField, stringArg } from "@nexus/schema";
-import { Message } from "@prisma/client";
 import { ForbiddenError } from "apollo-server-express";
+import assert from "assert";
 import { Config } from "../../config";
 import Strings from "../../constants/strings";
 import { prisma } from "../../server";
 import { AuthService, MessageService } from "../../service";
 
 export const MyConversationsQuery = queryField('myConversations', {
-    type: 'Conversation',
-    list: true,
-    resolve: async (_root, _args, ctx, _info) => {
+    type: objectType({
+        name: 'MyConversationOutput',
+        definition(t) {
+            t.field('data', { type: 'Conversation', list: true })
+            t.field('isLastPage', { type: 'Boolean' })
+        }
+    }),
+    args: {
+        page: intArg()
+    },
+    resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
-        return await prisma.conversation.findMany({
-            where: { members: { some: { userId: ctx.user.id } } },
-            orderBy: { updatedAt: 'desc' }
-        })
+        const pageSize: number = Config.defaultPageSize?.value || 10;
+        const data = await prisma.conversation.findMany({
+            where: {
+                members: { some: { userId: ctx.user.id } },
+                isHidden: { equals: false }
+            },
+            orderBy: { updatedAt: 'desc' },
+            take: pageSize,
+            skip: pageSize * ((args.page ?? 1) - 1)
+        });
+        return { data, isLastPage: data.length < pageSize }
     }
 })
 
 export const conversationQuery = queryField('conversation', {
     type: 'Conversation',
-    description: 'Truyền 1 trong 2: conversationId hoặc otherUserId',
     args: {
-        conversationId: idArg(),
-        otherUserId: idArg(),
+        conversationId: stringArg(),
+        userId: idArg()
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
-        if(!args.conversationId && !args.otherUserId) {
-            throw new Error("Please provide conversationId or otherUserId.")
-        }
+        assert(args.conversationId || args.userId, Strings.error.mustHaveConversationIdOrUserId);
 
         if (args.conversationId) {
             const conversation = await prisma.conversation.findOne({
@@ -43,9 +55,8 @@ export const conversationQuery = queryField('conversation', {
 
             return conversation;
         } else {
-            return await MessageService.getConversation(ctx, args.otherUserId);
+            return await MessageService.getConversation(ctx, { otherUserId: args.userId });
         }
-
     }
 })
 
@@ -55,37 +66,21 @@ export const messagesQuery = queryField('messages', {
         definition(t) {
             t.field('data', { type: 'Message', list: true, nullable: false })
             t.field('currentPage', { type: 'Int', nullable: false })
+            t.field('isLastPage', { type: 'Boolean', nullable: false })
         }
     }),
     args: {
-        conversationId: stringArg({ nullable: false }),
+        conversationId: stringArg(),
+        userId: idArg(),
         page: intArg(),
         focusMessageId: stringArg({ description: 'Nếu arg này tồn tại thì arg page ko có tác dụng' })
     },
     resolve: async (_root, args, ctx, _info) => {
-        AuthService.authenticate(ctx);
-        const pageSize = Config.defaultPageSize.value;
-        let messages: Message[] = [];
-        let currentPage = args.page ?? 1;
-        let focusMessage = !args.focusMessageId
-            ? null : await prisma.message.findOne({ where: { id: args.focusMessageId } });
-
-        if (focusMessage) {
-            const beforeFocusMessageCount = await prisma.message.count({
-                where: { createdAt: { gt: focusMessage.createdAt } },
-                orderBy: { createdAt: 'desc' }
-            });
-
-            currentPage = Math.ceil((beforeFocusMessageCount + 1) / pageSize);
-        }
-
-        messages = await prisma.message.findMany({
-            where: { conversationId: args.conversationId },
-            orderBy: { createdAt: 'desc' },
-            take: pageSize,
-            skip: pageSize * (currentPage - 1)
-        })
-
-        return { data: messages, currentPage };
+        return await MessageService.getMessages(
+            ctx,
+            { conversationId: args.conversationId, otherUserId: args.userId },
+            args.page,
+            args.focusMessageId,
+        );
     }
 })

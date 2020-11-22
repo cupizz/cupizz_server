@@ -7,9 +7,10 @@ export const CreateMessageMutation = mutationField(
         type: 'Message',
         // description: 'Bắt buộc truyền vào `conversationId` hoặc `receiverId`',
         args: {
-            receiverId: idArg({ nullable: false }),
-            message: stringArg({ nullable: false }),
-            attachments: arg({ type: 'Upload', list: true, nullable: true })
+            conversationId: idArg(),
+            receiverId: idArg(),
+            message: stringArg(),
+            attachments: arg({ type: 'Upload', list: true, nullable: true }),
         },
         resolve: async (_root, args, ctx, _info) => {
             return await MessageService.sendMessage(ctx, {

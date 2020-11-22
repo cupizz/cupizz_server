@@ -1,58 +1,78 @@
-import { Context } from '../context';
-import { prisma } from '../server';
-import { ConversationInclude, FileCreateInput, Message } from '@prisma/client'
-import { AuthService } from './auth.service';
-import { Permission } from '../model/permission';
-import { ClientError } from '../model/error';
-import Strings from '../constants/strings';
+import { Conversation, ConversationInclude, FileCreateInput, Message } from '@prisma/client';
+import { ForbiddenError } from 'apollo-server-express';
+import assert from 'assert';
 import { FileUpload } from 'graphql-upload';
-import { FileService } from './file.service';
-import { OnesignalService } from './onesignal.service';
+import { NotificationService } from '.';
 import { Config } from '../config';
+import Strings from '../constants/strings';
+import SubscriptionKey from '../constants/subscriptionKey';
+import { Context } from '../context';
+import { ClientError, ErrorNotFound } from '../model/error';
+import { prisma } from '../server';
+import { logger } from '../utils/logger';
+import { AuthService } from './auth.service';
+import { FileService } from './file.service';
 
 class MessageService {
-    public async getConversation(ctx: Context, receiverId: string, include?: ConversationInclude) {
+    public async getConversation(ctx: Context, id: { otherUserId?: string, conversationId?: string }, include?: ConversationInclude) {
         AuthService.authenticate(ctx);
-        let conversation = await prisma.conversation.findFirst({
-            where: {
-                members: {
-                    every: { userId: { in: [ctx.user.id, ...ctx.user.id !== receiverId ? [receiverId] : []] } },
-                    some: { userId: { equals: receiverId } }
-                }
-            },
-            include
-        })
+        assert(id.conversationId != null || id.otherUserId != null, Strings.error.mustHaveConversationIdOrUserId);
+        const memberIds = [ctx.user.id, ...ctx.user.id !== id.otherUserId && id.otherUserId ? [id.otherUserId] : []];
+        let conversation: Conversation;
 
-        if (!conversation) {
-            conversation = await prisma.conversation.create({
-                data: {
+        if (id.conversationId) {
+            conversation = await prisma.conversation.findOne({ where: { id: id.conversationId } });
+            if (!conversation) {
+                throw ErrorNotFound('Conversation is notfound');
+            }
+        } else {
+            const conversations = await prisma.conversation.findMany({
+                where: {
                     members: {
-                        create: [
-                            {
-                                user: { connect: { id: ctx.user.id } },
-                                isAdmin: true,
-                            },
-                            ctx.user.id !== receiverId ?
-                                {
-                                    user: { connect: { id: receiverId } },
-                                    isAdmin: true,
-                                } : undefined,
-                        ],
+                        every: { userId: { in: memberIds } },
                     }
                 },
-                include
+                include: { ...include, members: true }
             })
+            conversation = conversations.length > 1 || memberIds.length > 1
+                ? conversations.find(e => e.members.length === memberIds.length)
+                : conversations.length < 1
+                    ? null
+                    : conversations[0]
+
+            if (!conversation) {
+                conversation = await prisma.conversation.create({
+                    data: {
+                        members: {
+                            create: [
+                                {
+                                    user: { connect: { id: ctx.user.id } },
+                                    isAdmin: true,
+                                },
+                                ctx.user.id !== id.otherUserId ?
+                                    {
+                                        user: { connect: { id: id.otherUserId } },
+                                        isAdmin: true,
+                                    } : undefined,
+                            ],
+                        }
+                    },
+                    include: { ...include, members: true }
+                })
+            }
         }
 
         return conversation;
     }
 
-    public async searchConversation(ctx: Context, keyword: string, page?: number) {
+    public async searchConversation(ctx: Context, keyword: string, page?: number)
+        : Promise<{ data: (Conversation & { messages: Message[] })[], isLastPage: boolean }> {
         AuthService.authenticate(ctx);
         const pageSize: number = Config.defaultPageSize.value || 10;
-        return await prisma.conversation.findMany({
+        const data = await prisma.conversation.findMany({
             where: {
-                messages: { some: { message: { contains: keyword } } }
+                messages: { some: { message: { contains: keyword } } },
+                members: { some: { userId: { equals: ctx.user.id } } }
             },
             include: {
                 messages: {
@@ -62,24 +82,80 @@ class MessageService {
             },
             take: pageSize,
             skip: pageSize * ((page ?? 1) - 1)
-        })
+        });
+        return { data, isLastPage: data.length < pageSize }
     }
 
-    public async getMessages(ctx: Context, otherUserId: string, pagination?: { take: number, skip?: number }) {
-        const conversation = await this.getConversation(ctx, otherUserId);
-        return await prisma.message.findMany({
-            where: { conversationId: conversation.id },
-            ...pagination,
-            include: { attachments: true, sender: true }
-        });
+    public async getMessages(
+        ctx: Context,
+        id: { conversationId?: string, otherUserId?: string },
+        page: number = 1,
+        focusMessageId?: string
+    ): Promise<{ data: Message[], currentPage: number, isLastPage: boolean }> {
+        assert(id.otherUserId || id.conversationId, Strings.error.mustHaveConversationIdOrUserId)
+        AuthService.authenticate(ctx);
+
+        const pageSize = 20;
+        let messages: Message[] = [];
+        let currentPage = page;
+        let focusMessage = !focusMessageId
+            ? null : await prisma.message.findOne({ where: { id: focusMessageId } });
+
+        let conversation;
+        if (id.conversationId) {
+            conversation = await prisma.conversation.findOne({
+                where: { id: id.conversationId },
+                include: { members: true }
+            })
+
+            if (!conversation.members.map(e => e.userId).includes(ctx.user.id)) {
+                throw new ForbiddenError(Strings.error.unAuthorize);
+            }
+        } else {
+            conversation = await this.getConversation(ctx, { otherUserId: id.otherUserId });
+        }
+
+        if (focusMessage) {
+            const beforeFocusMessageCount = await prisma.message.count({
+                where: { createdAt: { gt: focusMessage.createdAt } },
+                orderBy: { createdAt: 'desc' }
+            });
+
+            currentPage = Math.ceil((beforeFocusMessageCount + 1) / pageSize);
+            await this._markAsReadMessage(ctx, focusMessage.id);
+        } else {
+            const newestMessageId = (await this.getNewestMessage(conversation.id))?.id;
+            if (newestMessageId) {
+                await this._markAsReadMessage(ctx, newestMessageId);
+            }
+        }
+
+        messages = await prisma.message.findMany({
+            where: { conversationId: conversation?.id },
+            orderBy: { createdAt: 'desc' },
+            take: pageSize + 1,
+            skip: pageSize * (currentPage - 1)
+        })
+
+        const isLastPage = messages.length <= pageSize;
+
+        return { data: messages.splice(0, pageSize), currentPage, isLastPage };
     }
 
     public async sendMessage(ctx: Context, data: {
-        receiverId: string,
-        message: string,
+        conversationId?: string,
+        receiverId?: string,
+        message?: string,
         attachments?: FileUpload[],
     }) {
-        let conversation = await this.getConversation(ctx, data.receiverId);
+        assert(data.conversationId !== null || data.receiverId !== null, Strings.error.mustHaveConversationIdOrUserId);
+        assert(data.message?.length > 0 ||  data.attachments?.length > 0, Strings.error.contentMustBeNotEmpty);
+
+        let conversation = data.conversationId
+            ? await prisma.conversation.findOne({ where: { id: data.conversationId } })
+            : await this.getConversation(ctx, { otherUserId: data.receiverId });
+        if (!conversation) throw ErrorNotFound();
+
         await this.canSendChat(ctx, conversation.id)
         let files: FileCreateInput[] = [];
         if (data.attachments) {
@@ -94,25 +170,35 @@ class MessageService {
                         message: data.message,
                         sender: { connect: { id: ctx.user.id } },
                         conversation: { connect: { id: conversation.id } },
-                        attachments: { create: files }
+                        attachments: { create: files },
                     }
                 },
                 unreadMessageCount: 0,
-                conversation: { update: { updatedAt: new Date() } }
+                conversation: {
+                    update: {
+                        updatedAt: new Date(),
+                        isHidden: false,
+                    }
+                }
             },
             include: { lastReadMessage: { include: { sender: true } } }
         })).lastReadMessage;
 
-        OnesignalService.sendToAll(data.message);
+        await this._updateUnreadMessageCount(conversation.id);
 
-        this._updateUnreadMessageCount(conversation.id);
+        NotificationService.sendNewMessageNofity(conversation.id, res.id);
+
+        ctx.pubsub.publish(SubscriptionKey.newMessage, res);
+        prisma.conversation.findOne({ where: { id: conversation.id } }).then((v) => {
+            ctx.pubsub.publish(SubscriptionKey.conversationChange, v);
+        })
 
         return res;
     }
 
     public async canSendChat(ctx: Context, conversationId: string, throwError: boolean = true): Promise<Boolean> {
-        let result = false;
-        result = AuthService.authorize(ctx, { values: [Permission.chat.create] }, throwError);
+        let result = true;
+        // result = AuthService.authorize(ctx, { values: [Permission.chat.create] }, throwError);
 
         if (result) {
             const member = await prisma.conversationMember.findOne({
@@ -132,6 +218,77 @@ class MessageService {
             }
         }
         return result;
+    }
+
+    public async getNewestMessage(conversationId: string) {
+        return await prisma.message.findFirst({
+            where: { conversationId },
+            orderBy: { createdAt: 'desc' }
+        })
+    }
+
+    public async updateInChatStatus(ctx: Context, id: { conversationId?: string, otherUserId?: string }, isInChat: boolean) {
+        AuthService.authenticate(ctx);
+        if (!id.conversationId && !id.otherUserId) {
+            await prisma.conversationMember.updateMany({
+                where: {
+                    userId: { equals: ctx.user.id },
+                    isCurrentlyInChat: !isInChat,
+                },
+                data: {
+                    isCurrentlyInChat: isInChat
+                }
+            })
+            if (isInChat) logger(`User ${ctx.user.id} is in all chat.`)
+            else logger(`User ${ctx.user.id} is out all chat.`)
+        } else {
+            const conversation = await this.getConversation(ctx, {
+                conversationId: id.conversationId, otherUserId: id.otherUserId
+            })
+            const members = (await prisma.conversationMember.update({
+                where: { conversationId_userId: { userId: ctx.user.id, conversationId: conversation.id } },
+                data: { isCurrentlyInChat: false },
+                include: { conversation: { include: { members: true } } }
+            })).conversation.members.filter(e => e.userId != ctx.user.id);
+
+            if (isInChat) logger(`User ${ctx.user.id} is in chat with ${members.map(e => e.userId).join(', ')}.`)
+            else logger(`User ${ctx.user.id} is out chat ${members.map(e => e.userId).join(', ')}.`)
+        }
+    }
+
+    private async _markAsReadMessage(ctx: Context, messageId: string) {
+        AuthService.authenticate(ctx);
+        const message = await prisma.message.findOne({
+            where: { id: messageId },
+        })
+        const conversationMember = await prisma.conversationMember.findOne({
+            where: {
+                conversationId_userId: {
+                    conversationId: message.conversationId,
+                    userId: ctx.user.id
+                }
+            },
+            include: { lastReadMessage: true }
+        })
+
+        if (conversationMember && (!conversationMember.lastReadMessage || conversationMember.lastReadMessage.createdAt < message.createdAt)) {
+            // Cập nhật lại tin nhắn mới nhất đã đọc
+            const conversation = (await prisma.conversationMember.update({
+                where: {
+                    conversationId_userId: {
+                        conversationId: message.conversationId,
+                        userId: ctx.user.id,
+                    }
+                },
+                data: {
+                    lastReadMessage: { connect: { id: messageId } },
+                    unreadMessageCount: await this._getUnreadMessageCount(message.conversationId, ctx.user.id, message)
+                },
+                include: { conversation: true }
+            })).conversation;
+
+            await ctx.pubsub.publish(SubscriptionKey.conversationChange, conversation);
+        }
     }
 
     private async _updateUnreadMessageCount(conversationId: string) {

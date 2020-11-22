@@ -27,6 +27,8 @@ export default class Strings {
         accountHasBeenDeleted: 'Account has been deleted',
         cannotSendMessageToThisConversation: 'Cannot send message to this conversation',
         noUserToUndo: 'Không còn ai để quay lại',
-        notificationIsNotBelongToYou: 'Thông báo này không phải của bạn'
+        notificationIsNotBelongToYou: 'Thông báo này không phải của bạn',
+        mustHaveConversationIdOrUserId: 'Must have conversationId or userId',
+        contentMustBeNotEmpty: 'Vui lòng nhập nội dung tin nhắn!',
     }
 }

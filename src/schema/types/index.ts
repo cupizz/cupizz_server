@@ -1,11 +1,9 @@
 import { arg, enumType, inputObjectType, objectType } from "@nexus/schema";
 import { ConversationMember, User } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
-import { Config, ConstConfig } from "../../config";
 import { prisma } from "../../server";
-import { UserService } from "../../service";
+import { MessageService, UserService } from "../../service";
 import { calculateDistance, DistanceUnit } from "../../utils/helper";
-import { Validator } from "../../utils/validator";
 
 export const Json = String;
 
@@ -307,7 +305,17 @@ export const ConversationType = objectType({
             resolve: async (root, _args, _ctx, _info) => {
                 return await prisma.conversation.findOne({
                     where: { id: root.id },
-                    include: { members: { include: { user: true } } }
+                    include: {
+                        members: {
+                            include: {
+                                user: {
+                                    include: {
+                                        avatar: true,
+                                    }
+                                }
+                            }
+                        }
+                    }
                 });
             }
         })
@@ -324,7 +332,18 @@ export const ConversationType = objectType({
                 });
             }
         })
-        t.model.messages({ pagination: true, ordering: true })
+        t.field('searchData', {
+            type: objectType({
+                name: 'SearchConversationData',
+                definition(t) {
+                    t.field('matchingMessage', {
+                        type: 'Message',
+                        nullable: false,
+                    })
+                }
+            }),
+            nullable: true
+        })
     }
 })
 
@@ -340,14 +359,27 @@ export const ConversationDataType = objectType({
                     .join(', ') || 'Me';
             }
         })
+        t.field('images', {
+            type: 'File', list: true, nullable: false,
+            resolve: async (root: any, _args, ctx, _info) => {
+                const data = root.members
+                    ?.filter((e: any) => root.members?.length > 1 ? e.userId !== ctx.user.id : true)
+                    ?.map((e: any) => e.user.avatar) ?? [];
+                return data;
+            }
+        })
         t.field('newestMessage', {
             type: 'Message',
-            nullable: true,
             resolve: async (root: any, _args, _ctx, _info) => {
-                return await prisma.message.findFirst({
-                    where: { conversationId: root.id },
-                    orderBy: { createdAt: 'desc' }
-                })
+                return MessageService.getNewestMessage(root.id);
+            }
+        })
+        t.field('otherMembers', {
+            type: 'ConversationMember',
+            list: true,
+            resolve: (root: any, _args, ctx, _info) => {
+                return (root.members as ConversationMember[])
+                    .filter(e => e.userId !== ctx.user?.id)
             }
         })
     }
