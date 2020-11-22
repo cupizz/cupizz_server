@@ -368,6 +368,31 @@ export const ConversationDataType = objectType({
                 return data;
             }
         })
+        t.field('onlineStatus', {
+            type: 'OnlineStatus', nullable: true,
+            resolve: async (root: any, _args, ctx, _info) => {
+                const otherMembers = ((root.members ?? []) as (ConversationMember & { user: User })[])
+                    .filter(e => e.userId !== ctx.user?.id);
+
+                if (otherMembers.length === 0) {
+                    return ctx.user?.onlineStatus ?? 'offline';
+                } else if (otherMembers.length === 1) {
+                    return otherMembers[0].user.onlineStatus;
+                }
+
+                const onlineMembers = otherMembers.findIndex((e) => e.user.onlineStatus == 'online' && e.user.showActive);
+                if (onlineMembers >= 0) {
+                    return 'online';
+                } else {
+                    const awayMembers = otherMembers.findIndex((e) => e.user.onlineStatus == 'away' && e.user.showActive);
+                    if (awayMembers >= 0) {
+                        return 'away';
+                    }
+                    return 'offline';
+                }
+
+            }
+        })
         t.field('newestMessage', {
             type: 'Message',
             resolve: async (root: any, _args, _ctx, _info) => {
