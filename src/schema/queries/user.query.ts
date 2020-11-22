@@ -1,4 +1,4 @@
-import { booleanArg, enumType, intArg, queryField, } from "@nexus/schema";
+import { arg, booleanArg, enumType, intArg, objectType, queryField, } from "@nexus/schema";
 import { Config } from "../../config";
 import { prisma } from "../../server";
 import { AuthService, UserService } from "../../service";
@@ -57,6 +57,37 @@ export const FriendsQuery = queryField('friends', {
             default:
                 return await FriendService.getFriendsSortNew(ctx, args.type, args.page, pageSize);
         }
+    }
+})
+
+export const FriendsV2Query = queryField('friendsV2', {
+    type: objectType({
+        name: 'FriendsQueryOutputV2',
+        definition(t) {
+            t.field('data', { type: 'FriendDataType', list: true })
+            t.boolean('isLastPage')
+        }
+    }),
+    args: {
+        type: arg({ type: 'FriendTypeEnumInput' }),
+        orderBy: arg({ type: 'FriendSortEnumInput' }),
+        page: intArg({ nullable: true })
+    },
+    resolve: async (_root, args, ctx, _info) => {
+        AuthService.authenticate(ctx);
+        const pageSize = Config.defaultPageSize.value;
+        let data = [];
+
+        switch (args.orderBy) {
+            case 'login':
+                data = await FriendService.getFriendsSortLogin(ctx, args.type, args.page, pageSize);
+            case 'age':
+                data = await FriendService.getFriendsSortAge(ctx, args.type, args.page, pageSize);
+            default:
+                data = await FriendService.getFriendsSortNew(ctx, args.type, args.page, pageSize);
+        }
+
+        return { data, isLastPage: data.length < pageSize }
     }
 })
 
