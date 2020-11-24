@@ -393,6 +393,16 @@ export const ConversationDataType = objectType({
 
             }
         })
+        t.field('lastOnline', {
+            type: 'DateTime', nullable: true,
+            resolve: async (root: any, _args, ctx, _info) => {
+                const otherMembers = ((root.members ?? []) as (ConversationMember & { user: User })[])
+                    .filter(e => e.userId !== ctx.user?.id);
+                if ((otherMembers).length === 1 && otherMembers[0].user.showActive) {
+                    return otherMembers[0].user.lastOnline;
+                } else return null;
+            }
+        })
         t.field('newestMessage', {
             type: 'Message',
             resolve: async (root: any, _args, _ctx, _info) => {
