@@ -1,23 +1,38 @@
-import { arg, booleanArg, enumType, intArg, objectType, queryField, } from "@nexus/schema";
+import { arg, enumType, intArg, objectType, queryField, stringArg } from "@nexus/schema";
 import { Config } from "../../config";
+import { ErrorNotFound } from "../../model/error";
 import { prisma } from "../../server";
-import { AuthService, UserService } from "../../service";
-import { FriendWhereInput } from '@prisma/client'
-import { RecommendService } from "../../service/recommend.service";
+import { AuthService } from "../../service";
 import { FriendService } from "../../service/friend.service";
+import { RecommendService } from "../../service/recommend.service";
 
 export const MeQuery = queryField('me', {
     type: 'User',
-    resolve: (root, args, ctx, info) => {
+    resolve: (_root, _args, ctx, _info) => {
         AuthService.authenticate(ctx);
         return ctx.user;
+    }
+})
+
+export const userQuery = queryField('user', {
+    type: 'User',
+    args: {
+        id: stringArg({ required: true })
+    },
+    resolve: async (_root, args, ctx, _info) => {
+        AuthService.authenticate(ctx);
+        const user = await prisma.user.findOne({ where: { id: args.id } });
+        if (!user) {
+            throw ErrorNotFound('Không tìm thấy người dùng');
+        }
+        return user;
     }
 })
 
 export const NotOfflineFriendsQuery = queryField('notOfflineFriends', {
     type: 'OnlineUserOutput',
     list: true,
-    resolve: async (root, args, ctx, info) => {
+    resolve: async (_root, _args, ctx, _info) => {
         AuthService.authenticate(ctx);
         return (await prisma.friend.findMany({
             where: {

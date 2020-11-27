@@ -12,7 +12,7 @@ export const ErrorOtpIncorrect = ClientError(Strings.error.otpIncorrect);
 export const ErrorTokenExpired = ClientError(Strings.error.tokenExpired);
 export const ErrorTokenIncorrect = ClientError(Strings.error.tokenIncorrect);
 
-export const ErrorNotFound = (message?: string) => ClientError(`NOTFOUND${message ? ': ' + message : ''}`)
+export const ErrorNotFound = (message?: string) => ClientError(`${message ? message : 'NOTFOUND'}`)
 export const ErrorUnAuthenticate = (message?: string) => new AuthenticationError(message || Strings.error.unAuthenticate);
 
 export class ForbiddenError extends AuthenticationError {
