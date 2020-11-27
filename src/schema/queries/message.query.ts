@@ -1,4 +1,4 @@
-import { idArg, intArg, objectType, queryField, stringArg } from "@nexus/schema";
+import { booleanArg, idArg, intArg, objectType, queryField, stringArg } from "@nexus/schema";
 import { ForbiddenError } from "apollo-server-express";
 import assert from "assert";
 import { Config } from "../../config";
@@ -80,6 +80,32 @@ export const messagesQuery = queryField('messages', {
             ctx,
             { conversationId: args.conversationId, otherUserId: args.userId },
             args.page,
+            args.focusMessageId,
+        );
+    }
+})
+
+export const messagesV2Query = queryField('messagesV2', {
+    type: objectType({
+        name: 'MessagesOutputV2',
+        definition(t) {
+            t.field('data', { type: 'Message', list: true, nullable: false })
+            t.field('isLastPage', { type: 'Boolean', nullable: false })
+        }
+    }),
+    args: {
+        conversationId: stringArg(),
+        userId: idArg(),
+        cursor: idArg(),
+        getNewer: booleanArg({ default: false }),
+        focusMessageId: stringArg({ description: 'Nếu arg này tồn tại thì arg page ko có tác dụng' })
+    },
+    resolve: async (_root, args, ctx, _info) => {
+        return await MessageService.getMessagesV2(
+            ctx,
+            { conversationId: args.conversationId, otherUserId: args.userId },
+            args.cursor,
+            args.getNewer,
             args.focusMessageId,
         );
     }

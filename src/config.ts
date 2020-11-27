@@ -15,8 +15,6 @@ export type ConfigField = 'debugLog'
     | 'maxPaginationSize'
     | 'maxUserImage'
     | 'trialTime'
-    | 'onesignalAppId'
-    | 'onesignalApiKey'
     | 'ngWords'
     | 'minAge'
     | 'maxAge'
@@ -38,8 +36,6 @@ const _Config: ConfigType = {
     maxPaginationSize: { value: 100, description: 'Số lượng phần tử tối đa trên 1 trang' },
     maxUserImage: { value: 9, description: 'Số lượng hình ảnh tối đa của mỗi người dùng' },
     trialTime: { value: 24 * 60 * 60, description: 'Thời gian dùng thử. (Tính theo phút)' },
-    onesignalAppId: { value: process.env.ONESIGNAL_APP_ID, description: '' },
-    onesignalApiKey: { value: process.env.ONESIGNAL_API_KEY, description: '' },
     ngWords: { value: ["死ね", "殺す"].join(ConstConfig.listSeparateSymbol), description: 'Từ cấm' },
     minAge: { value: 18, description: '' },
     maxAge: { value: 100, description: '' },

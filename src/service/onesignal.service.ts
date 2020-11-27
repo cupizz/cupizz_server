@@ -1,11 +1,10 @@
 import { Client } from 'onesignal-node';
 import { CreateNotificationBody } from 'onesignal-node/lib/types';
-import { Config } from '../config';
 import NotificationPayload from '../model/notificationPayload';
 import { logger } from '../utils/logger';
 
 class OnesignalService {
-    private _client = new Client(Config.onesignalAppId.value, Config.onesignalApiKey.value);
+    private _client = new Client(process.env.ONESIGNAL_APP_ID, process.env.ONESIGNAL_API_KEY);
 
     public async sendToAll(title: string, message: string, subtitle?: string) {
         const result = this.sendNotification({
