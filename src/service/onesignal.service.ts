@@ -20,14 +20,7 @@ class OnesignalService {
 
     public async sendToUserIds(title: string, message: string, userIds: string[], data: NotificationPayload, subtitle?: string, image?: string) {
         if (userIds.length === 0) return;
-
-        const filters = userIds
-            .map((e, i) =>
-                ({ "field": "tag", "key": "userId", "relation": "=", "value": e }))
-            .reduce(
-                (r, a, i) => (i !== 0 ? r.concat({ "operator": "OR" }, a) : r.concat(a)),
-                []
-            )
+        
         try {
             const result = await this.sendNotification({
                 ...title ? {
@@ -36,11 +29,11 @@ class OnesignalService {
                 ...subtitle ? {
                     subtitle: { en: subtitle }
                 } : {},
+                include_external_user_ids: userIds,
                 contents: { en: message },
                 big_picture: image,
                 adm_big_picture: image,
                 ios_attachments: image ? { id1: image } : null,
-                filters,
                 data,
             })
 
