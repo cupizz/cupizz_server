@@ -41,26 +41,35 @@ class MessageService {
                     : conversations[0]
 
             if (!conversation) {
-                conversation = await prisma.conversation.create({
-                    data: {
-                        members: {
-                            create: [
-                                {
-                                    user: { connect: { id: ctx.user.id } },
-                                    isAdmin: true,
-                                },
-                                ctx.user.id !== id.otherUserId ?
+                try {
+
+                    conversation = await prisma.conversation.create({
+                        data: {
+                            members: {
+                                create: [
                                     {
-                                        user: { connect: { id: id.otherUserId } },
+                                        user: { connect: { id: ctx.user.id } },
                                         isAdmin: true,
-                                    } : undefined,
-                            ],
-                        }
-                    },
-                    include: { ...include, members: true }
-                })
+                                    },
+                                    ctx.user.id !== id.otherUserId ?
+                                        {
+                                            user: { connect: { id: id.otherUserId } },
+                                            isAdmin: true,
+                                        } : undefined,
+                                ],
+                            }
+                        },
+                        include: { ...include, members: true }
+                    })
+                } catch (error) {
+                    if(!await prisma.user.findOne({where: {id: id.otherUserId}})) {
+                        throw ErrorNotFound("Không tìm thấy tài khoản.");
+                    }
+                }
             }
         }
+
+        if (!conversation) throw new Error("Đã xảy ra lỗi");
 
         return conversation;
     }

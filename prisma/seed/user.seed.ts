@@ -45,6 +45,7 @@ export const seedUser = async () => {
                     mustHaveFields: { set: getRandomSubarray(Object.values(MustHaveField), faker.random.number(Object.values(MustHaveField).length)) },
                     allowMatching: true,
                     isPrivate: false,
+                    pushNotiSetting: ['like', 'matching', 'newMessage', 'other'],
                     showActive: faker.random.boolean(),
                     avatar: {
                         create: {
