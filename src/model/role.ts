@@ -7,18 +7,21 @@ class DefaultRole {
         name: 'Administrator',
         description: 'Bố mày là admin',
         permissions: Permission.toArray(),
+        canAccessBackOffice: true,
     }
     public normal: Role = {
         id: 'normal',
         name: 'Normal User',
         description: 'Người dùng đã nạp tiền để sử dụng app',
         permissions: [...Permission.friend.toArray()],
+        canAccessBackOffice: false,
     }
     public trial: Role = {
         id: 'trial',
         name: 'Trial User',
         description: 'Người dùng mới đăng ký, chưa nạp tiền',
         permissions: [...Permission.friend.toArray()],
+        canAccessBackOffice: false,
     }
 }
 

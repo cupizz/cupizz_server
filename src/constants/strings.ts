@@ -9,12 +9,15 @@ export default class Strings {
     
     static error = {
         incorrectPassword: 'Mật khẩu không chính xác.',
+        userNotFound: 'Không tìm thấy người dùng.',
         emailNotFound: 'Email not found',
         emailExisted: 'Email existed',
         emailIncorrectForm: 'Email không đúng định dạng',
         otpIncorrect: 'Otp không đúng.',
         unAuthorize: 'Unauthorize',
         unAuthenticate: 'Please login before',
+        lockedAccount: 'Tài khoản này đã bị khóa, vui lòng liên hệ BQT để được hỗ trợ.',
+        trialExpired: 'Thời hạn dùng thử đã hết. \nHãy nâng cấp tài khoản để tiếp tục sử dụng ứng dụng.',
         tokenExpired: 'Token expired',
         tokenIncorrect: 'Token incorrect',
         cannotAuthenticateGoogleAccount: 'Can not authenticate Google account',

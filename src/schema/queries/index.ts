@@ -1,4 +1,7 @@
 import { queryType, objectType } from '@nexus/schema';
+import { Permission } from '../../model/permission';
+import { AuthService } from '../../service';
+import { Validator } from '../../utils/validator';
 export * from './user.query';
 export * from './message.query';
 
@@ -24,5 +27,20 @@ export const PublicQueries = queryType({
             }
         })
         t.crud.hobbyValues({ alias: 'hobbies', pagination: { take: true, skip: true } })
+        t.crud.users({
+            pagination: true,
+            filtering: true,
+            ordering: true,
+            resolve: (root, args, context, info, origin) => {
+                AuthService.authorize(context, { values: [Permission.user.list] });
+                if (!args.take) {
+                    args.take = 10;
+                } else {
+                    Validator.maxPagination(args.take);
+                }
+
+                return origin(root, args, context, info);
+            }
+        })
     }
 })

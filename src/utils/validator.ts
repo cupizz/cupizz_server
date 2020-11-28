@@ -1,3 +1,5 @@
+import { StringFieldUpdateOperationsInput } from "@prisma/client";
+import { Config } from "../config";
 import Strings from "../constants/strings";
 import { ValidationError } from "../model/error";
 import { FriendStatusEnum } from "../schema/types";
@@ -38,7 +40,7 @@ class Validator {
         let error: string;
 
         if (value.length > 20) {
-            error = '20文字以内で入力してください';
+            error = 'Vui lòng nhập trong vòng 20 ký tự';
         }
 
         if (throwError && error) {
@@ -52,10 +54,28 @@ class Validator {
         return value === FriendStatusEnum.friend || value === FriendStatusEnum.me;
     }
 
-    public phoneNumber(value: string, throwError: boolean = true): string {
+    public phoneNumber(value: string | StringFieldUpdateOperationsInput, throwError: boolean = true): string {
+        let error: string;
+        const regexp = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
+        const _value = typeof value === 'string' ? value : value.set;
+
+        if (!regexp.test(_value)) {
+            error = 'Số điện thoại không đúng định dạng'
+        }
+
+        if (throwError && error) {
+            throw ValidationError(error);
+        }
+
+        return error;
+    }
+
+    public maxPagination(take: number, throwError: boolean = true): string {
         let error: string;
 
-        // TODO validate phone number
+        if (take > Config.maxPaginationSize.value) {
+            error = 'Max pagination size is ' + Config.maxPaginationSize.value;
+        }
 
         if (throwError && error) {
             throw ValidationError(error);

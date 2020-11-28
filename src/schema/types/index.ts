@@ -1,8 +1,10 @@
 import { arg, enumType, inputObjectType, objectType } from "@nexus/schema";
 import { ConversationMember, User } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
+import { defaultAvatar } from "../../config";
+import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
-import { MessageService, UserService } from "../../service";
+import { AuthService, MessageService, UserService } from "../../service";
 import { calculateDistance, DistanceUnit } from "../../utils/helper";
 
 export const Json = String;
@@ -162,12 +164,27 @@ export const UserDataType = objectType({
                     : null
             }
         })
+        t.field('status', {
+            type: 'UserStatus', nullable: true,
+            resolve: (root: any, _args, ctx, _info) => {
+                return UserService.canAccessPrivateAccount(ctx, root)
+                    ? root.status : null;
+            }
+        })
+        t.field('statusUpdatedAt', {
+            type: 'DateTime', nullable: true,
+            resolve: (root: any, _args, ctx, _info) => {
+                return UserService.canAccessPrivateAccount(ctx, root)
+                    ? root.statusUpdatedAt : null;
+            }
+        })
         t.field('settings', {
             type: UserSettingType,
             description: "Các cài đặt của User",
             nullable: true,
             resolve: (root: any, _args, ctx, _info): any => {
-                if (ctx.user?.id === root.id) return { ...root }
+                if (ctx.user?.id === root.id || AuthService.authorize(ctx, { values: [Permission.user.list] }, false))
+                    return { ...root }
                 return null
             }
         })

@@ -11,6 +11,8 @@ export const ErrorIncorrectPassword = ClientError(Strings.error.incorrectPasswor
 export const ErrorOtpIncorrect = ClientError(Strings.error.otpIncorrect);
 export const ErrorTokenExpired = ClientError(Strings.error.tokenExpired);
 export const ErrorTokenIncorrect = ClientError(Strings.error.tokenIncorrect);
+export const ErrorTrialExpired = ClientError(Strings.error.trialExpired);
+export const ErrorLockedAccount =  new ApolloError(Strings.error.lockedAccount, 'LOCKED_ACCOUNT');
 
 export const ErrorNotFound = (message?: string) => ClientError(`${message ? message : 'NOTFOUND'}`)
 export const ErrorUnAuthenticate = (message?: string) => new AuthenticationError(message || Strings.error.unAuthenticate);

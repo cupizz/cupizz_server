@@ -1,6 +1,6 @@
 import { arg, booleanArg, idArg, intArg, mutationField, stringArg } from "@nexus/schema";
 import { FileCreateInput } from '@prisma/client';
-import { ConstConfig } from "../../config";
+import Strings from "../../constants/strings";
 import { ClientError, ErrorNotFound } from "../../model/error";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
@@ -215,5 +215,28 @@ export const UndoLastDislikedUserMutation = mutationField('undoLastDislikedUser'
     type: 'User',
     resolve: async (_root, _args, ctx, _info) => {
         return await RecommendService.undoDislike(ctx);
+    }
+})
+
+export const updateUserStatusMutation = mutationField('updateUserStatus', {
+    type: 'User',
+    description: '[ADMIN]',
+    args: {
+        id: idArg({ required: true }),
+        status: arg({ type: 'UserStatus', required: true }),
+    },
+    resolve: async (_root, args, ctx, _info) => {
+        AuthService.authorize(ctx, { values: [Permission.user.update] });
+        try {
+           return await prisma.user.update({
+                where: { id: args.id },
+                data: { status: args.status }
+            });
+        } catch(e) {
+            if(!await prisma.user.findOne({where: {id: args.id}})) {
+                throw ErrorNotFound(Strings.error.userNotFound);
+            }
+            throw e;
+        }
     }
 })

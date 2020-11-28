@@ -36,6 +36,7 @@ class AuthService {
                     throw ErrorIncorrectPassword;
                 }
             }
+            await UserService.validateValidAccount(user);
             UserService.updateOnlineStatus(user);
 
             const token = this.sign({ userId: user.id } as JwtAuthPayload);

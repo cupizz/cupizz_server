@@ -1,4 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { File, PrismaClient } from '@prisma/client';
+import { Context } from './context';
+
+export const defaultAvatar = (ctx: Context): File => ({ id: "0", type: 'image', url: ctx.hostUrl + '/assets/default-avatar.png', thumbnail: null, messageId: null });
 
 export const ConstConfig = {
     port: process.env.PORT || 2020,

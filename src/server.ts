@@ -34,6 +34,9 @@ async function main() {
 
   const createContext = async (token: string, hostUrl: string): Promise<Context> => {
     const user = await AuthService.verifyUser(token);
+    if (user) {
+      await UserService.validateValidAccount(user);
+    }
     return { prisma, pubsub, user, token, hostUrl }
   }
 

@@ -1,12 +1,12 @@
 
 import { ResultValue } from '@nexus/schema/dist/core';
-import { Friend, Gender, OnlineStatus, User, UserWhereInput } from '@prisma/client';
+import { Friend, OnlineStatus, User } from '@prisma/client';
 import { AuthService, NotificationService } from '.';
 import { Config } from '../config';
 import Strings from '../constants/strings';
 import SubscriptionKey from '../constants/subscriptionKey';
 import { Context } from '../context';
-import { ClientError, ErrorEmailExisted, ErrorOtpIncorrect, ErrorTokenIncorrect, ValidationError } from '../model/error';
+import { ClientError, ErrorEmailExisted, ErrorLockedAccount, ErrorOtpIncorrect, ErrorTokenExpired, ErrorTokenIncorrect, ErrorTrialExpired, ValidationError } from '../model/error';
 import { Permission } from '../model/permission';
 import { JwtRegisterPayload } from '../model/registerPayload';
 import { DefaultRole } from '../model/role';
@@ -20,6 +20,20 @@ import { Validator } from '../utils/validator';
 import { RecommendService } from './recommend.service';
 
 class UserService {
+    public canAccessPrivateAccount(ctx: Context, targetUser: User) {
+        return AuthService.authorize(ctx, { values: [Permission.user.list] }, false)
+            || (ctx.user?.id === targetUser?.id && ctx.user && targetUser)
+            || (targetUser && !targetUser?.isPrivate);
+    }
+
+    public async validateValidAccount(user: User) {
+        if (user.roleId === DefaultRole.trial.id && user.createdAt.getTime() + Config.trialTime.value * 60 * 1000 < Date.now()) {
+            throw ErrorTrialExpired;
+        } else if (user.status === 'disabled') {
+            throw ErrorLockedAccount;
+        }
+    }
+
     /**
      * @returns OTP chỉ được trả về trong môi trường dev, vì thế sử dụng cẩn thận
      */

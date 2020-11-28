@@ -3,7 +3,7 @@
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = "***"
 }
 
 generator client {
@@ -203,7 +203,6 @@ model Role {
   description String?
   permissions String[]
   user        User[]
-  canAccessBackOffice Boolean  @default(false)
 }
 
 model Conversation {
