@@ -96,10 +96,13 @@ export const FriendsV2Query = queryField('friendsV2', {
         switch (args.orderBy) {
             case 'login':
                 data = await FriendService.getFriendsSortLogin(ctx, args.type, args.page, pageSize);
+                break;
             case 'age':
                 data = await FriendService.getFriendsSortAge(ctx, args.type, args.page, pageSize);
+                break;
             default:
                 data = await FriendService.getFriendsSortNew(ctx, args.type, args.page, pageSize);
+                break;
         }
 
         return { data, isLastPage: data.length < pageSize }
