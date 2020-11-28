@@ -1,9 +1,12 @@
-import { queryType, objectType } from '@nexus/schema';
+import { queryType, objectType, stringArg, arg, booleanArg } from '@nexus/schema';
 import { Permission } from '../../model/permission';
 import { AuthService } from '../../service';
 import { Validator } from '../../utils/validator';
+import request from 'request';
+import { universities } from '../../utils/universities';
 export * from './user.query';
 export * from './message.query';
+
 
 export const PublicQueries = queryType({
     definition(t) {
@@ -40,6 +43,32 @@ export const PublicQueries = queryType({
                 }
 
                 return origin(root, args, context, info);
+            }
+        })
+        t.field('searchUniversities', {
+            type: 'String',
+            list: true,
+            args: {
+                name: stringArg(),
+                exactMatch: booleanArg(),
+            },
+            resolve: async (_root, args) => {
+                if (!args.name) return universities;
+
+                if (args.exactMatch) {
+                    return universities.filter(e => e.toLowerCase().includes(args.name.toLowerCase()));
+                } else {
+                    const listKey = args.name.split(' ');
+                    return universities.filter(e => {
+                        for (const iterator of listKey) {
+                            if (e.toLocaleLowerCase().includes(iterator.toLowerCase())) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+                }
+
             }
         })
     }

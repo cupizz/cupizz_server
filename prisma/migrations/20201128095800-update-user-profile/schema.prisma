@@ -3,7 +3,7 @@
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = "***"
 }
 
 generator client {
@@ -43,13 +43,6 @@ enum PrivateField {
   phoneNumber
   job
   height
-  address
-  educationLevel
-  smoking
-  drinking
-  yourKids
-  lookingFor
-  religious
 }
 
 enum MustHaveField {
@@ -140,7 +133,7 @@ model User {
   genderPrefer            Gender[]
   distancePrefer          Int                    @default(100)
   educationLevelsPrefer   EducationLevel[]
-  theirKids               HaveKids?
+  theirKids               HaveKids[]
   religiousPrefer         Religious[]
   mustHaveFields          MustHaveField[]
   allowMatching           Boolean                @default(true)

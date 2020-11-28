@@ -3,7 +3,7 @@
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = "***"
 }
 
 generator client {
@@ -140,7 +140,6 @@ model User {
   genderPrefer            Gender[]
   distancePrefer          Int                    @default(100)
   educationLevelsPrefer   EducationLevel[]
-  theirKids               HaveKids?
   religiousPrefer         Religious[]
   mustHaveFields          MustHaveField[]
   allowMatching           Boolean                @default(true)

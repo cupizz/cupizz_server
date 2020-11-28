@@ -21,7 +21,14 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         job: stringArg(),
         height: intArg(),
         privateFields: arg({ type: 'PrivateFieldEnum', list: true }),
-        avatar: arg({ type: 'Upload' })
+        avatar: arg({ type: 'Upload' }),
+        address: stringArg(),
+        educationLevel: arg({ type: 'EducationLevel' }),
+        smoking: arg({ type: 'UsualType' }),
+        drinking: arg({ type: 'UsualType' }),
+        yourKids: arg({ type: 'HaveKids' }),
+        lookingFor: arg({ type: 'LookingFor' }),
+        religious: arg({ type: 'Religious' }),
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
@@ -41,6 +48,13 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
                 ...args.gender ? { gender: { set: args.gender } } : {},
                 ...args.phoneNumber ? { phoneNumber: { set: args.phoneNumber } } : {},
                 ...args.job ? { job: { set: args.job } } : {},
+                ...args.address ? { address: { set: args.address } } : {},
+                ...args.educationLevel ? { educationLevel: { set: args.educationLevel } } : {},
+                ...args.smoking ? { smoking: { set: args.smoking } } : {},
+                ...args.drinking ? { drinking: { set: args.drinking } } : {},
+                ...args.yourKids ? { yourKids: { set: args.yourKids } } : {},
+                ...args.lookingFor ? { lookingFor: { set: args.lookingFor } } : {},
+                ...args.religious ? { religious: { set: args.religious } } : {},
                 ...args.height ? { height: { set: args.height } } : {},
                 ...args.privateFields ? { privateFields: { set: args.privateFields } } : {},
                 ...args.hobbyIds ? { hobbies: { set: args.hobbyIds?.map(e => ({ id: e })) } } : {},
@@ -64,7 +78,10 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
         maxHeightPrefer: intArg(),
         genderPrefer: arg({ type: 'Gender', list: true }),
         distancePrefer: intArg(),
-        mustHaveFields: arg({ type: 'MustHaveEnum', list: true })
+        mustHaveFields: arg({ type: 'MustHaveEnum', list: true }),
+        educationLevelsPrefer: arg({ type: 'EducationLevel', list: true }),
+        theirKids: arg({ type: 'HaveKids' }),
+        religiousPrefer: arg({ type: 'Religious', list: true }),
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
@@ -74,7 +91,10 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
             data: {
                 ...args,
                 genderPrefer: args.genderPrefer ? { set: args.genderPrefer } : undefined,
-                mustHaveFields: args.mustHaveFields ? { set: args.mustHaveFields } : undefined
+                mustHaveFields: args.mustHaveFields ? { set: args.mustHaveFields } : undefined,
+                educationLevelsPrefer: args.educationLevelsPrefer ? { set: args.educationLevelsPrefer } : undefined,
+                theirKids: args.theirKids ? { set: args.theirKids } : undefined,
+                religiousPrefer: args.religiousPrefer ? { set: args.religiousPrefer } : undefined,
             }
         })
         await RecommendService.regenerateRecommendableUsers(ctx.user.id);
@@ -228,12 +248,12 @@ export const updateUserStatusMutation = mutationField('updateUserStatus', {
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authorize(ctx, { values: [Permission.user.update] });
         try {
-           return await prisma.user.update({
+            return await prisma.user.update({
                 where: { id: args.id },
                 data: { status: args.status }
             });
-        } catch(e) {
-            if(!await prisma.user.findOne({where: {id: args.id}})) {
+        } catch (e) {
+            if (!await prisma.user.findOne({ where: { id: args.id } })) {
                 throw ErrorNotFound(Strings.error.userNotFound);
             }
             throw e;

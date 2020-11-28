@@ -1,0 +1,137 @@
+{
+  "version": "0.3.14-fixed",
+  "steps": [
+    {
+      "tag": "CreateEnum",
+      "enum": "EducationLevel",
+      "values": [
+        "highSchool",
+        "college",
+        "gradSchool"
+      ]
+    },
+    {
+      "tag": "CreateEnum",
+      "enum": "UsualType",
+      "values": [
+        "never",
+        "occasionally",
+        "often"
+      ]
+    },
+    {
+      "tag": "CreateEnum",
+      "enum": "HaveKids",
+      "values": [
+        "dontHave",
+        "have"
+      ]
+    },
+    {
+      "tag": "CreateEnum",
+      "enum": "LookingFor",
+      "values": [
+        "chatting",
+        "friendship",
+        "somethingCasual",
+        "longtermRelationship"
+      ]
+    },
+    {
+      "tag": "CreateEnum",
+      "enum": "Religious",
+      "values": [
+        "agnostic",
+        "atheist",
+        "buddhist",
+        "catholic",
+        "christian",
+        "hindu",
+        "jewish",
+        "muslim",
+        "sikh",
+        "spiritual",
+        "other"
+      ]
+    },
+    {
+      "tag": "UpdateEnum",
+      "enum": "MustHaveField",
+      "createdValues": [
+        "educationLevel",
+        "theirKids",
+        "religious"
+      ]
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "address",
+      "type": "String",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "educationLevel",
+      "type": "EducationLevel",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "smoking",
+      "type": "UsualType",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "drinking",
+      "type": "UsualType",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "yourKids",
+      "type": "HaveKids",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "lookingFor",
+      "type": "LookingFor",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "religious",
+      "type": "Religious",
+      "arity": "Optional"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "educationLevelsPrefer",
+      "type": "EducationLevel",
+      "arity": "List"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "theirKids",
+      "type": "HaveKids",
+      "arity": "List"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "religiousPrefer",
+      "type": "Religious",
+      "arity": "List"
+    }
+  ]
+}

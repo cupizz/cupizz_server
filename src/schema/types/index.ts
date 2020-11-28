@@ -1,7 +1,6 @@
 import { arg, enumType, inputObjectType, objectType } from "@nexus/schema";
-import { ConversationMember, User } from "@prisma/client";
+import { ConversationMember, Gender, MustHaveField, OnlineStatus, PrivateField, SocialProviderType, User, FileType, EducationLevel, UsualType, HaveKids, LookingFor, Religious } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
-import { defaultAvatar } from "../../config";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
 import { AuthService, MessageService, UserService } from "../../service";
@@ -12,12 +11,12 @@ export const Json = String;
 export const Upload = GraphQLUpload;
 
 export const GenderType = enumType({
-    members: ['male', 'female', 'other'],
+    members: Object.keys(Gender),
     name: 'Gender'
 });
 
 export const FileTypeType = enumType({
-    members: ['image', 'sound'],
+    members: Object.keys(FileType),
     name: 'FileType'
 })
 
@@ -28,30 +27,42 @@ export const DistanceUnitEnum = enumType({
 
 export const SocialProviderEnumType = enumType({
     name: 'SocialProviderEnumType',
-    members: ['email', 'facebook', 'google', 'instagram']
+    members: Object.keys(SocialProviderType)
 })
 
 export const PrivateFieldEnumType = enumType({
     name: 'PrivateFieldEnum',
-    members: [
-        'birthday',
-        'introduction',
-        'gender',
-        'hobbies',
-        'phoneNumber',
-        'job',
-        'height',
-    ]
+    members: Object.keys(PrivateField)
 })
 
 export const MustHaveEnumType = enumType({
     name: 'MustHaveEnum',
-    members: [
-        'age',
-        'height',
-        'distance',
-        'gender',
-    ]
+    members: Object.keys(MustHaveField)
+})
+
+export const educationLevelType = enumType({
+    name: 'EducationLevelEnum',
+    members: Object.keys(EducationLevel)
+})
+
+export const usualType = enumType({
+    name: 'UsualTypeEnum',
+    members: Object.keys(UsualType)
+})
+
+export const haveKidsType = enumType({
+    name: 'HaveKidsEnum',
+    members: Object.keys(HaveKids)
+})
+
+export const LookingForType = enumType({
+    name: 'LookingForEnum',
+    members: Object.keys(LookingFor)
+})
+
+export const ReligiousType = enumType({
+    name: 'ReligiousEnum',
+    members: Object.keys(Religious)
 })
 
 export enum FriendStatusEnum {
@@ -69,7 +80,7 @@ export const FriendStatusType = enumType({
 
 export const OnlineStatusEnumType = enumType({
     name: 'OnlineStatus',
-    members: ['online', 'away', 'offline']
+    members: Object.keys(OnlineStatus)
 })
 
 export const UserType = objectType({
@@ -117,6 +128,13 @@ export const UserDataType = objectType({
         t.model('User').phoneNumber()
         t.model('User').job()
         t.model('User').height()
+        t.model('User').address()
+        t.model('User').educationLevel()
+        t.model('User').smoking()
+        t.model('User').drinking()
+        t.model('User').yourKids()
+        t.model('User').lookingFor()
+        t.model('User').religious()
         t.model('User').minAgePrefer()
         t.model('User').maxAgePrefer()
         t.model('User').minHeightPrefer()
@@ -125,6 +143,9 @@ export const UserDataType = objectType({
         t.model('User').genderPrefer()
         t.model('User').distancePrefer()
         t.model('User').distancePrefer()
+        t.model('User').educationLevelsPrefer()
+        t.model('User').theirKids()
+        t.model('User').religiousPrefer()
         t.model('User').avatar()
         t.model('User').cover()
         t.model('User').role()
@@ -257,7 +278,7 @@ export const FriendDataType = objectType({
     }
 })
 
-export const FileType = objectType({
+export const fileType = objectType({
     name: 'File',
     definition(t) {
         t.model.id()
