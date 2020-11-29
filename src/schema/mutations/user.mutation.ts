@@ -22,6 +22,7 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         height: intArg(),
         privateFields: arg({ type: 'PrivateFieldEnum', list: true }),
         avatar: arg({ type: 'Upload' }),
+        cover: arg({ type: 'Upload' }),
         address: stringArg(),
         educationLevel: arg({ type: 'EducationLevel' }),
         smoking: arg({ type: 'UsualType' }),
@@ -38,6 +39,11 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         let avatar: FileCreateInput;
         if (args.avatar) {
             avatar = await FileService.upload(await args.avatar);
+        }
+
+        let cover: FileCreateInput;
+        if (args.cover) {
+            cover = await FileService.upload(await args.cover);
         }
 
         const user = await prisma.user.update({
@@ -58,7 +64,8 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
                 ...args.height ? { height: { set: args.height } } : {},
                 ...args.privateFields ? { privateFields: { set: args.privateFields } } : {},
                 ...args.hobbyIds ? { hobbies: { set: args.hobbyIds?.map(e => ({ id: e })) } } : {},
-                ...avatar ? { avatar: { create: avatar } } : {}
+                ...avatar ? { avatar: { create: avatar } } : {},
+                ...cover ? { cover: { create: cover } } : {}
             }
         })
 
