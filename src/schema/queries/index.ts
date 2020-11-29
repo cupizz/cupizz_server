@@ -4,6 +4,7 @@ import { AuthService } from '../../service';
 import { Validator } from '../../utils/validator';
 import request from 'request';
 import { universities } from '../../utils/universities';
+import { prisma } from '../../server';
 export * from './user.query';
 export * from './message.query';
 
@@ -43,6 +44,16 @@ export const PublicQueries = queryType({
                 }
 
                 return origin(root, args, context, info);
+            }
+        })
+        t.field('userCount', {
+            type: 'Int',
+            args: {
+                where: arg({ type: 'UserWhereInput' }),
+            },
+            resolve: async (root, args, ctx, info) => {
+                AuthService.authorize(ctx, { values: [Permission.user.list] });
+                return await prisma.user.count({ where: args.where })
             }
         })
         t.field('searchUniversities', {
