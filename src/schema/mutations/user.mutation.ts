@@ -33,8 +33,10 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
-
-        Validator.phoneNumber(args.phoneNumber);
+        
+        if(args.phoneNumber) {
+            Validator.phoneNumber(args.phoneNumber);
+        }
 
         let avatar: FileCreateInput;
         if (args.avatar) {
