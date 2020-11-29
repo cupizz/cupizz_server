@@ -299,6 +299,7 @@ export const RoleType = objectType({
         t.model.name()
         t.model.description()
         t.model.permissions()
+        t.model.canAccessBackOffice()
     }
 })
 
