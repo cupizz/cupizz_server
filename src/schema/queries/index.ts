@@ -1,6 +1,6 @@
 import { queryType, objectType, stringArg, arg, booleanArg } from '@nexus/schema';
 import { Permission } from '../../model/permission';
-import { AuthService } from '../../service';
+import { AuthService, UserService } from '../../service';
 import { Validator } from '../../utils/validator';
 import request from 'request';
 import { universities } from '../../utils/universities';
@@ -51,9 +51,20 @@ export const PublicQueries = queryType({
             args: {
                 where: arg({ type: 'UserWhereInput' }),
             },
-            resolve: async (root, args, ctx, info) => {
+            resolve: async (_root, args, ctx) => {
                 AuthService.authorize(ctx, { values: [Permission.user.list] });
                 return await prisma.user.count({ where: args.where })
+            }
+        })
+        t.field('getAddress', {
+            type: 'String',
+            args: {
+                latitude: stringArg({ required: true }),
+                longitude: stringArg({ required: true })
+            },
+            resolve: async (_root, args, ctx) => {
+                AuthService.authenticate(ctx);
+                return await UserService.getAddress(args.latitude, args.longitude);
             }
         })
         t.field('searchUniversities', {

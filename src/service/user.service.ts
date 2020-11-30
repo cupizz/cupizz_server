@@ -1,18 +1,18 @@
-import request from 'request';
 import { ResultValue } from '@nexus/schema/dist/core';
 import { Friend, OnlineStatus, User } from '@prisma/client';
+import request from 'request';
 import { AuthService, NotificationService } from '.';
 import { Config } from '../config';
 import Strings from '../constants/strings';
 import SubscriptionKey from '../constants/subscriptionKey';
 import { Context } from '../context';
-import { ClientError, ErrorEmailExisted, ErrorLockedAccount, ErrorOtpIncorrect, ErrorTokenExpired, ErrorTokenIncorrect, ErrorTrialExpired, ValidationError } from '../model/error';
+import { ClientError, ErrorEmailExisted, ErrorLockedAccount, ErrorOtpIncorrect, ErrorTokenIncorrect, ErrorTrialExpired, ValidationError } from '../model/error';
 import { Permission } from '../model/permission';
 import { JwtRegisterPayload } from '../model/registerPayload';
 import { DefaultRole } from '../model/role';
 import { NexusGenAllTypes } from '../schema/generated/nexus';
 import { FriendStatusEnum } from '../schema/types';
-import { prisma, pubsub } from '../server';
+import { prisma, pubsub, redis } from '../server';
 import { logger } from '../utils/logger';
 import OtpHandler from '../utils/otpHandler';
 import { PasswordHandler } from '../utils/passwordHandler';
@@ -236,36 +236,20 @@ class UserService {
         }
     }
 
-    public async getAddress(user: User, ignoreOldAddress: boolean = false): Promise<string | null> {
+    public async getAddressOfUser(user: User, ignoreOldAddress: boolean = false): Promise<string | null> {
         if (user.address && !ignoreOldAddress) return user.address;
         if (!user.latitude || !user.longitude) return null;
 
         try {
-            const res = await new Promise<request.Response>((resolve, reject) => {
-                const url = `https://us1.locationiq.com/v1/reverse.php?key=${process.env.LOCATIONIQ_TOKEN}&lat=${user.latitude}&lon=${user.longitude}&zoom=10&accept-language=vi&format=json`;
-                request.get({
-                    url,
-                    callback: (e, res) => {
-                        if (e) {
-                            reject(e);
-                        } else {
-                            resolve(res);
-                        }
-                    }
-                })
-            });
+            const address = await this.getAddress(user.latitude.toString(), user.longitude.toString());
 
-            if (res.statusCode != 200) throw new Error(res.body);
-
-            const decoded = JSON.parse(res.body);
-
-            if (decoded.display_name) {
+            if (address) {
                 prisma.user.update({
                     where: { id: user.id },
-                    data: { address: decoded.display_name }
+                    data: { address }
                 })
 
-                return decoded.display_name;
+                return address;
             }
             return null;
         } catch (error) {
@@ -273,6 +257,52 @@ class UserService {
             return null;
         }
     }
+
+    public async getAddress(latitude: string, longitude: string): Promise<string | null> {
+        if (!latitude || !longitude) return null;
+        const redisKey = `getAddress:${latitude},${longitude}`;
+
+        try {
+            return await new Promise<string>((res, rej) => {
+                redis.get(redisKey, (error, result) => {
+                    if (result) {
+                        res(result);
+                    } else {
+                        rej(error);
+                    }
+                })
+            })
+        } catch (_) {
+            try {
+                const res = await new Promise<request.Response>((resolve, reject) => {
+                    const url = `https://us1.locationiq.com/v1/reverse.php?key=${process.env.LOCATIONIQ_TOKEN}&lat=${latitude}&lon=${longitude}&zoom=10&accept-language=vi&format=json`;
+                    request.get({
+                        url,
+                        callback: (e, res) => {
+                            if (e) {
+                                reject(e);
+                            } else {
+                                resolve(res);
+                            }
+                        }
+                    })
+                });
+
+                if (res.statusCode != 200) throw new Error(res.body);
+
+                const decoded = JSON.parse(res.body);
+                const address = decoded.display_name;
+
+                redis.setex(redisKey, 86400, address);
+                
+                return address;
+            } catch (error) {
+                logger(error);
+                return null;
+            }
+        }
+    }
+
 }
 
 

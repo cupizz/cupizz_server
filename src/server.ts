@@ -12,12 +12,18 @@ import { runCronJob } from './cron'
 import { DefaultRole } from './model/role'
 import { schema } from './schema'
 import { AuthService, UserService } from './service'
-import { logger } from './utils/logger'
+import { logger } from './utils/logger';
+import responseTime from 'response-time'
+import Redis from 'redis';
 
 export const pubsub = new PubSub();
 export const prisma = new PrismaClient({
   log: ['error', 'warn'],
   errorFormat: 'minimal'
+});
+export const redis = Redis.createClient({ host: process.env.REDIS_HOST });
+redis.on('error', (err) => {
+  logger("Error " + err);
 });
 
 async function main() {
@@ -31,6 +37,7 @@ async function main() {
   }));
 
   app.use('/graphql', bodyParser.json());
+  app.use(responseTime());
 
   const createContext = async (token: string, hostUrl: string): Promise<Context> => {
     const user = await AuthService.verifyUser(token);

@@ -129,7 +129,7 @@ export const UserDataType = objectType({
         t.model('User').job()
         t.model('User').height()
         t.model('User').address({
-            resolve: async (root: any) => UserService.getAddress(root)
+            resolve: async (root: any) => UserService.getAddressOfUser(root)
         })
         t.model('User').educationLevel()
         t.model('User').smoking()

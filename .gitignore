@@ -118,3 +118,4 @@ dist
 
 src/schema/generated
 temp
+.docker/*
