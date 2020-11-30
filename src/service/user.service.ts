@@ -1,4 +1,4 @@
-
+import request from 'request';
 import { ResultValue } from '@nexus/schema/dist/core';
 import { Friend, OnlineStatus, User } from '@prisma/client';
 import { AuthService, NotificationService } from '.';
@@ -233,6 +233,44 @@ class UserService {
                         ]
                     }
                 })
+        }
+    }
+
+    public async getAddress(user: User, ignoreOldAddress: boolean = false): Promise<string | null> {
+        if (user.address && !ignoreOldAddress) return user.address;
+        if (!user.latitude || !user.longitude) return null;
+
+        try {
+            const res = await new Promise<request.Response>((resolve, reject) => {
+                const url = `https://us1.locationiq.com/v1/reverse.php?key=${process.env.LOCATIONIQ_TOKEN}&lat=${user.latitude}&lon=${user.longitude}&zoom=10&accept-language=vi&format=json`;
+                request.get({
+                    url,
+                    callback: (e, res) => {
+                        if (e) {
+                            reject(e);
+                        } else {
+                            resolve(res);
+                        }
+                    }
+                })
+            });
+
+            if (res.statusCode != 200) throw new Error(res.body);
+
+            const decoded = JSON.parse(res.body);
+
+            if (decoded.display_name) {
+                prisma.user.update({
+                    where: { id: user.id },
+                    data: { address: decoded.display_name }
+                })
+
+                return decoded.display_name;
+            }
+            return null;
+        } catch (error) {
+            logger(error);
+            return null;
         }
     }
 }

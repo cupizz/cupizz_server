@@ -14,7 +14,7 @@ export const seedUser = async () => {
 
     await Promise.all(Array.from(Array(200).keys())
         .map(async (_, i) => {
-            const minAgePrefer = faker.random.number({ min: Config.minAge.value, max: 40});
+            const minAgePrefer = faker.random.number({ min: Config.minAge.value, max: 40 });
             const maxAgePrefer = faker.random.number({ min: minAgePrefer, max: 40 });
             const minHeightPrefer = faker.random.number({ min: Config.minHeight.value, max: Config.maxHeight.value });
             const maxHeightPrefer = faker.random.number({ min: minHeightPrefer, max: Config.maxHeight.value });
@@ -59,7 +59,16 @@ export const seedUser = async () => {
                             url: getRandomImage()
                         }
                     },
-                    userImages: { create: Array.from(Array(faker.random.number(9)).keys()).map(_ => ({ image: { create: { type: 'image', url: faker.image.people() } } })) },
+                    userImages: {
+                        create: Array.from(Array(faker.random.number(9)).keys()).map(_ => ({
+                            image: {
+                                create: {
+                                    type: 'image',
+                                    url: getRandomImage()
+                                }
+                            }
+                        }))
+                    },
                     lastOnline: faker.date.recent(),
                     role: { connect: { id: faker.random.boolean() ? DefaultRole.normal.id : DefaultRole.trial.id } },
                     socialProvider: {
