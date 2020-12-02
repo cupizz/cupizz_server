@@ -1,0 +1,81 @@
+{
+  "version": "0.3.14-fixed",
+  "steps": [
+    {
+      "tag": "CreateField",
+      "model": "Question",
+      "field": "gradient",
+      "type": "String",
+      "arity": "List"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Question",
+          "field": "color"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Question",
+          "field": "color"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "\"000000\""
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "Question",
+          "field": "textColor"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "Question",
+          "field": "textColor"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "\"ffffff\""
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserAnswer",
+      "field": "gradient",
+      "type": "String",
+      "arity": "List"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "UserAnswer",
+      "field": "color",
+      "arity": "Optional"
+    },
+    {
+      "tag": "UpdateField",
+      "model": "UserAnswer",
+      "field": "textColor",
+      "arity": "Optional"
+    }
+  ]
+}

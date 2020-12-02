@@ -3,7 +3,7 @@
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = "***"
 }
 
 generator client {
@@ -188,18 +188,16 @@ model Question {
   id         String       @id @default(cuid())
   content    String
   userAnswer UserAnswer[]
-  color      String       @default("000000")
-  textColor  String       @default("ffffff")
-  gradient   String[]
+  color      String
+  textColor  String
 }
 
 model UserAnswer {
   id         String     @id @default(cuid())
   question   Question   @relation(fields: [questionId], references: [id])
   questionId String
-  color      String?
-  textColor  String?
-  gradient   String[]
+  color      String
+  textColor  String
   content    String
   createBy   User       @relation(fields: [createById], references: [id])
   createById String

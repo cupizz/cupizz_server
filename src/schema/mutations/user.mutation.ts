@@ -172,7 +172,7 @@ export const RemoveUserImageMutation = mutationField('removeUserImage', {
     args: {
         id: stringArg({ nullable: false })
     },
-    resolve: async (root, args, ctx, info) => {
+    resolve: async (_root, args, ctx) => {
         AuthService.authenticate(ctx);
         const where = {
             userId_imageId: {
@@ -193,7 +193,9 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
     type: 'UserAnswer',
     args: {
         questionId: idArg({ nullable: false }),
-        color: stringArg({ nullable: false }),
+        color: stringArg(),
+        textColor: stringArg(),
+        gradient: stringArg({ list: true }),
         content: stringArg({ nullable: false }),
         backgroundImage: arg({ type: 'Upload' })
     },
@@ -208,6 +210,8 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
             data: {
                 color: args.color,
                 content: args.content,
+                textColor: args.textColor,
+                gradient: args.gradient ?? [],
                 createBy: { connect: { id: ctx.user.id } },
                 question: { connect: { id: args.questionId } },
                 ...args.backgroundImage ? {

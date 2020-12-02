@@ -320,6 +320,8 @@ export const QuestionType = objectType({
         t.model.id()
         t.model.content()
         t.model.color()
+        t.model.textColor()
+        t.model.gradient()
     }
 })
 
@@ -329,6 +331,8 @@ export const UserAnswerType = objectType({
         t.model.id()
         t.model.question()
         t.model.color()
+        t.model.textColor()
+        t.model.gradient()
         t.model.content()
         t.model.userImage()
         t.model.createBy()
