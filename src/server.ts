@@ -15,6 +15,7 @@ import { AuthService, UserService } from './service'
 import { logger } from './utils/logger';
 import responseTime from 'response-time'
 import Redis from 'redis';
+import { devSeed } from './dev-seed'
 
 export const pubsub = new PubSub();
 export const prisma = new PrismaClient({
@@ -38,6 +39,7 @@ async function main() {
 
   app.use('/graphql', bodyParser.json());
   app.use(responseTime());
+  devSeed(app);
 
   const createContext = async (token: string, hostUrl: string): Promise<Context> => {
     const user = await AuthService.verifyUser(token);

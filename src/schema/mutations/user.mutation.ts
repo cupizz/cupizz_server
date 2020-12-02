@@ -118,6 +118,37 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
     }
 })
 
+export const updateUserImagesSortOrder = mutationField('updateUserImagesSortOrder', {
+    type: 'User',
+    args: {
+        userImagesSortOrder: stringArg({ list: true, description: 'Danh sách image id theo thứ tự' }),
+    },
+    resolve: async (_root, args, ctx) => {
+        AuthService.authenticate(ctx);
+
+        const currentUserImages = (await prisma.userImage.findMany({ where: { userId: { equals: ctx.user.id } } }));
+
+        // Sửa lại ds userImagesSortOrder sao cho chứa đầy đủ các image hiện tại.
+        const standardizedUserImagesSortOrder: string[] = [];
+        if (args.userImagesSortOrder) {
+            standardizedUserImagesSortOrder.push(...Array.from(new Set(args.userImagesSortOrder)).filter(e => currentUserImages.findIndex(e2 => e2.id === e) >= 0));
+            standardizedUserImagesSortOrder.push(...currentUserImages.filter(e => !args.userImagesSortOrder.includes(e.id)).map(e => e.id));
+        }
+
+        return await prisma.user.update({
+            where: { id: ctx.user.id },
+            data: {
+                userImages: {
+                    update: standardizedUserImagesSortOrder.map((e, i) => ({
+                        where: { id: e },
+                        data: { sortOrder: i + 1 }
+                    }))
+                }
+            }
+        })
+    }
+})
+
 export const ConnectSocialNetworkMutation = mutationField('connectSocialNetwork', {
     type: 'User',
     args: {
@@ -174,18 +205,12 @@ export const RemoveUserImageMutation = mutationField('removeUserImage', {
     },
     resolve: async (_root, args, ctx) => {
         AuthService.authenticate(ctx);
-        const where = {
-            userId_imageId: {
-                imageId: args.id,
-                userId: ctx.user.id
-            }
-        };
 
-        if (!await prisma.userImage.findOne({ where })) {
+        if (!await prisma.userImage.findOne({ where: { id: args.id } })) {
             throw ErrorNotFound();
         }
 
-        return await prisma.userImage.delete({ where })
+        return await prisma.userImage.delete({ where: { id: args.id } })
     }
 })
 
@@ -217,7 +242,7 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
                 ...args.backgroundImage ? {
                     userImage: {
                         create: {
-                            image: { create: await FileService.upload(await args.backgroundImage) },
+                            ...args.backgroundImage ? { image: { create: await FileService.upload(await args.backgroundImage) } } : {},
                             user: { connect: { id: ctx.user.id } }
                         }
                     }

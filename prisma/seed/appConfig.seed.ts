@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import faker from 'faker/locale/vi';
 import { Config } from "../../src/config";
 
 export const defaultHobbies = [
@@ -55,7 +56,7 @@ export const seedAppConfig = async () => {
         })
     )
 
-    return await Promise.all(
+    await Promise.all(
         [
             ...defaultHobbies.map(async e => await db.hobbyValue.create({
                 data: { value: e }
@@ -63,3 +64,17 @@ export const seedAppConfig = async () => {
         ]
     )
 };
+
+export const seedQuestion = async () => {
+    const db = new PrismaClient();
+    
+    await Promise.all(
+        Array.from(Array(10).keys()).map(async () => await db.question.create({
+            data: {
+                content: faker.lorem.sentence(),
+                color: Math.floor(Math.random() * 16777215).toString(16),
+                textColor: Math.floor(Math.random() * 16777215).toString(16),
+            }
+        })),
+    )
+}

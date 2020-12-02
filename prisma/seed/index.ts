@@ -2,13 +2,14 @@ import { PrismaClient } from "@prisma/client";
 import { exit } from "process";
 import { DefaultRole } from "../../src/model/role";
 import { PasswordHandler } from "../../src/utils/passwordHandler";
-import { seedAppConfig } from "./appConfig.seed";
+import { seedAppConfig, seedQuestion } from "./appConfig.seed";
 import { seedRole } from "./role.seed";
 import { seedUser } from "./user.seed";
 
 const seed = async () => {
     const db = new PrismaClient();
     await seedAppConfig();
+    await seedQuestion();
     console.log('Seeded App configs');
     await seedRole();
     await db.user.create({
