@@ -308,9 +308,12 @@ export const RoleType = objectType({
 export const UserImageType = objectType({
     name: 'UserImage',
     definition(t) {
+        t.model.id()
         t.model.image()
         t.model.user()
         t.model.userAnswer()
+        t.model.sortOrder()
+        t.model.createdAt()
     }
 })
 
