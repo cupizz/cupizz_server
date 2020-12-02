@@ -1,4 +1,4 @@
-import { arg, booleanArg, idArg, intArg, mutationField, stringArg } from "@nexus/schema";
+import { arg, booleanArg, floatArg, idArg, intArg, mutationField, stringArg } from "@nexus/schema";
 import { FileCreateInput } from '@prisma/client';
 import Strings from "../../constants/strings";
 import { ClientError, ErrorNotFound } from "../../model/error";
@@ -16,6 +16,9 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         nickName: stringArg(),
         introduction: stringArg(),
         gender: arg({ type: 'Gender' }),
+        birthday: arg({ type: 'DateTime' }),
+        latitude: floatArg(),
+        longitude: floatArg(),
         hobbyIds: stringArg({ list: true }),
         phoneNumber: stringArg(),
         job: stringArg(),
@@ -33,8 +36,8 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
-        
-        if(args.phoneNumber) {
+
+        if (args.phoneNumber) {
             Validator.phoneNumber(args.phoneNumber);
         }
 
@@ -55,6 +58,10 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
                 ...args.introduction ? { introduction: { set: args.introduction } } : {},
                 ...args.gender ? { gender: { set: args.gender } } : {},
                 ...args.phoneNumber ? { phoneNumber: { set: args.phoneNumber } } : {},
+                ...args.birthday ? { birthday: { set: args.birthday } } : {},
+                ...args.latitude ? { latitude: { set: args.latitude } } : {},
+                ...args.longitude ? { longitude: { set: args.longitude } } : {},
+                ...args.longitude || args.latitude ? { address: { set: '' } } : {},
                 ...args.job ? { job: { set: args.job } } : {},
                 ...args.address ? { address: { set: args.address } } : {},
                 ...args.educationLevel ? { educationLevel: { set: args.educationLevel } } : {},
@@ -71,7 +78,7 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
             }
         })
 
-        if (args.hobbyIds) {
+        if (args.hobbyIds || args.latitude || args.longitude) {
             await RecommendService.regenerateRecommendableUsers(ctx.user.id);
         }
         return user;
