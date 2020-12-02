@@ -29,6 +29,15 @@ export function devSeed(app: any) {
     )
     res.sendStatus(200);
   });
+  app.get('/delte-all-userImage-question-answer', async (_: any, res: any) => {
+    await prisma.$transaction([
+      prisma.userAnswer.deleteMany({}),
+      prisma.question.deleteMany({}),
+      prisma.userImage.deleteMany({}),
+    ]
+    )
+    res.sendStatus(200);
+  });
 }
 
 function getRandomSubarray<T>(arr: T[], size: number): T[] {
