@@ -31,7 +31,7 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         smoking: arg({ type: 'UsualType' }),
         drinking: arg({ type: 'UsualType' }),
         yourKids: arg({ type: 'HaveKids' }),
-        lookingFor: arg({ type: 'LookingFor' }),
+        lookingFors: arg({ type: 'LookingFor', list: true }),
         religious: arg({ type: 'Religious' }),
     },
     resolve: async (_root, args, ctx, _info) => {
@@ -68,7 +68,7 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
                 ...args.smoking ? { smoking: { set: args.smoking } } : {},
                 ...args.drinking ? { drinking: { set: args.drinking } } : {},
                 ...args.yourKids ? { yourKids: { set: args.yourKids } } : {},
-                ...args.lookingFor ? { lookingFor: { set: args.lookingFor } } : {},
+                ...args.lookingFors ? { lookingFors: { set: args.lookingFors } } : {},
                 ...args.religious ? { religious: { set: args.religious } } : {},
                 ...args.height ? { height: { set: args.height } } : {},
                 ...args.privateFields ? { privateFields: { set: args.privateFields } } : {},
