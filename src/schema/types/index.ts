@@ -135,7 +135,7 @@ export const UserDataType = objectType({
         t.model('User').smoking()
         t.model('User').drinking()
         t.model('User').yourKids()
-        t.model('User').lookingFor()
+        t.model('User').lookingFors()
         t.model('User').religious()
         t.model('User').minAgePrefer()
         t.model('User').maxAgePrefer()
