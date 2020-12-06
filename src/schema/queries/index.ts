@@ -93,5 +93,18 @@ export const PublicQueries = queryType({
 
             }
         })
+        t.field('questions', {
+            type: 'Question',
+            list: true,
+            args: {
+                keyword: stringArg(),
+            },
+            resolve: async (_root, args, ctx) => {
+                AuthService.authenticate(ctx);
+                return await prisma.question.findMany({
+                    where: args.keyword ? {content: {contains: args.keyword}} : undefined
+                });
+            }
+        })
     }
 })
