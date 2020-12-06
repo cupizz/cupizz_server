@@ -96,7 +96,14 @@ export const UserType = objectType({
             resolve: async (root, _args, ctx, _info): Promise<any> => {
                 const friendType = await UserService.getFriendStatus(ctx.user?.id, root.id);
                 return {
-                    ...root,
+                    ...await prisma.user.findOne({
+                        where: { id: root.id },
+                        include: {
+                            userImages: {
+                                orderBy: { sortOrder: 'asc' }
+                            },
+                        },
+                    }),
                     friendType,
                 }
             }
@@ -151,7 +158,11 @@ export const UserDataType = objectType({
         t.model('User').avatar()
         t.model('User').cover()
         t.model('User').role()
-        t.model('User').userImages({ pagination: false })
+        t.model('User').userImages({
+            pagination: false, resolve: async (root: any, args, ctx) => {
+                return root.userImages;
+            }
+        })
         t.model('User').socialProvider({ pagination: false, alias: 'socialProviders' })
         t.field('distance', {
             type: 'String',

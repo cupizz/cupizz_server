@@ -215,7 +215,7 @@ export const RemoveUserImageMutation = mutationField('removeUserImage', {
 })
 
 export const AnswerQuestionMutation = mutationField('answerQuestion', {
-    type: 'UserAnswer',
+    type: 'UserImage',
     args: {
         questionId: idArg({ nullable: false }),
         color: stringArg(),
@@ -231,22 +231,20 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
             throw ErrorNotFound('Question not found');
         }
 
-        return await prisma.userAnswer.create({
+        return await prisma.userImage.create({
             data: {
-                color: args.color,
-                content: args.content,
-                textColor: args.textColor,
-                gradient: args.gradient ?? [],
-                createBy: { connect: { id: ctx.user.id } },
-                question: { connect: { id: args.questionId } },
-                ...args.backgroundImage ? {
-                    userImage: {
-                        create: {
-                            ...args.backgroundImage ? { image: { create: await FileService.upload(await args.backgroundImage) } } : {},
-                            user: { connect: { id: ctx.user.id } }
-                        }
-                    }
-                } : {}
+                user: { connect: { id: ctx.user.id } },
+                ...args.backgroundImage ? { image: { create: await FileService.upload(await args.backgroundImage) } } : {},
+                userAnswer: {
+                    create: {
+                        color: args.color,
+                        content: args.content,
+                        textColor: args.textColor,
+                        gradient: args.gradient ?? [],
+                        createBy: { connect: { id: ctx.user.id } },
+                        question: { connect: { id: args.questionId } },
+                    },
+                }
             }
         })
     }
