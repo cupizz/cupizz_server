@@ -1,8 +1,8 @@
 {
-  "name": "cubizz-server",
+  "name": "cupizz-server",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "git@github.com:cubizz/cubizz-server.git",
+  "repository": "git@github.com:cupizz/cupizz-server.git",
   "author": "Hieren <hienlh1298@gmail.com>",
   "license": "MIT",
   "scripts": {

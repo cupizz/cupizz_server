@@ -9,7 +9,7 @@ services:
     links:
       - db
     networks:
-      - cubizz
+      - cupizz
     ports:
       - '1998:1998'
       - '5555:5555'
@@ -25,7 +25,7 @@ services:
       - '80:80'
       - '443:443'
     networks:
-      - cubizz
+      - cupizz
     depends_on:
       - web
       - db
@@ -42,17 +42,17 @@ services:
     volumes:
         - database:/var/lib/postgresql/data
     networks:
-      - cubizz
+      - cupizz
   redis:
     image: redis:5-alpine
     volumes:
       - .docker/redis-data:/data
     restart: unless-stopped
     networks:
-      - cubizz
+      - cupizz
 
 networks:
-  cubizz:
+  cupizz:
 
 volumes:
   database:

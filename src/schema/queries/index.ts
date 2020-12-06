@@ -24,7 +24,7 @@ export const PublicQueries = queryType({
             nullable: true,
             resolve: async (_root, _args, _ctx, _info) => {
                 return {
-                    appName: 'Cubizz',
+                    appName: 'Cupizz',
                     apiVersion: 'v1.0.0',
                     contact: 'hienlh1298@gmail.com'
                 };

@@ -8,7 +8,7 @@ COPY ./package.json ./package.json
 RUN yarn install --silent
 
 FROM node:10-alpine
-WORKDIR /cubizz
+WORKDIR /cupizz
 
 COPY --from=builder /node_modules ./node_modules
 COPY . .

@@ -6,7 +6,7 @@ services:
       dockerfile: dev.dockerfile
 
     volumes:
-      - .:/cubizz:cached
+      - .:/cupizz:cached
     command: sleep infinity
     env_file:
       - .env
@@ -15,7 +15,7 @@ services:
     ports:
       - 1998:1998
     networks:
-      - cubizz
+      - cupizz
     depends_on:
         - redis
         - db
@@ -29,14 +29,14 @@ services:
       POSTGRES_USER: user
       POSTGRES_DB: data
     networks:
-      - cubizz
+      - cupizz
   redis:
     image: redis:5-alpine
     volumes:
       - .docker/redis-data:/data
     restart: unless-stopped
     networks:
-      - cubizz
+      - cupizz
 
 networks:
-  cubizz:
+  cupizz:

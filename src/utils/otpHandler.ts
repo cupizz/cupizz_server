@@ -31,7 +31,7 @@ export default class OtpHandler {
         });
 
         await transporter.sendMail({
-            from: '"Cubizz" <no-reply@cubizz.cf>',
+            from: '"Cupizz" <no-reply@cupizz.cf>',
             to: email,
             subject: "Xác thực email",
             text:
