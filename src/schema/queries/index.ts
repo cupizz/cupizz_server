@@ -1,13 +1,12 @@
-import { queryType, objectType, stringArg, arg, booleanArg, intArg } from '@nexus/schema';
-import { Permission } from '../../model/permission';
-import { AuthService, UserService } from '../../service';
-import { Validator } from '../../utils/validator';
-import request from 'request';
-import { universities } from '../../utils/universities';
-import { prisma } from '../../server';
+import { arg, booleanArg, intArg, objectType, queryType, stringArg } from '@nexus/schema';
 import { Config } from '../../config';
-export * from './user.query';
+import { Permission } from '../../model/permission';
+import { prisma } from '../../server';
+import { AuthService, UserService } from '../../service';
+import { universities } from '../../utils/universities';
+import { Validator } from '../../utils/validator';
 export * from './message.query';
+export * from './user.query';
 
 
 export const PublicQueries = queryType({
@@ -109,6 +108,29 @@ export const PublicQueries = queryType({
                     take: pageSize,
                     skip: pageSize * ((args.page ?? 1) - 1),
                 });
+            }
+        })
+        t.field('colorsOfAnswer', {
+            type: objectType({
+                name: 'ColorOfAnswer',
+                definition(t) {
+                    t.field('color', { type: 'String' });
+                    t.field('gradient', { type: 'String', list: true, nullable: true });
+                    t.field('textColor', { type: 'String' });
+                }
+            }),
+            list: true,
+            resolve: () => {
+                return [
+                    {
+                        color: '000000',
+                        textColor: 'ffffff'
+                    },
+                    {
+                        color: 'ffffff',
+                        textColor: '000000'
+                    }
+                ]
             }
         })
     }
