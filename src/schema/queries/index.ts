@@ -1,10 +1,11 @@
-import { queryType, objectType, stringArg, arg, booleanArg } from '@nexus/schema';
+import { queryType, objectType, stringArg, arg, booleanArg, intArg } from '@nexus/schema';
 import { Permission } from '../../model/permission';
 import { AuthService, UserService } from '../../service';
 import { Validator } from '../../utils/validator';
 import request from 'request';
 import { universities } from '../../utils/universities';
 import { prisma } from '../../server';
+import { Config } from '../../config';
 export * from './user.query';
 export * from './message.query';
 
@@ -98,11 +99,15 @@ export const PublicQueries = queryType({
             list: true,
             args: {
                 keyword: stringArg(),
+                page: intArg({default: 1}),
             },
             resolve: async (_root, args, ctx) => {
                 AuthService.authenticate(ctx);
+                const pageSize: number = Config.defaultPageSize?.value || 10;
                 return await prisma.question.findMany({
-                    where: args.keyword ? {content: {contains: args.keyword}} : undefined
+                    where: args.keyword ? {content: {contains: args.keyword}} : undefined,
+                    take: pageSize,
+                    skip: pageSize * ((args.page ?? 1) - 1),
                 });
             }
         })
