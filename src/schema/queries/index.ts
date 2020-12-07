@@ -98,13 +98,13 @@ export const PublicQueries = queryType({
             list: true,
             args: {
                 keyword: stringArg(),
-                page: intArg({default: 1}),
+                page: intArg({ default: 1 }),
             },
             resolve: async (_root, args, ctx) => {
                 AuthService.authenticate(ctx);
                 const pageSize: number = Config.defaultPageSize?.value || 10;
                 return await prisma.question.findMany({
-                    where: args.keyword ? {content: {contains: args.keyword}} : undefined,
+                    where: args.keyword ? { content: { contains: args.keyword } } : undefined,
                     take: pageSize,
                     skip: pageSize * ((args.page ?? 1) - 1),
                 });
@@ -129,6 +129,57 @@ export const PublicQueries = queryType({
                     {
                         color: 'ffffff',
                         textColor: '000000'
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            '77a1d3',
+                            '79cbca',
+                            'e684ae',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            'EC6F66',
+                            'F3A183',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            'ED4264',
+                            'FFEDBC',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            'DC2424',
+                            '4A569D',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            '24C6DC',
+                            '514A9D',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            '0099F7',
+                            'F11712',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            '#833ab4',
+                            '#fd1d1d',
+                            '#fcb045',
+                        ]
                     }
                 ]
             }
