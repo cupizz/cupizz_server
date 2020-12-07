@@ -102,8 +102,31 @@ export const PublicQueries = queryType({
             resolve: async (_root, args, ctx) => {
                 AuthService.authenticate(ctx);
                 return await prisma.question.findMany({
-                    where: args.keyword ? {content: {contains: args.keyword}} : undefined
+                    where: args.keyword ? { content: { contains: args.keyword } } : undefined
                 });
+            }
+        })
+        t.field('colorsOfAnswer', {
+            type: objectType({
+                name: 'ColorOfAnswer',
+                definition(t) {
+                    t.field('color', { type: 'String' });
+                    t.field('gradient', { type: 'String', list: true, nullable: true });
+                    t.field('textColor', { type: 'String' });
+                }
+            }),
+            list: true,
+            resolve: () => {
+                return [
+                    {
+                        color: '000000',
+                        textColor: 'ffffff'
+                    },
+                    {
+                        color: 'ffffff',
+                        textColor: '000000'
+                    }
+                ]
             }
         })
     }
