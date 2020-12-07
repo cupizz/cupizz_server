@@ -94,8 +94,13 @@ export const PublicQueries = queryType({
             }
         })
         t.field('questions', {
-            type: 'Question',
-            list: true,
+            type: objectType({
+                name: 'QuestionsOutput',
+                definition(t) {
+                    t.field('data', { type: 'Question', list: true })
+                    t.field('isLastPage', { type: 'Boolean' })
+                }
+            }),
             args: {
                 keyword: stringArg(),
                 page: intArg({ default: 1 }),
@@ -103,11 +108,12 @@ export const PublicQueries = queryType({
             resolve: async (_root, args, ctx) => {
                 AuthService.authenticate(ctx);
                 const pageSize: number = Config.defaultPageSize?.value || 10;
-                return await prisma.question.findMany({
+                const data = await prisma.question.findMany({
                     where: args.keyword ? { content: { contains: args.keyword } } : undefined,
                     take: pageSize,
                     skip: pageSize * ((args.page ?? 1) - 1),
                 });
+                return { data, isLastPage: data.length < pageSize };
             }
         })
         t.field('colorsOfAnswer', {
