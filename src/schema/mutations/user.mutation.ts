@@ -250,6 +250,57 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
     }
 })
 
+export const editAnswerMutation = mutationField('editAnswer', {
+    type: 'UserImage',
+    args: {
+        answerId: idArg({ required: true }),
+        color: stringArg(),
+        textColor: stringArg(),
+        gradient: stringArg({ list: true }),
+        content: stringArg({ nullable: false }),
+        backgroundImage: arg({ type: 'Upload' })
+    },
+    resolve: async (_root, args, ctx, _info) => {
+        AuthService.authenticate(ctx);
+
+        const userAnswer = await prisma.userAnswer.findOne({
+            where: { id: args.answerId },
+            include: { userImage: true }
+        });
+
+        if (!userAnswer || !userAnswer.userImage) {
+            throw ErrorNotFound('Không tìm thấy dữ liệu. Vui lòng tải lại trang và thử lại.');
+        }
+
+        let image;
+        if (args.backgroundImage) {
+            image = await FileService.upload(await args.backgroundImage);
+        }
+
+        return (await prisma.userAnswer.update({
+            where: { id: args.answerId },
+            data: {
+                ...args.color ? { color: { set: args.color } } : {},
+                ...args.textColor ? { textColor: { set: args.textColor } } : {},
+                ...args.gradient ? { gradient: { set: args.gradient } } : {},
+                ...args.content ? { content: { set: args.content } } : {},
+                ...image ? {
+                    userImage: {
+                        update: {
+                            image: {
+                                ...userAnswer.userImage?.imageId ? {
+                                    update: { ...image, id: userAnswer.userImage.imageId },
+                                } : { create: image }
+                            }
+                        }
+                    }
+                } : {},
+            },
+            include: { userImage: true }
+        })).userImage;
+    }
+})
+
 export const AddFriendMutation = mutationField('addFriend', {
     type: 'FriendType',
     args: {
