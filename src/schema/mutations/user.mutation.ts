@@ -188,10 +188,16 @@ export const AddUserImageMutation = mutationField('addUserImage', {
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
 
+        const imageCount = (await prisma.userImage.findFirst({
+            where: { userId: ctx.user.id },
+            orderBy: { sortOrder: 'desc' }
+        })).sortOrder;
+
         const userImage = await prisma.userImage.create({
             data: {
                 image: { create: await FileService.upload(await args.image) },
-                user: { connect: { id: ctx.user.id } }
+                user: { connect: { id: ctx.user.id } },
+                sortOrder: imageCount + 1,
             }
         })
         return userImage;
@@ -231,10 +237,16 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
             throw ErrorNotFound('Question not found');
         }
 
+        const imageCount = (await prisma.userImage.findFirst({
+            where: { userId: ctx.user.id },
+            orderBy: { sortOrder: 'desc' }
+        })).sortOrder;
+
         return await prisma.userImage.create({
             data: {
                 user: { connect: { id: ctx.user.id } },
                 ...args.backgroundImage ? { image: { create: await FileService.upload(await args.backgroundImage) } } : {},
+                sortOrder: imageCount + 1,
                 userAnswer: {
                     create: {
                         color: args.color,
