@@ -1,12 +1,12 @@
-import { queryType, objectType, stringArg, arg, booleanArg } from '@nexus/schema';
+import { arg, booleanArg, intArg, objectType, queryType, stringArg } from '@nexus/schema';
+import { Config } from '../../config';
 import { Permission } from '../../model/permission';
-import { AuthService, UserService } from '../../service';
-import { Validator } from '../../utils/validator';
-import request from 'request';
-import { universities } from '../../utils/universities';
 import { prisma } from '../../server';
-export * from './user.query';
+import { AuthService, UserService } from '../../service';
+import { universities } from '../../utils/universities';
+import { Validator } from '../../utils/validator';
 export * from './message.query';
+export * from './user.query';
 
 
 export const PublicQueries = queryType({
@@ -94,16 +94,26 @@ export const PublicQueries = queryType({
             }
         })
         t.field('questions', {
-            type: 'Question',
-            list: true,
+            type: objectType({
+                name: 'QuestionsOutput',
+                definition(t) {
+                    t.field('data', { type: 'Question', list: true })
+                    t.field('isLastPage', { type: 'Boolean' })
+                }
+            }),
             args: {
                 keyword: stringArg(),
+                page: intArg({ default: 1 }),
             },
             resolve: async (_root, args, ctx) => {
                 AuthService.authenticate(ctx);
-                return await prisma.question.findMany({
-                    where: args.keyword ? { content: { contains: args.keyword } } : undefined
+                const pageSize: number = Config.defaultPageSize?.value || 10;
+                const data = await prisma.question.findMany({
+                    where: args.keyword ? { content: { contains: args.keyword } } : undefined,
+                    take: pageSize,
+                    skip: pageSize * ((args.page ?? 1) - 1),
                 });
+                return { data, isLastPage: data.length < pageSize };
             }
         })
         t.field('colorsOfAnswer', {
@@ -125,6 +135,57 @@ export const PublicQueries = queryType({
                     {
                         color: 'ffffff',
                         textColor: '000000'
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            '77a1d3',
+                            '79cbca',
+                            'e684ae',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            'EC6F66',
+                            'F3A183',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            'ED4264',
+                            'FFEDBC',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            'DC2424',
+                            '4A569D',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            '24C6DC',
+                            '514A9D',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            '0099F7',
+                            'F11712',
+                        ]
+                    },
+                    {
+                        textColor: 'ffffff',
+                        gradient: [
+                            '#833ab4',
+                            '#fd1d1d',
+                            '#fcb045',
+                        ]
                     }
                 ]
             }
