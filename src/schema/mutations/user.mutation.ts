@@ -269,7 +269,7 @@ export const editAnswerMutation = mutationField('editAnswer', {
         color: stringArg(),
         textColor: stringArg(),
         gradient: stringArg({ list: true }),
-        content: stringArg({ nullable: false }),
+        content: stringArg(),
         backgroundImage: arg({ type: 'Upload' })
     },
     resolve: async (_root, args, ctx, _info) => {
