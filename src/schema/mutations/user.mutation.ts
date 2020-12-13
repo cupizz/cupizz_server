@@ -191,7 +191,7 @@ export const AddUserImageMutation = mutationField('addUserImage', {
         const imageCount = (await prisma.userImage.findFirst({
             where: { userId: ctx.user.id },
             orderBy: { sortOrder: 'desc' }
-        })).sortOrder;
+        }))?.sortOrder ?? 0;
 
         const userImage = await prisma.userImage.create({
             data: {
@@ -240,7 +240,7 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
         const imageCount = (await prisma.userImage.findFirst({
             where: { userId: ctx.user.id },
             orderBy: { sortOrder: 'desc' }
-        })).sortOrder;
+        }))?.sortOrder ?? 0;
 
         return await prisma.userImage.create({
             data: {
@@ -269,7 +269,7 @@ export const editAnswerMutation = mutationField('editAnswer', {
         color: stringArg(),
         textColor: stringArg(),
         gradient: stringArg({ list: true }),
-        content: stringArg({ nullable: false }),
+        content: stringArg(),
         backgroundImage: arg({ type: 'Upload' })
     },
     resolve: async (_root, args, ctx, _info) => {
