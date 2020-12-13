@@ -116,6 +116,16 @@ export const PublicQueries = queryType({
                 return { data, isLastPage: data.length < pageSize };
             }
         })
+        t.field('unreadMessageCount', {
+            type: 'Int',
+            resolve: async (_root, _args, ctx) => {
+                AuthService.authenticate(ctx);
+                return (await prisma.conversationMember.aggregate({
+                    where: { userId: ctx.user.id },
+                    sum: { unreadMessageCount: true }
+                })).sum?.unreadMessageCount ?? 0;
+            }
+        })
         t.field('colorsOfAnswer', {
             type: objectType({
                 name: 'ColorOfAnswer',
