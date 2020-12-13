@@ -81,6 +81,8 @@ class Permission extends ByModule {
     public user = new PermissionByModule('user');
     public role = new PermissionByModule('role');
     public hobby = new PermissionByModule('hobby');
+    public question = new PermissionByModule('question');
+    public qnA = new PermissionByModule('qnA');
     public friend = new FriendPermission();
     public chat = new ChatPermission();
 

@@ -604,6 +604,7 @@ export const HobbyValuType = objectType({
     definition(t) {
         t.model.id()
         t.model.value()
+        t.model.isValid()
     }
 })
 
