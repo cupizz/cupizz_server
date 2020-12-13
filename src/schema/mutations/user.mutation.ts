@@ -114,9 +114,9 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
                 educationLevelsPrefer: args.educationLevelsPrefer ? { set: args.educationLevelsPrefer } : undefined,
                 theirKids: args.theirKids ? { set: args.theirKids } : undefined,
                 religiousPrefer: args.religiousPrefer ? { set: args.religiousPrefer } : undefined,
-                allowMatching: args.allowMatching ? { set: args.allowMatching } : undefined,
-                isPrivate: args.isPrivate ? { set: args.isPrivate } : undefined,
-                pushNotiSetting: args.pushNotiSetting ? { set: args.pushNotiSetting } : undefined,
+                allowMatching: args.allowMatching,
+                isPrivate: args.isPrivate,
+                pushNotiSetting: args.pushNotiSetting,
             }
         })
         await RecommendService.regenerateRecommendableUsers(ctx.user.id);
