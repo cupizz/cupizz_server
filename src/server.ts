@@ -72,7 +72,11 @@ async function main() {
   })
 
   apolloServer.applyMiddleware({ app });
+  app.use('/', express.static('public'));
   app.use('/assets', express.static('assets'));
+  app.get('/your-ip', (req, res) => {
+    res.send(req.headers['x-real-ip'] || req.connection.remoteAddress);
+  });
   const server = createServer(app);
 
   server.listen(PORT, async () => {
