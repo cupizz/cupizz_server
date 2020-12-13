@@ -98,6 +98,9 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
         educationLevelsPrefer: arg({ type: 'EducationLevel', list: true }),
         theirKids: arg({ type: 'HaveKids' }),
         religiousPrefer: arg({ type: 'Religious', list: true }),
+        allowMatching: booleanArg(),
+        isPrivate: booleanArg(),
+        pushNotiSetting: arg({ type: 'NotificationType', list: true }),
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
@@ -111,6 +114,9 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
                 educationLevelsPrefer: args.educationLevelsPrefer ? { set: args.educationLevelsPrefer } : undefined,
                 theirKids: args.theirKids ? { set: args.theirKids } : undefined,
                 religiousPrefer: args.religiousPrefer ? { set: args.religiousPrefer } : undefined,
+                allowMatching: args.allowMatching ? { set: args.allowMatching } : undefined,
+                isPrivate: args.isPrivate ? { set: args.isPrivate } : undefined,
+                pushNotiSetting: args.pushNotiSetting ? { set: args.pushNotiSetting } : undefined,
             }
         })
         await RecommendService.regenerateRecommendableUsers(ctx.user.id);

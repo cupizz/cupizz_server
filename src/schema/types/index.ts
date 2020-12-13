@@ -1,5 +1,5 @@
 import { arg, enumType, inputObjectType, objectType } from "@nexus/schema";
-import { ConversationMember, Gender, MustHaveField, OnlineStatus, PrivateField, SocialProviderType, User, FileType, EducationLevel, UsualType, HaveKids, LookingFor, Religious } from "@prisma/client";
+import { ConversationMember, Gender, MustHaveField, OnlineStatus, PrivateField, SocialProviderType, User, FileType, EducationLevel, UsualType, HaveKids, LookingFor, Religious, NotificationType } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
@@ -81,6 +81,11 @@ export const FriendStatusType = enumType({
 export const OnlineStatusEnumType = enumType({
     name: 'OnlineStatus',
     members: Object.keys(OnlineStatus)
+})
+
+export const notificationType = enumType({
+    name: 'NotificationType',
+    members: Object.keys(NotificationType)
 })
 
 export const UserType = objectType({
@@ -245,6 +250,7 @@ export const UserSettingType = objectType({
         t.model("User").allowMatching()
         t.model("User").isPrivate()
         t.model("User").showActive()
+        t.model("User").pushNotiSetting()
     }
 })
 
