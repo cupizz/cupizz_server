@@ -100,6 +100,7 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
         religiousPrefer: arg({ type: 'Religious', list: true }),
         allowMatching: booleanArg(),
         isPrivate: booleanArg(),
+        showActive: booleanArg(),
         pushNotiSetting: arg({ type: 'NotificationType', list: true }),
     },
     resolve: async (_root, args, ctx, _info) => {
@@ -116,6 +117,7 @@ export const UpdateMySettingMutation = mutationField('updateMySetting', {
                 religiousPrefer: args.religiousPrefer ? { set: args.religiousPrefer } : undefined,
                 allowMatching: args.allowMatching,
                 isPrivate: args.isPrivate,
+                showActive: args.showActive,
                 pushNotiSetting: args.pushNotiSetting,
             }
         })
