@@ -6,7 +6,7 @@ import { logger } from '../utils/logger';
 class OnesignalService {
     private _client = new Client(process.env.ONESIGNAL_APP_ID, process.env.ONESIGNAL_API_KEY);
 
-    public async sendToAll(title: string, message: string, subtitle?: string) {
+    public async sendToAll(title: string, message: string, subtitle?: string, image?: string) {
         const result = this.sendNotification({
             headings: { en: title },
             ...subtitle ? {
@@ -14,6 +14,9 @@ class OnesignalService {
             } : {},
             contents: { en: message },
             included_segments: ['All'],
+            big_picture: image,
+            adm_big_picture: image,
+            ios_attachments: image ? { id1: image } : null,
         })
         return result;
     }
