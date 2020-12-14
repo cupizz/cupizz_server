@@ -110,12 +110,12 @@ class AuthService {
         return true;
     }
 
-    public sign<T extends object>(payload: T, expiresIn?: string): string {
+    public sign<T extends object>(payload: T, expiresIn?: number): string {
         return jwt.sign(
             payload,
             process.env.JWT_SECRET_KEY,
             {
-                expiresIn: expiresIn || `${process.env.USER_TOKEN_EXPIRE_DAY || '1'} days`
+                expiresIn: `${expiresIn || Config.loginTokenExpireTime.value}m`
             }
         );
     }
