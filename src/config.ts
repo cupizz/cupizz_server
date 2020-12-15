@@ -24,7 +24,8 @@ export type ConfigField = 'debugLog'
     | 'minHeight'
     | 'maxHeight'
     | 'minDistance'
-    | 'maxDistance';
+    | 'maxDistance'
+    | 'forgotPassTokenExpireTime';
 
 export type ConfigType = Record<ConfigField, { value: any, description: string }>;
 
@@ -46,6 +47,7 @@ const _Config: ConfigType = {
     maxHeight: { value: 200, description: '' },
     minDistance: { value: 5, description: '' },
     maxDistance: { value: 500, description: '' },
+    forgotPassTokenExpireTime: { value: 10, description: '' }
 }
 
 let _configFromDb = _Config;

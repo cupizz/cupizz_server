@@ -55,6 +55,47 @@ Hãy điền mã này vào ứng dụng để \ntiếp tục quá trình đăng 
     }
 
     /**
+     * Code dơ
+     */
+    public async sendForgotPass(email: string): Promise<{
+        token: string,
+        otp?: string
+    }> {
+        Validator.email(email);
+        let transporter = nodemailer.createTransport({
+            host: "smtp.lolipop.jp",
+            port: 465,
+            auth: {
+                user: 'l_hien@gonosen.asia',
+                pass: 'eLud4fxYM-jr',
+            },
+        });
+
+        await transporter.sendMail({
+            from: '"Cupizz" <no-reply@cupizz.cf>',
+            to: email,
+            subject: "Yêu cầu đổi mật khẩu",
+            text:
+                `Mã xác thực yêu cầu của bạn là: ${this._otp.toString()}
+Hãy điền mã này vào ứng dụng để \ntiếp tục quá trình đổi mật khẩu.`,
+        });
+
+        const otpPayload: JwtOtpPayload = {
+            email: email,
+            otp: PasswordHandler.encode(this._otp.toString())
+        }
+
+        if (process.env.NODE_ENV == 'development') {
+            logger(email + this._otp)
+        }
+
+        return {
+            token: AuthService.sign(otpPayload, Config.otpExpireTime.value ?? 5),
+            otp: process.env.NODE_ENV == 'development' ? this._otp : null
+        }
+    }
+
+    /**
      * Return null if otp is incorrect
      * @param token 
      * @param otp 

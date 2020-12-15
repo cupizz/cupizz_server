@@ -5,3 +5,4 @@ export * from './message.service';
 export * from './socialNetwork.service';
 export * from './file.service';
 export * from './notification.service';
+export * from './mail.service';

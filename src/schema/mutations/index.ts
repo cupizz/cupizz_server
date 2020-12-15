@@ -7,6 +7,7 @@ export * from './auth.mutation'
 export * from './message.mutation'
 export * from './file.mutation'
 export * from './user.mutation'
+export * from './forgotPass.mutation'
 
 export const mutations = mutationType({
     definition(t) {
