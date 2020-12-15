@@ -42,6 +42,7 @@ class OnesignalService {
                 adm_big_picture: options.image,
                 ios_attachments: options.image ? { id1: options.image } : null,
                 large_icon: options.largeIcon,
+                android_accent_color: 'fffb6c6d',
                 data,
             })
 
