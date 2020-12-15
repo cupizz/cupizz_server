@@ -21,22 +21,27 @@ class OnesignalService {
         return result;
     }
 
-    public async sendToUserIds(title: string, message: string, userIds: string[], data: NotificationPayload, subtitle?: string, image?: string) {
+    public async sendToUserIds(title: string, message: string, userIds: string[], data: NotificationPayload, options: {
+        subtitle?: string,
+        image?: string, 
+        largeIcon?: string
+    }) {
         if (userIds.length === 0) return;
-        
+
         try {
             const result = await this.sendNotification({
                 ...title ? {
                     headings: { en: title }
                 } : {},
-                ...subtitle ? {
-                    subtitle: { en: subtitle }
+                ...options.subtitle ? {
+                    subtitle: { en: options.subtitle }
                 } : {},
                 include_external_user_ids: userIds,
                 contents: { en: message },
-                big_picture: image,
-                adm_big_picture: image,
-                ios_attachments: image ? { id1: image } : null,
+                big_picture: options.image,
+                adm_big_picture: options.image,
+                ios_attachments: options.image ? { id1: options.image } : null,
+                large_icon: options.largeIcon,
                 data,
             })
 

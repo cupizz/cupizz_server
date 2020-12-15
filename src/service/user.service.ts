@@ -184,7 +184,7 @@ class UserService {
                         sender: { connect: { id: currentUserId } },
                         isSuperLike: isSuperLike
                     },
-                    include: { sender: true, receiver: true }
+                    include: { sender: { include: { avatar: true } }, receiver: true }
                 });
                 RecommendService.regenerateRecommendableUsers(currentUserId)
                 NotificationService.sendLikeOrMatchingNotify('like', sentData.sender, sentData.receiver)
@@ -201,7 +201,7 @@ class UserService {
                         }
                     },
                     data: { acceptedAt: new Date() },
-                    include: { sender: true, receiver: true }
+                    include: { sender: true, receiver: { include: { avatar: true } } }
                 })
                 NotificationService.sendLikeOrMatchingNotify('matching', friendData.receiver, friendData.sender)
                 return { status: 'friend', data: sentData }
@@ -294,7 +294,7 @@ class UserService {
                 const address = decoded.display_name;
 
                 redis.setex(redisKey, 86400, address);
-                
+
                 return address;
             } catch (error) {
                 logger(error);

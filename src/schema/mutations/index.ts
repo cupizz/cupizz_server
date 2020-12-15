@@ -29,7 +29,7 @@ export const mutations = mutationType({
                 if (args.userIds.length === 0) {
                     await OnesignalService.sendToAll(args.title, args.content, args.subtitle, image?.url);
                 } else {
-                    await OnesignalService.sendToUserIds(args.title, args.content, args.userIds, null, args.subtitle, image?.url);
+                    await OnesignalService.sendToUserIds(args.title, args.content, args.userIds, null, { subtitle: args.subtitle, image: image?.url });
                 }
                 return true;
             }

@@ -1,4 +1,4 @@
-import { User } from '@prisma/client';
+import { File, User } from '@prisma/client';
 import { ForbiddenError } from 'apollo-server-express';
 import Strings from '../constants/strings';
 import { Context } from '../context';
@@ -9,7 +9,7 @@ import { AuthService } from './auth.service';
 import { OnesignalService } from './onesignal.service';
 
 class NotificationService {
-    public async sendLikeOrMatchingNotify(type: 'like' | 'matching', fromUser: User, toUser: User): Promise<NotificationPayload | null> {
+    public async sendLikeOrMatchingNotify(type: 'like' | 'matching', fromUser: User & { avatar: File }, toUser: User): Promise<NotificationPayload | null> {
         const notification = await prisma.notification.create({
             data: {
                 type,
@@ -30,7 +30,10 @@ class NotificationService {
                 null,
                 content,
                 [toUser.id],
-                notification
+                notification,
+                {
+                    largeIcon: fromUser.avatar?.url
+                }
             )
         }
 
@@ -44,7 +47,7 @@ class NotificationService {
         })
         const message = await prisma.message.findOne({
             where: { id: messageId },
-            include: { sender: true }
+            include: { sender: { include: { avatar: true } } }
         })
 
         if (!conversation || !message)
@@ -66,7 +69,9 @@ class NotificationService {
             message.message ?? Strings.notification.newMessageTitle(message.sender.nickName),
             receiverPushIds,
             notificationData,
-            null,
+            {
+                largeIcon: message.sender.avatar?.url
+            },
         );
 
         return notificationData;
@@ -93,7 +98,8 @@ class NotificationService {
             title,
             content,
             receiverPushIds,
-            notification
+            notification,
+            {}
         );
 
         return notification;
