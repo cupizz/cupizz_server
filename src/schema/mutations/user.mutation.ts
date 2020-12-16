@@ -1,14 +1,38 @@
 import { arg, booleanArg, floatArg, idArg, intArg, mutationField, stringArg } from "@nexus/schema";
 import { FileCreateInput } from '@prisma/client';
 import Strings from "../../constants/strings";
-import { ClientError, ErrorNotFound } from "../../model/error";
+import { ClientError, ErrorIncorrectPassword, ErrorNotFound } from "../../model/error";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
 import { AuthService, UserService } from "../../service";
 import { FileService } from "../../service/file.service";
 import { RecommendService } from "../../service/recommend.service";
 import { SocialNetworkService } from "../../service/socialNetwork.service";
+import { PasswordHandler } from "../../utils/passwordHandler";
 import { Validator } from "../../utils/validator";
+
+export const changePasswordMutation = mutationField('changePassword', {
+    type: 'Boolean',
+    args: {
+        oldPass: stringArg({ required: true }),
+        newPass: stringArg({ required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+        AuthService.authenticate(ctx);
+
+        if (!PasswordHandler.compare(args.oldPass, ctx.user.password)) {
+            throw ErrorIncorrectPassword;
+        }
+        Validator.password(args.newPass);
+
+        await prisma.user.update({
+            where: { id: ctx.user.id },
+            data: { password: PasswordHandler.encode(args.newPass) }
+        })
+
+        return true;
+    }
+})
 
 export const UpdateProfileMutation = mutationField('updateProfile', {
     type: 'User',
