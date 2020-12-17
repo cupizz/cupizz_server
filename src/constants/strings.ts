@@ -4,7 +4,7 @@ export default class Strings {
     static notification = {
         newLikeContent: (fromUserName: string) => `${fromUserName} đã thích bạn`,
         newMatchContent: (fromUserName: string) => `Bạn và ${fromUserName} đã ghép đôi thành công`,
-        newMessageTitle: (fromUserName: string) => `Tin nhắn mới từ ${fromUserName}`
+        newMessageTitle: (fromUserName: string) => `${fromUserName}`
     }
     
     static error = {
