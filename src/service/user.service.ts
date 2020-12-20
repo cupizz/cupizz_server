@@ -108,6 +108,7 @@ class UserService {
 
                 role: { connect: { id: DefaultRole.trial.id } },
                 socialProvider: { create: payload },
+                pushNotiSetting: ['like', 'matching', 'newMessage', 'other'],
             }
         });
     }

@@ -47,6 +47,7 @@ export const LoginSocialNetwork = mutationField('loginSocialNetwork', {
                             ...socialData.birthday ? { birthday: socialData.birthday } : {},
                             ...socialData.phoneNumber ? { phoneNumber: socialData.phoneNumber } : {},
                             ...socialData.gender ? { gender: socialData.gender } : {},
+                            pushNotiSetting: ['like', 'matching', 'newMessage', 'other'],
                         }
                     }
                 }
