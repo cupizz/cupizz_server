@@ -1,6 +1,7 @@
 import { arg, enumType, inputObjectType, objectType } from "@nexus/schema";
 import { ConversationMember, Gender, MustHaveField, OnlineStatus, PrivateField, SocialProviderType, User, FileType, EducationLevel, UsualType, HaveKids, LookingFor, Religious, NotificationType } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
+import { defaultAvatar } from "../../config";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
 import { AuthService, MessageService, UserService } from "../../service";
@@ -428,8 +429,8 @@ export const ConversationDataType = objectType({
             type: 'File', list: true, nullable: false,
             resolve: async (root: any, _args, ctx, _info) => {
                 const data = root.members
-                    ?.filter((e: any) => root.members?.length > 1 ? e.userId !== ctx.user.id : true)
-                    ?.map((e: any) => e.user.avatar) ?? [];
+                    ?.filter((e: any) => e.user.avatar && (root.members?.length > 1 ? e.userId !== ctx.user.id : true))
+                    ?.map((e: any) => e.user.avatar ?? defaultAvatar(ctx)) ?? [];
                 return data;
             }
         })
