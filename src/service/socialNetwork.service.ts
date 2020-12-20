@@ -38,11 +38,12 @@ class SocialNetworkService {
             if (res.statusCode != 200) throw new Error(res.body);
 
             const decoded = JSON.parse(res.body);
+            const avatar = decoded.photos?.[0]?.url;
 
             return {
                 id: (decoded.resourceName as string).split('/')[1],
                 type: 'google',
-                avatar: decoded.photos?.[0]?.url,
+                avatar: avatar ? avatar.split('s100').reverse().splice(1).reverse().join('s100') + 's700' : null,
                 birthday: decoded.birthdays?.[0]?.date ? new Date(decoded.birthdays?.[0]?.date?.year, decoded.birthdays?.[0]?.date?.month, decoded.birthdays?.[0]?.date?.day) : null,
                 name: decoded.names?.[0]?.displayName,
                 email: decoded.emailAddresses?.[0]?.value,
