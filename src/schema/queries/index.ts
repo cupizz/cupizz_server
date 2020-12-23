@@ -35,6 +35,8 @@ export const PublicQueries = queryType({
             pagination: true,
             filtering: true,
             ordering: true,
+            //@ts-ignore
+            description: '[ADMIN]',
             resolve: (root, args, context, info, origin) => {
                 AuthService.authorize(context, { values: [Permission.user.list] });
                 if (!args.take) {

@@ -173,15 +173,15 @@ class UserService {
         }
     }
 
-    public async addFriend(currentUserId: string, otherUserId: string, isSuperLike: boolean = false): Promise<NexusGenAllTypes['FriendType']> {
-        const friendData = await this.getFriendStatus(currentUserId, otherUserId);
+    public async addFriend(currentUserId: string, targetUserId: string, isSuperLike: boolean = false): Promise<NexusGenAllTypes['FriendType']> {
+        const friendData = await this.getFriendStatus(currentUserId, targetUserId);
         switch (friendData.status) {
             case FriendStatusEnum.me:
                 throw ClientError(Strings.error.cannotDoOnYourself);
             case FriendStatusEnum.none:
                 const sentData = await prisma.friend.create({
                     data: {
-                        receiver: { connect: { id: otherUserId } },
+                        receiver: { connect: { id: targetUserId } },
                         sender: { connect: { id: currentUserId } },
                         isSuperLike: isSuperLike
                     },
@@ -189,6 +189,7 @@ class UserService {
                 });
                 RecommendService.regenerateRecommendableUsers(currentUserId)
                 NotificationService.sendLikeOrMatchingNotify('like', sentData.sender, sentData.receiver)
+                this.updateLikeDislikeCount(targetUserId);
                 return { status: 'sent', data: sentData }
             case FriendStatusEnum.sent:
                 RecommendService.regenerateRecommendableUsers(currentUserId)
@@ -198,7 +199,7 @@ class UserService {
                     where: {
                         senderId_receiverId: {
                             receiverId: currentUserId,
-                            senderId: otherUserId
+                            senderId: targetUserId
                         }
                     },
                     data: { acceptedAt: new Date() },
@@ -219,6 +220,7 @@ class UserService {
                 throw ClientError(Strings.error.cannotDoOnYourself);
             case FriendStatusEnum.none:
                 await RecommendService.dislikeUser(ctx, targetUserId);
+                break;
             default:
                 await prisma.friend.deleteMany({
                     where: {
@@ -234,6 +236,7 @@ class UserService {
                         ]
                     }
                 })
+                this.updateLikeDislikeCount(targetUserId);
         }
     }
 
@@ -304,6 +307,20 @@ class UserService {
         }
     }
 
+    /**
+     * Function này không cần thiết phải đợi nó hoàn thành, vì nó thường là 
+     * cập nhật của user khác không phải của user đang đăng nhập nên dữ liệu 
+     * thay đổi không cần thiết phải ngay lập tức.
+     */
+    public async updateLikeDislikeCount(userId: string, options: { ignoreLike?: boolean, ignoreDislike?: boolean } = { ignoreDislike: false, ignoreLike: false }) {
+        return await prisma.user.update({
+            where: { id: userId },
+            data: {
+                ...!options.ignoreLike ? { likeCount: await prisma.friend.count({ where: { receiverId: userId } }) } : {},
+                ...!options.ignoreDislike ? { dislikeCount: await prisma.dislikedUser.count({ where: { dislikedUserId: userId } }) } : {},
+            }
+        })
+    }
 }
 
 

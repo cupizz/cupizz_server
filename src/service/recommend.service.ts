@@ -1,5 +1,5 @@
 import { Gender, User, UserWhereInput } from '@prisma/client';
-import { AuthService } from '.';
+import { AuthService, UserService } from '.';
 import { Config } from '../config';
 import Strings from '../constants/strings';
 import { Context } from '../context';
@@ -64,6 +64,7 @@ class RecommendService {
                         },
                     })
                 ])
+                UserService.updateLikeDislikeCount(targetUserId, { ignoreLike: true });
             } catch (e) {
                 logger(e);
             }
@@ -107,6 +108,7 @@ class RecommendService {
         } catch (e) {
             logger(e);
         }
+        UserService.updateLikeDislikeCount(lastDislikedUser.dislikedUserId, { ignoreLike: true });
         return lastDislikedUser.dislikedUser;
     }
 

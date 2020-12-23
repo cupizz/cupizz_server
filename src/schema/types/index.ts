@@ -164,6 +164,20 @@ export const UserDataType = objectType({
         t.model('User').avatar()
         t.model('User').cover()
         t.model('User').role()
+        t.model('User').dislikeCount({
+            resolve: (root, args, ctx, info, origin) => {
+                if (ctx.user?.id === root.id || AuthService.authorize(ctx, { values: [Permission.user.list] }, false))
+                    return origin(root, args, ctx, info);
+                return null
+            }
+        })
+        t.model('User').likeCount({
+            resolve: (root, args, ctx, info, origin) => {
+                if (ctx.user?.id === root.id || AuthService.authorize(ctx, { values: [Permission.user.list] }, false))
+                    return origin(root, args, ctx, info);
+                return null
+            }
+        })
         t.model('User').userImages({
             pagination: false, resolve: async (root: any, args, ctx) => {
                 return root.userImages;
