@@ -9,6 +9,7 @@ export * from './file.mutation'
 export * from './user.mutation'
 export * from './forgotPass.mutation'
 export * from './helper.mutation'
+export * from './appConfig.mutation'
 
 export const mutations = mutationType({
     definition(t) {
@@ -34,6 +35,13 @@ export const mutations = mutationType({
                     await OnesignalService.sendToUserIds(args.title, args.content, args.userIds, null, { subtitle: args.subtitle, image: image?.url });
                 }
                 return true;
+            }
+        })
+        t.crud.updateOneAppConfig({
+            alias: 'adminUpdateAppConfig',
+            resolve: (root, args, ctx, info, origin) => {
+                AuthService.authorize(ctx, { values: [Permission.config.update] })
+                return origin(root, args, ctx, info);
             }
         })
         t.crud.createOneHobbyValue({
