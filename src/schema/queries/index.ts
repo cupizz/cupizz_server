@@ -95,6 +95,16 @@ export const PublicQueries = queryType({
 
             }
         })
+        t.crud.questions({
+            alias: 'adminQuestions',
+            filtering: true,
+            ordering: true,
+            pagination: true,
+            resolve: (root, args, ctx, info, origin) => {
+                AuthService.authorize(ctx, {values: [Permission.question.list]});
+                return origin(root, args, ctx, info);
+            }
+        })
         t.field('questions', {
             type: objectType({
                 name: 'QuestionsOutput',
