@@ -142,7 +142,7 @@ export const UserDataType = objectType({
         t.model('User').job()
         t.model('User').height()
         t.model('User').address({
-            resolve: async (root: any) => UserService.getAddressOfUser(root)
+            resolve: (root: any) => UserService.getAddressOfUser(root)
         })
         t.model('User').educationLevel()
         t.model('User').smoking()
@@ -626,6 +626,7 @@ export const HobbyValuType = objectType({
         t.model.id()
         t.model.value()
         t.model.isValid()
+        t.model.index()
     }
 })
 
