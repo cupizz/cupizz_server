@@ -352,17 +352,17 @@ class UserService {
 
         return json.map(e => ({
             id: e.id,
-            nickname: e.nickName,
-            introduction: e.introduction,
-            age: calculateAge(e.birthday),
-            gender: e.gender ? Object.values(Gender).indexOf(e.gender) : null,
-            height: e.height,
+            nickname: e.nickName ?? '',
+            introduction: e.introduction ?? '',
+            age: calculateAge(e.birthday) ?? -1,
+            gender: Object.values(Gender).indexOf(e.gender),
+            height: e.height, 
             x: e.latitude,
             y: e.longitude,
-            smoking: e.smoking ? Object.values(UsualType).indexOf(e.smoking) : null,
-            drinking: e.drinking ? Object.values(UsualType).indexOf(e.drinking) : null,
-            yourKids: e.yourKids ? Object.values(HaveKids).indexOf(e.yourKids) : null,
-            religious: e.religious ? Object.values(Religious).indexOf(e.religious) : null,
+            smoking: Object.values(UsualType).indexOf(e.smoking),
+            drinking: Object.values(UsualType).indexOf(e.drinking),
+            yourKids: Object.values(HaveKids).indexOf(e.yourKids),
+            religious: Object.values(Religious).indexOf(e.religious),
             hobbies: e.hobbies.map(h => h.value),
         }));
     }
