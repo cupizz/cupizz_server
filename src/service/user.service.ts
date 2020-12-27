@@ -1,5 +1,5 @@
 import { ResultValue } from '@nexus/schema/dist/core';
-import { Friend, OnlineStatus, User } from '@prisma/client';
+import { Friend, OnlineStatus, Role, User } from '@prisma/client';
 import request from 'request';
 import { AuthService, NotificationService } from '.';
 import { Config } from '../config';
@@ -18,6 +18,7 @@ import OtpHandler from '../utils/otpHandler';
 import { PasswordHandler } from '../utils/passwordHandler';
 import { Validator } from '../utils/validator';
 import { RecommendService } from './recommend.service';
+import fs from 'fs';
 
 class UserService {
     public canAccessPrivateAccount(ctx: Context, targetUser: User) {
@@ -320,6 +321,29 @@ class UserService {
                 ...!options.ignoreDislike ? { dislikeCount: await prisma.dislikedUser.count({ where: { dislikedUserId: userId } }) } : {},
             }
         })
+    }
+
+    /**
+     * return Path of json file
+     */
+    public async export(user: User & {role: Role}): Promise<string> {
+        AuthService.authorizeUser(user, {values: [Permission.user.export]});
+        
+        const json  = await prisma.user.findMany({include: {
+            hobbies: true,
+            userImages: true,
+        }});
+
+        json.map(e => {
+            // @ts-ignore
+            e.hobbyIds = e.hobbies.map(e => e.id);
+            // @ts-ignore
+            e.hobbyIndexs = e.hobbies.map(e => e.index);
+        })
+        
+        const path = process.env.PWD + '/user-export.json';
+        fs.writeFileSync(path, JSON.stringify(json));
+        return path;
     }
 }
 

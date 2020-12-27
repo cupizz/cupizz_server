@@ -1,4 +1,4 @@
-import { SocialProviderType, User } from "@prisma/client";
+import { Role, SocialProviderType, User } from "@prisma/client";
 import { ForbiddenError } from "apollo-server-express";
 import jwt, { TokenExpiredError } from 'jsonwebtoken';
 import { Config } from "../config";
@@ -66,8 +66,12 @@ class AuthService {
     }
 
     public authorize(ctx: Context, requiredPermissions: PermissionFilter, throwError: boolean = true): boolean {
-        if (!this.authenticate(ctx, throwError)) return false;
-        const missingPermissions = this._authorize(ctx.user.role.permissions, requiredPermissions);
+        return this.authorizeUser(ctx.user, requiredPermissions, throwError);
+    }
+
+    public authorizeUser(user: User & { role: Role }, requiredPermissions: PermissionFilter, throwError: boolean = true): boolean {
+        if (!this.authenticateUser(user, throwError)) return false;
+        const missingPermissions = this._authorize(user.role.permissions, requiredPermissions);
         if (missingPermissions.length > 0) {
             if (throwError) {
                 throw new ForbiddenError('Missing permissions: ' + missingPermissions.join(', '));
@@ -103,7 +107,11 @@ class AuthService {
     }
 
     public authenticate(ctx: Context, throwError: boolean = true): boolean {
-        if (!ctx.user) {
+        return this.authenticateUser(ctx.user, throwError);
+    }
+
+    public authenticateUser(user: User, throwError: boolean = true): boolean {
+        if (!user) {
             if (throwError) throw ErrorUnAuthenticate();
             return false;
         }

@@ -1,21 +1,21 @@
 import { PrismaClient } from '@prisma/client'
-import { ApolloServer, PubSub } from 'apollo-server-express'
+import { ApolloServer, ForbiddenError, PubSub } from 'apollo-server-express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express from 'express'
 import { execute, subscribe } from 'graphql'
 import { createServer } from 'http'
+import Redis from 'redis'
+import responseTime from 'response-time'
 import { SubscriptionServer } from 'subscriptions-transport-ws'
 import { Config, ConstConfig, loadConfig } from './config'
 import { Context } from './context'
 import { runCronJob } from './cron'
+import { devSeed } from './dev-seed'
 import { DefaultRole } from './model/role'
 import { schema } from './schema'
 import { AuthService, UserService } from './service'
-import { logger } from './utils/logger';
-import responseTime from 'response-time'
-import Redis from 'redis';
-import { devSeed } from './dev-seed'
+import { logger } from './utils/logger'
 
 export const pubsub = new PubSub();
 export const prisma = new PrismaClient({
@@ -77,6 +77,21 @@ async function main() {
   app.get('/your-ip', (req, res) => {
     res.send(req.headers['x-real-ip'] || req.connection.remoteAddress);
   });
+  app.get('/export/users', async (req, res) => {
+    try {
+      const user = await AuthService.verifyUser(req.query.authorization.toString());
+      const filePath = await UserService.export(user);
+      return res.sendFile(filePath, (e) => {
+        return res.status(400).json(e);
+      });
+    } catch (e) {
+      logger(e);
+      if (e instanceof ForbiddenError) {
+        return res.status(403).json(e);
+      }
+      return res.status(400).json(e);
+    }
+  })
   const server = createServer(app);
 
   server.listen(PORT, async () => {
