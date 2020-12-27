@@ -5,7 +5,7 @@ import { defaultAvatar } from "../../config";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
 import { AuthService, MessageService, UserService } from "../../service";
-import { calculateDistance, DistanceUnit } from "../../utils/helper";
+import { calculateAge, calculateDistance, DistanceUnit } from "../../utils/helper";
 
 export const Json = String;
 
@@ -126,13 +126,7 @@ export const UserDataType = objectType({
             nullable: true,
             resolve: (root, _args, _ctx, _info) => {
                 const birthday = root.birthday;
-                if (birthday) {
-                    const ageDifMs = Date.now() - birthday.getTime();
-                    const ageDate = new Date(ageDifMs);
-                    return Math.abs(ageDate.getUTCFullYear() - 1970);
-                } else {
-                    return null;
-                }
+                return calculateAge(birthday);
             }
         })
         t.model('User').introduction()

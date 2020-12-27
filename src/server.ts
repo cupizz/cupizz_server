@@ -80,10 +80,8 @@ async function main() {
   app.get('/export/users', async (req, res) => {
     try {
       const user = await AuthService.verifyUser(req.query.authorization.toString());
-      const filePath = await UserService.export(user);
-      return res.sendFile(filePath, (e) => {
-        return res.status(400).json(e);
-      });
+      const json = await UserService.export(user);
+      return res.json(json);
     } catch (e) {
       logger(e);
       if (e instanceof ForbiddenError) {

@@ -1,5 +1,5 @@
 import { ResultValue } from '@nexus/schema/dist/core';
-import { Friend, OnlineStatus, Role, User } from '@prisma/client';
+import { Friend, Gender, HaveKids, OnlineStatus, Religious, Role, User, UsualType } from '@prisma/client';
 import request from 'request';
 import { AuthService, NotificationService } from '.';
 import { Config } from '../config';
@@ -19,6 +19,7 @@ import { PasswordHandler } from '../utils/passwordHandler';
 import { Validator } from '../utils/validator';
 import { RecommendService } from './recommend.service';
 import fs from 'fs';
+import { calculateAge } from '../utils/helper';
 
 class UserService {
     public canAccessPrivateAccount(ctx: Context, targetUser: User) {
@@ -326,28 +327,46 @@ class UserService {
     /**
      * return Path of json file
      */
-    public async export(user: User & {role: Role}): Promise<string> {
-        AuthService.authorizeUser(user, {values: [Permission.user.export]});
-        
-        const json  = await prisma.user.findMany({include: {
-            hobbies: true,
-            userImages: true,
-        }});
+    public async export(user: User & { role: Role }): Promise<{
+        id: string,
+        nickname: string,
+        introduction?: string,
+        age?: number,
+        gender?: number,
+        height?: number,
+        x?: number,
+        y?: number,
+        smoking?: number,
+        drinking?: number,
+        yourKids?: number,
+        religious?: number,
+        hobbies: string[],
+    }[]> {
+        AuthService.authorizeUser(user, { values: [Permission.user.export] });
 
-        json.map(e => {
-            // @ts-ignore
-            e.hobbyIds = e.hobbies.map(e => e.id);
-            // @ts-ignore
-            e.hobbyIndexs = e.hobbies.map(e => e.index);
-        })
-        
-        const path = process.env.PWD + '/user-export.json';
-        fs.writeFileSync(path, JSON.stringify(json));
-        return path;
+        const json = await prisma.user.findMany({
+            include: {
+                hobbies: true,
+            }
+        });
+
+        return json.map(e => ({
+            id: e.id,
+            nickname: e.nickName,
+            introduction: e.introduction,
+            age: calculateAge(e.birthday),
+            gender: e.gender ? Object.values(Gender).indexOf(e.gender) : null,
+            height: e.height,
+            x: e.latitude,
+            y: e.longitude,
+            smoking: e.smoking ? Object.values(UsualType).indexOf(e.smoking) : null,
+            drinking: e.drinking ? Object.values(UsualType).indexOf(e.drinking) : null,
+            yourKids: e.yourKids ? Object.values(HaveKids).indexOf(e.yourKids) : null,
+            religious: e.religious ? Object.values(Religious).indexOf(e.religious) : null,
+            hobbies: e.hobbies.map(h => h.value),
+        }));
     }
 }
-
-
 
 const _ = new UserService();
 export { _ as UserService };
