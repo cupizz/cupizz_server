@@ -9,6 +9,13 @@ class DefaultRole {
         permissions: Permission.toArray(),
         canAccessBackOffice: true,
     }
+    public tester: Role = {
+        id: 'tester',
+        name: 'Tester',
+        description: 'Tester',
+        permissions: [...Permission.friend.toArray()],
+        canAccessBackOffice: false,
+    }
     public normal: Role = {
         id: 'normal',
         name: 'Normal User',

@@ -70,7 +70,7 @@ export const seedUser = async () => {
                         }))
                     },
                     lastOnline: faker.date.recent(),
-                    role: { connect: { id: faker.random.boolean() ? DefaultRole.normal.id : DefaultRole.trial.id } },
+                    role: { connect: { id: DefaultRole.tester.id } },
                     socialProvider: {
                         create: {
                             id: `test${i}@gmail.com`,
