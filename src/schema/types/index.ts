@@ -445,6 +445,7 @@ export const ConversationDataType = objectType({
         t.field('onlineStatus', {
             type: 'OnlineStatus', nullable: true,
             resolve: async (root: any, _args, ctx, _info) => {
+                if(!ctx.user?.showActive) return null;
                 const otherMembers = ((root.members ?? []) as (ConversationMember & { user: User })[])
                     .filter(e => e.userId !== ctx.user?.id);
 
@@ -470,6 +471,7 @@ export const ConversationDataType = objectType({
         t.field('lastOnline', {
             type: 'DateTime', nullable: true,
             resolve: async (root: any, _args, ctx, _info) => {
+                if(!ctx.user?.showActive) return null;
                 const otherMembers = ((root.members ?? []) as (ConversationMember & { user: User })[])
                     .filter(e => e.userId !== ctx.user?.id);
                 if ((otherMembers).length === 1 && otherMembers[0].user.showActive) {
