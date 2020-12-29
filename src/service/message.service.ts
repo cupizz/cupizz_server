@@ -42,27 +42,9 @@ class MessageService {
 
             if (!conversation) {
                 try {
-
-                    conversation = await prisma.conversation.create({
-                        data: {
-                            members: {
-                                create: [
-                                    {
-                                        user: { connect: { id: ctx.user.id } },
-                                        isAdmin: true,
-                                    },
-                                    ctx.user.id !== id.otherUserId ?
-                                        {
-                                            user: { connect: { id: id.otherUserId } },
-                                            isAdmin: true,
-                                        } : undefined,
-                                ],
-                            }
-                        },
-                        include: { ...include, members: true }
-                    })
+                    conversation = await this._createConversation(memberIds, include);
                 } catch (error) {
-                    if(!await prisma.user.findOne({where: {id: id.otherUserId}})) {
+                    if (!await prisma.user.findOne({ where: { id: id.otherUserId } })) {
                         throw ErrorNotFound("Không tìm thấy tài khoản.");
                     }
                 }
@@ -320,8 +302,8 @@ class MessageService {
                 include: { conversation: { include: { members: true } } }
             })).conversation.members.filter(e => e.userId != ctx.user.id);
 
-            if (isInChat) logger(`User ${ctx.user.id} is in chat with ${members.map(e => e.userId).join(', ')}.`)
-            else logger(`User ${ctx.user.id} is out chat ${members.map(e => e.userId).join(', ')}.`)
+            if (isInChat) logger(`User ${ctx.user.id} is in chat ${conversation.id}.`)
+            else logger(`User ${ctx.user.id} is out chat ${conversation.id}.`)
         }
     }
 
@@ -388,6 +370,30 @@ class MessageService {
                 ..._lastReadMessage ? { createdAt: { gt: _lastReadMessage.createdAt } } : {}
             }
         })
+    }
+
+    private static _blockingCreateConversation: boolean = false;
+    private async _createConversation(memberIds: string[], include?: ConversationInclude) {
+        while (MessageService._blockingCreateConversation) {
+            await new Promise(resolve => setTimeout(resolve, 100))
+        }
+
+        try {
+            MessageService._blockingCreateConversation = true;
+            return await prisma.conversation.create({
+                data: {
+                    members: {
+                        create: memberIds.map(e => ({
+                            user: { connect: { id: e } },
+                            isAdmin: true,
+                        })),
+                    }
+                },
+                include: { ...include, members: true }
+            })
+        } finally {
+            MessageService._blockingCreateConversation = false;
+        }
     }
 }
 
