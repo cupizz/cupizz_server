@@ -50,14 +50,12 @@ const _Config: ConfigType = {
     forgotPassTokenExpireTime: { value: 10, description: '' }
 }
 
-let _configFromDb = _Config;
-
 export const loadConfig = async () => {
     const listConfig = await (new PrismaClient()).appConfig.findMany({ orderBy: { id: 'asc' } });
     const result: any = {};
     listConfig.forEach(e => result[e.id] = { value: e.data, description: e.description });
-    _configFromDb = result ?? _Config;
+    Config = result ?? _Config;
     return listConfig;
 }
 
-export const Config = _configFromDb;
+export let Config: ConfigType = _Config;
