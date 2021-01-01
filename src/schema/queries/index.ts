@@ -138,6 +138,11 @@ export const PublicQueries = queryType({
                 })).sum?.unreadMessageCount ?? 0;
             }
         })
+        t.crud.qnAs({
+            pagination: false,
+            filtering: true,
+            ordering: true,
+        })
         t.field('colorsOfAnswer', {
             type: objectType({
                 name: 'ColorOfAnswer',
