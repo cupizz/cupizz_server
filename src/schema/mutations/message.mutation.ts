@@ -1,4 +1,4 @@
-import { arg, idArg, intArg, mutationField, stringArg } from "@nexus/schema";
+import { arg, idArg, intArg, mutationField, stringArg } from "nexus";
 import { MessageService } from "../../service/message.service";
 
 export const CreateMessageMutation = mutationField(
@@ -15,9 +15,9 @@ export const CreateMessageMutation = mutationField(
         resolve: async (_root, args, ctx, _info) => {
             return await MessageService.sendMessage(ctx, {
                 ...args,
-                ...args.attachments ? {
+                ...(args.attachments ? {
                     attachments: await Promise.all(args.attachments)
-                } : {}
+                } : {})
             });
         }
     }

@@ -1,4 +1,4 @@
-import { idArg, intArg, stringArg, subscriptionField } from "@nexus/schema";
+import { idArg, intArg, stringArg, subscriptionField } from "nexus";
 import { Conversation, Message } from "@prisma/client";
 import { withFilter } from "apollo-server-express";
 import SubscriptionKey from "../../constants/subscriptionKey";
@@ -30,14 +30,14 @@ export const MessageSubscription = subscriptionField(
                 return (args.conversationId
                     ? root.conversationId === args.conversationId
                     : (args.senderId ? args.senderId === root.senderId || ctx.user.id === root.senderId : true))
-                    && !!await prisma.conversationMember.findOne({
+                    && !!(await prisma.conversationMember.findUnique({
                         where: {
                             conversationId_userId: {
                                 conversationId: root.conversationId,
                                 userId: ctx.user.id
                             }
                         }
-                    })
+                    }));
             }
         ))(root, args, ctx, info), () => {
             MessageService.updateInChatStatus(ctx, {
@@ -62,14 +62,14 @@ export const ConversationChangeSubscription = subscriptionField(
                 return pubsub.asyncIterator(SubscriptionKey.conversationChange);
             },
             async (root: Conversation, _args, ctx, _info) => {
-                return !!await prisma.conversationMember.findOne({
+                return !!(await prisma.conversationMember.findUnique({
                     where: {
                         conversationId_userId: {
                             conversationId: root.id,
                             userId: ctx.user.id
                         }
                     }
-                })
+                }));
             }
         ))(root, args, ctx, info), () => {
             // MessageService.updateInChatStatus(ctx, {}, false);

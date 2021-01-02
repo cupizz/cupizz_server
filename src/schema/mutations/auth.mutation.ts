@@ -1,4 +1,4 @@
-import { arg, enumType, mutationField, objectType, stringArg } from "@nexus/schema";
+import { arg, enumType, mutationField, objectType, stringArg } from "nexus";
 import { Config, ConstConfig } from "../../config";
 import { JwtAuthPayload } from "../../model/jwtPayload";
 import { JwtRegisterPayload } from "../../model/registerPayload";
@@ -30,7 +30,7 @@ export const LoginSocialNetwork = mutationField('loginSocialNetwork', {
     },
     resolve: async (_root, args, _ctx, _info) => {
         const socialData = await SocialNetworkService.login(args.type, args.accessToken);
-        let socialProvider = await prisma.socialProvider.findOne({
+        let socialProvider = await prisma.socialProvider.findUnique({
             where:
                 { id_type: { type: socialData.type, id: socialData.id } },
         })
@@ -43,10 +43,10 @@ export const LoginSocialNetwork = mutationField('loginSocialNetwork', {
                         create: {
                             nickName: socialData.name ?? socialData.id,
                             role: { connect: { id: DefaultRole.normal.id } },
-                            ...socialData.avatar ? { avatar: { create: { type: 'image', url: socialData.avatar } } } : {},
-                            ...socialData.birthday ? { birthday: socialData.birthday } : {},
-                            ...socialData.phoneNumber ? { phoneNumber: socialData.phoneNumber } : {},
-                            ...socialData.gender ? { gender: socialData.gender } : {},
+                            ...(socialData.avatar ? { avatar: { create: { type: 'image', url: socialData.avatar } } } : {}),
+                            ...(socialData.birthday ? { birthday: socialData.birthday } : {}),
+                            ...(socialData.phoneNumber ? { phoneNumber: socialData.phoneNumber } : {}),
+                            ...(socialData.gender ? { gender: socialData.gender } : {}),
                             pushNotiSetting: ['like', 'matching', 'newMessage', 'other'],
                         }
                     }

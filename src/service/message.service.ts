@@ -1,4 +1,4 @@
-import { Conversation, ConversationInclude, FileCreateInput, Message } from '@prisma/client';
+import { Conversation, Message, Prisma } from '@prisma/client';
 import { ForbiddenError } from 'apollo-server-express';
 import assert from 'assert';
 import { FileUpload } from 'graphql-upload';
@@ -14,14 +14,14 @@ import { AuthService } from './auth.service';
 import { FileService } from './file.service';
 
 class MessageService {
-    public async getConversation(ctx: Context, id: { otherUserId?: string, conversationId?: string }, include?: ConversationInclude) {
+    public async getConversation(ctx: Context, id: { otherUserId?: string, conversationId?: string }, include?: Prisma.ConversationInclude) {
         AuthService.authenticate(ctx);
         assert(id.conversationId != null || id.otherUserId != null, Strings.error.mustHaveConversationIdOrUserId);
-        const memberIds = [ctx.user.id, ...ctx.user.id !== id.otherUserId && id.otherUserId ? [id.otherUserId] : []];
+        const memberIds = [ctx.user.id, ...(ctx.user.id !== id.otherUserId && id.otherUserId ? [id.otherUserId] : [])];
         let conversation: Conversation;
 
         if (id.conversationId) {
-            conversation = await prisma.conversation.findOne({ where: { id: id.conversationId } });
+            conversation = await prisma.conversation.findUnique({ where: { id: id.conversationId } });
             if (!conversation) {
                 throw ErrorNotFound('Conversation is notfound');
             }
@@ -44,7 +44,7 @@ class MessageService {
                 try {
                     conversation = await this._createConversation(memberIds, include);
                 } catch (error) {
-                    if (!await prisma.user.findOne({ where: { id: id.otherUserId } })) {
+                    if (!(await prisma.user.findUnique({ where: { id: id.otherUserId } }))) {
                         throw ErrorNotFound("Không tìm thấy tài khoản.");
                     }
                 }
@@ -90,11 +90,11 @@ class MessageService {
         let messages: Message[] = [];
         let currentPage = page;
         let focusMessage = !focusMessageId
-            ? null : await prisma.message.findOne({ where: { id: focusMessageId } });
+            ? null : await prisma.message.findUnique({ where: { id: focusMessageId } });
 
         let conversation;
         if (id.conversationId) {
-            conversation = await prisma.conversation.findOne({
+            conversation = await prisma.conversation.findUnique({
                 where: { id: id.conversationId },
                 include: { members: true }
             })
@@ -146,11 +146,11 @@ class MessageService {
         const pageSize = 20;
         let messages: Message[] = [];
         let focusMessage = !focusMessageId
-            ? null : await prisma.message.findOne({ where: { id: focusMessageId } });
+            ? null : await prisma.message.findUnique({ where: { id: focusMessageId } });
 
         let conversation;
         if (id.conversationId) {
-            conversation = await prisma.conversation.findOne({
+            conversation = await prisma.conversation.findUnique({
                 where: { id: id.conversationId },
                 include: { members: true }
             })
@@ -203,12 +203,12 @@ class MessageService {
         assert(data.message?.length > 0 || data.attachments?.length > 0, Strings.error.contentMustBeNotEmpty);
 
         let conversation = data.conversationId
-            ? await prisma.conversation.findOne({ where: { id: data.conversationId } })
+            ? await prisma.conversation.findUnique({ where: { id: data.conversationId } })
             : await this.getConversation(ctx, { otherUserId: data.receiverId });
         if (!conversation) throw ErrorNotFound();
 
         await this.canSendChat(ctx, conversation.id)
-        let files: FileCreateInput[] = [];
+        let files: Prisma.FileCreateInput[] = [];
         if (data.attachments) {
             files = await FileService.uploadMulti(data.attachments)
         }
@@ -240,7 +240,7 @@ class MessageService {
         NotificationService.sendNewMessageNofity(conversation.id, res.id);
 
         ctx.pubsub.publish(SubscriptionKey.newMessage, res);
-        prisma.conversation.findOne({ where: { id: conversation.id } }).then((v) => {
+        prisma.conversation.findUnique({ where: { id: conversation.id } }).then((v) => {
             ctx.pubsub.publish(SubscriptionKey.conversationChange, v);
         })
 
@@ -252,7 +252,7 @@ class MessageService {
         // result = AuthService.authorize(ctx, { values: [Permission.chat.create] }, throwError);
 
         if (result) {
-            const member = await prisma.conversationMember.findOne({
+            const member = await prisma.conversationMember.findUnique({
                 where: {
                     conversationId_userId: {
                         conversationId,
@@ -309,10 +309,10 @@ class MessageService {
 
     private async _markAsReadMessage(ctx: Context, messageId: string) {
         AuthService.authenticate(ctx);
-        const message = await prisma.message.findOne({
+        const message = await prisma.message.findUnique({
             where: { id: messageId },
         })
-        const conversationMember = await prisma.conversationMember.findOne({
+        const conversationMember = await prisma.conversationMember.findUnique({
             where: {
                 conversationId_userId: {
                     conversationId: message.conversationId,
@@ -358,7 +358,7 @@ class MessageService {
 
     private async _getUnreadMessageCount(conversationId: string, userId: string, lastReadMessage?: Message) {
         const _lastReadMessage: Message = lastReadMessage
-            || (await prisma.conversationMember.findOne({
+            || (await prisma.conversationMember.findUnique({
                 where: { conversationId_userId: { conversationId, userId } },
                 include: { lastReadMessage: true }
             })).lastReadMessage;
@@ -367,13 +367,13 @@ class MessageService {
             where: {
                 conversationId,
                 senderId: { not: userId },
-                ..._lastReadMessage ? { createdAt: { gt: _lastReadMessage.createdAt } } : {}
+                ...(_lastReadMessage ? { createdAt: { gt: _lastReadMessage.createdAt } } : {})
             }
-        })
+        });
     }
 
     private static _blockingCreateConversation: boolean = false;
-    private async _createConversation(memberIds: string[], include?: ConversationInclude) {
+    private async _createConversation(memberIds: string[], include?: Prisma.ConversationInclude) {
         while (MessageService._blockingCreateConversation) {
             await new Promise(resolve => setTimeout(resolve, 100))
         }

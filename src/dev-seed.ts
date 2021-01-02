@@ -15,7 +15,7 @@ export function devSeed(app: any) {
         data: {
           user: { connect: { id: e.id } },
           image: { create: { type: 'image', url: getRandomImage() } },
-          ...faker.random.boolean ? {
+          ...(faker.random.boolean ? {
             userAnswer: {
               create: {
                 content: faker.lorem.sentence(),
@@ -23,7 +23,7 @@ export function devSeed(app: any) {
                 question: { connect: { id: allQuestion[faker.random.number(allQuestion.length - 1)].id } },
               }
             }
-          } : {}
+          } : {})
         }
       }))
     )

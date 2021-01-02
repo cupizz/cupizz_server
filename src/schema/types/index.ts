@@ -1,4 +1,4 @@
-import { arg, enumType, inputObjectType, objectType } from "@nexus/schema";
+import { arg, enumType, inputObjectType, objectType } from "nexus";
 import { ConversationMember, Gender, MustHaveField, OnlineStatus, PrivateField, SocialProviderType, User, FileType, EducationLevel, UsualType, HaveKids, LookingFor, Religious, NotificationType } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
 import { defaultAvatar } from "../../config";
@@ -102,16 +102,16 @@ export const UserType = objectType({
             resolve: async (root, _args, ctx, _info): Promise<any> => {
                 const friendType = await UserService.getFriendStatus(ctx.user?.id, root.id);
                 return {
-                    ...await prisma.user.findOne({
+                    ...(await prisma.user.findUnique({
                         where: { id: root.id },
                         include: {
                             userImages: {
                                 orderBy: { sortOrder: 'asc' }
                             },
                         },
-                    }),
+                    })),
                     friendType,
-                }
+                };
             }
         })
     }
@@ -297,9 +297,9 @@ export const FriendDataType = objectType({
             type: 'User',
             resolve: async (root: any, _args, ctx, _info) => {
                 if (root.senderId === ctx.user.id) {
-                    return await prisma.user.findOne({ where: { id: root.receiverId } });
+                    return await prisma.user.findUnique({ where: { id: root.receiverId } });
                 } else {
-                    return await prisma.user.findOne({ where: { id: root.senderId } });
+                    return await prisma.user.findUnique({ where: { id: root.senderId } });
                 }
             }
         })
@@ -377,7 +377,7 @@ export const ConversationType = objectType({
         t.field('data', {
             type: 'ConversationData',
             resolve: async (root, _args, _ctx, _info) => {
-                return await prisma.conversation.findOne({
+                return await prisma.conversation.findUnique({
                     where: { id: root.id },
                     include: {
                         members: {
@@ -396,7 +396,7 @@ export const ConversationType = objectType({
         t.field('personalData', {
             type: 'PersonalConversationData',
             resolve: async (root, _args, ctx, _info) => {
-                return await prisma.conversationMember.findOne({
+                return await prisma.conversationMember.findUnique({
                     where: {
                         conversationId_userId: {
                             conversationId: root.id,

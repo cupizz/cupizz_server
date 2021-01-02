@@ -1,4 +1,4 @@
-import { makeSchema } from '@nexus/schema';
+import { declarativeWrappingPlugin, makeSchema } from 'nexus';
 import { GraphQLDateTime } from 'graphql-iso-date';
 import { nexusSchemaPrisma } from 'nexus-plugin-prisma/schema';
 import path from 'path';
@@ -25,22 +25,10 @@ const nexusPrisma = nexusSchemaPrisma({
 
 export const schema = makeSchema({
   types: [Query, Type, Subscription, Mutation],
-  plugins: [nexusPrisma],
+  plugins: [nexusPrisma, declarativeWrappingPlugin()],
   outputs: {
     schema: __dirname + '/generated/schema.graphql',
     typegen: __dirname + '/generated/nexus.ts',
   },
-  typegenAutoConfig: {
-    contextType: 'Context.Context',
-    sources: [
-      {
-        source: '@prisma/client',
-        alias: 'prisma',
-      },
-      {
-        source: require.resolve('../context'),
-        alias: 'Context',
-      },
-    ],
-  },
+  contextType: {export: 'Context', module: process.env.PWD + '/src/context.ts'},
 })

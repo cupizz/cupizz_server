@@ -24,7 +24,6 @@ export const prisma = new PrismaClient({
 });
 export const redis = Redis.createClient({ host: process.env.REDIS_HOST });
 redis.on('error', (err) => {
-  logger("Error " + err);
 });
 
 async function main() {

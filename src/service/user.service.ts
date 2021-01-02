@@ -1,4 +1,4 @@
-import { ResultValue } from '@nexus/schema/dist/core';
+import { ResultValue } from 'nexus/dist/core';
 import { Friend, Gender, HaveKids, OnlineStatus, Religious, Role, User, UsualType } from '@prisma/client';
 import request from 'request';
 import { AuthService, NotificationService } from '.';
@@ -43,7 +43,7 @@ class UserService {
         token: string,
         otp?: string
     }> {
-        let socialProvider = (await prisma.socialProvider.findOne({
+        let socialProvider = (await prisma.socialProvider.findUnique({
             where: {
                 id_type: {
                     id: email,
@@ -81,7 +81,7 @@ class UserService {
 
         if (!payload?.type || !payload?.id) {
             throw ErrorTokenIncorrect;
-        } else if (await prisma.socialProvider.findOne({
+        } else if (await prisma.socialProvider.findUnique({
             where: {
                 id_type: {
                     type: payload.type,
@@ -123,7 +123,7 @@ class UserService {
         if (!myId || !otherId) { status = FriendStatusEnum.none; }
         else if (otherId === myId) { status = FriendStatusEnum.me; }
         else {
-            friend = await prisma.friend.findOne({
+            friend = await prisma.friend.findUnique({
                 where: {
                     senderId_receiverId: {
                         receiverId: myId,
@@ -135,7 +135,7 @@ class UserService {
             if (friend) {
                 status = friend.acceptedAt ? FriendStatusEnum.friend : FriendStatusEnum.received;
             } else {
-                friend = await prisma.friend.findOne({
+                friend = await prisma.friend.findUnique({
                     where: {
                         senderId_receiverId: {
                             senderId: myId,
@@ -163,7 +163,7 @@ class UserService {
             where: { id: user.id },
             data: {
                 lastOnline: new Date(),
-                ...status ? { onlineStatus: status } : {}
+                ...(status ? { onlineStatus: status } : {})
             }
         })
         if (status) {
@@ -318,10 +318,10 @@ class UserService {
         return await prisma.user.update({
             where: { id: userId },
             data: {
-                ...!options.ignoreLike ? { likeCount: await prisma.friend.count({ where: { receiverId: userId } }) } : {},
-                ...!options.ignoreDislike ? { dislikeCount: await prisma.dislikedUser.count({ where: { dislikedUserId: userId } }) } : {},
+                ...(!options.ignoreLike ? { likeCount: await prisma.friend.count({ where: { receiverId: userId } }) } : {}),
+                ...(!options.ignoreDislike ? { dislikeCount: await prisma.dislikedUser.count({ where: { dislikedUserId: userId } }) } : {}),
             }
-        })
+        });
     }
 
     /**

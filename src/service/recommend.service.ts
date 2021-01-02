@@ -1,4 +1,4 @@
-import { Gender, User, UserWhereInput } from '@prisma/client';
+import { Gender, User, Prisma } from '@prisma/client';
 import { AuthService, UserService } from '.';
 import { Config } from '../config';
 import Strings from '../constants/strings';
@@ -32,21 +32,21 @@ class RecommendService {
 
     public async dislikeUser(ctx: Context, targetUserId: string): Promise<void> {
         AuthService.authenticate(ctx);
-        if (!await prisma.dislikedUser.findOne({
+        if (!(await prisma.dislikedUser.findUnique({
             where: {
                 userId_dislikedUserId: {
                     userId: ctx.user.id,
                     dislikedUserId: targetUserId
                 }
             }
-        }) && await prisma.recommendableUser.findOne({
+        })) && (await prisma.recommendableUser.findUnique({
             where: {
                 userId_recommendableUserId: {
                     userId: ctx.user.id,
                     recommendableUserId: targetUserId,
                 }
             }
-        })) {
+        }))) {
             try {
                 await prisma.$transaction([
                     prisma.recommendableUser.delete({
@@ -150,7 +150,7 @@ class RecommendService {
     }
 
     private async _getMatchingUsers(userId: string) {
-        const user = await prisma.user.findOne({
+        const user = await prisma.user.findUnique({
             where: { id: userId },
             include: {
                 dislikedUsers: true,
@@ -174,7 +174,7 @@ class RecommendService {
             max: new Date(now.getUTCFullYear() - (user.minAgePrefer || Config.minAge.value), 11, 31),
         };
 
-        const where: UserWhereInput = {
+        const where: Prisma.UserWhereInput = {
             // Omission conditions
             NOT: { OR: [userId, ...friendIds, ...user.dislikedUsers.map(e => e.dislikedUserId)].map(e => ({ id: { equals: e } })) },
             roleId: { not: { equals: DefaultRole.admin.id } },

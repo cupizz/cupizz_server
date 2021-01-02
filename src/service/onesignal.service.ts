@@ -9,9 +9,9 @@ class OnesignalService {
     public async sendToAll(title: string, message: string, subtitle?: string, image?: string) {
         const result = this.sendNotification({
             headings: { en: title },
-            ...subtitle ? {
+            ...(subtitle ? {
                 subtitle: { en: subtitle }
-            } : {},
+            } : {}),
             contents: { en: message },
             included_segments: ['All'],
             big_picture: image,
@@ -30,12 +30,12 @@ class OnesignalService {
 
         try {
             const result = await this.sendNotification({
-                ...title ? {
+                ...(title ? {
                     headings: { en: title }
-                } : {},
-                ...options.subtitle ? {
+                } : {}),
+                ...(options.subtitle ? {
                     subtitle: { en: options.subtitle }
-                } : {},
+                } : {}),
                 include_external_user_ids: userIds,
                 contents: { en: message },
                 big_picture: options.image,

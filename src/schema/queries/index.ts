@@ -1,4 +1,4 @@
-import { arg, booleanArg, intArg, objectType, queryType, stringArg } from '@nexus/schema';
+import { arg, booleanArg, intArg, objectType, queryType, stringArg } from 'nexus';
 import { Config } from '../../config';
 import { Permission } from '../../model/permission';
 import { prisma } from '../../server';

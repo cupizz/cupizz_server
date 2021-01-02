@@ -7,6 +7,7 @@ import { Context } from '../context';
 import { ClientError, ErrorEmailNotFound, ErrorIncorrectPassword, ErrorTokenExpired, ErrorUnAuthenticate } from '../model/error';
 import { JwtAuthPayload } from "../model/jwtPayload";
 import { prisma } from '../server';
+import { logger } from "../utils/logger";
 import { PasswordHandler } from "../utils/passwordHandler";
 import { Validator } from "../utils/validator";
 import { UserService } from "./user.service";
@@ -19,7 +20,7 @@ class PermissionFilter {
 
 class AuthService {
     public async login(type: SocialProviderType, id: string, password?: string, deviceId?: string): Promise<{ token: string, info: User }> {
-        let user = (await prisma.socialProvider.findOne({
+        let user = (await prisma.socialProvider.findUnique({
             where: { id_type: { id, type } },
             include: { user: true }
         }))?.user;
@@ -119,12 +120,11 @@ class AuthService {
     }
 
     public sign<T extends object>(payload: T, expiresIn?: number): string {
+        const expire = expiresIn || Config.loginTokenExpireTime.value;
         return jwt.sign(
             payload,
             process.env.JWT_SECRET_KEY,
-            {
-                expiresIn: `${expiresIn || Config.loginTokenExpireTime.value}m`
-            }
+            { expiresIn: `${expire}m` }
         );
     }
 
@@ -138,7 +138,7 @@ class AuthService {
 
         const payload: JwtAuthPayload = (typeof decoded === 'string') ? JSON.parse(decoded) : decoded;
 
-        return await prisma.user.findOne({ where: { id: payload.userId }, include: { role: true } });
+        return await prisma.user.findUnique({ where: { id: payload.userId }, include: { role: true } });
     }
 
     public verify<T>(token: string): T {

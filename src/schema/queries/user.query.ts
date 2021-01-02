@@ -1,4 +1,4 @@
-import { arg, enumType, intArg, objectType, queryField, stringArg } from "@nexus/schema";
+import { arg, enumType, intArg, objectType, queryField, stringArg } from "nexus";
 import { Config } from "../../config";
 import { ErrorNotFound } from "../../model/error";
 import { prisma } from "../../server";
@@ -21,7 +21,7 @@ export const userQuery = queryField('user', {
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
-        const user = await prisma.user.findOne({ where: { id: args.id } });
+        const user = await prisma.user.findUnique({ where: { id: args.id } });
         if (!user) {
             throw ErrorNotFound('Không tìm thấy người dùng');
         }

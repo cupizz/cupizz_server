@@ -50,7 +50,7 @@ export const seedAppConfig = async () => {
                 data: {
                     id: e,
                     name: e,
-                    data: Object.values(Config)[i]
+                    data: Object.values(Config)[i].value,
                 }
             })
         })

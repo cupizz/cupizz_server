@@ -21,7 +21,7 @@ class ForgotPassService {
         otp?: string
     }> {
         Validator.email(email);
-        const socialProvider = await prisma.socialProvider.findOne({
+        const socialProvider = await prisma.socialProvider.findUnique({
             where: { id_type: { id: email, type: 'email' } },
             include: { user: true }
         });
@@ -45,7 +45,7 @@ class ForgotPassService {
             throw ErrorOtpIncorrect;
         }
 
-        const socialProvider = await prisma.socialProvider.findOne({
+        const socialProvider = await prisma.socialProvider.findUnique({
             where: { id_type: { type: 'email', id: email } },
             include: { user: { include: { avatar: true } } }
         });

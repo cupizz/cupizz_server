@@ -1,4 +1,4 @@
-import { objectType, subscriptionField } from "@nexus/schema";
+import { objectType, subscriptionField } from "nexus";
 import { withFilter } from "apollo-server-express";
 import SubscriptionKey from "../../constants/subscriptionKey";
 import { pubsub } from "../../server";

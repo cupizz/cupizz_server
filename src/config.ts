@@ -52,9 +52,9 @@ const _Config: ConfigType = {
 
 export const loadConfig = async () => {
     const listConfig = await (new PrismaClient()).appConfig.findMany({ orderBy: { id: 'asc' } });
-    const result: any = {};
+    const result: any = _Config;
     listConfig.forEach(e => result[e.id] = { value: e.data, description: e.description });
-    Config = result ?? _Config;
+    Config = result;
     return listConfig;
 }
 

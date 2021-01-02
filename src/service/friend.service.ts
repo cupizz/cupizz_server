@@ -1,11 +1,11 @@
-import { Friend, FriendWhereInput, UserWhereInput } from '@prisma/client';
+import { Friend, Prisma } from '@prisma/client';
 import { Context } from '../context';
 import { NexusGenEnums } from '../schema/generated/nexus';
 import { prisma } from '../server';
 
 class FriendService {
     public async getFriendsSortAge(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number): Promise<Friend[]> {
-        let where: FriendWhereInput;
+        let where: Prisma.FriendWhereInput;
         switch (type) {
             case 'friend':
                 where = {
@@ -53,7 +53,7 @@ class FriendService {
     }
 
     public async getFriendsSortLogin(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number): Promise<Friend[]> {
-        let where: UserWhereInput;
+        let where: Prisma.UserWhereInput;
         switch (type) {
             case 'friend':
                 where = {
@@ -110,7 +110,7 @@ class FriendService {
     }
 
     public async getFriendsSortNew(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number): Promise<Friend[]> {
-        let where: FriendWhereInput;
+        let where: Prisma.FriendWhereInput;
         switch (type) {
             case 'friend':
                 where = {

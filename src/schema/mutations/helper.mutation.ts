@@ -1,4 +1,4 @@
-import { mutationField } from "@nexus/schema";
+import { mutationField } from "nexus";
 import { HaveKids, LookingFor, Religious, Role, UsualType } from "@prisma/client";
 import { random } from "faker";
 import { Permission } from "../../model/permission";

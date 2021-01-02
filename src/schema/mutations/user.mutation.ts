@@ -1,5 +1,6 @@
-import { arg, booleanArg, floatArg, idArg, intArg, mutationField, stringArg } from "@nexus/schema";
-import { FileCreateInput } from '@prisma/client';
+import { arg, booleanArg, floatArg, idArg, intArg, mutationField, stringArg } from "nexus";
+import { inputObjectType, NexusInputFieldConfig } from "nexus/dist/core";
+import { Prisma } from '@prisma/client';
 import Strings from "../../constants/strings";
 import { ClientError, ErrorIncorrectPassword, ErrorNotFound } from "../../model/error";
 import { Permission } from "../../model/permission";
@@ -10,6 +11,7 @@ import { RecommendService } from "../../service/recommend.service";
 import { SocialNetworkService } from "../../service/socialNetwork.service";
 import { PasswordHandler } from "../../utils/passwordHandler";
 import { Validator } from "../../utils/validator";
+import { logger } from "../../utils/logger";
 
 export const changePasswordMutation = mutationField('changePassword', {
     type: 'Boolean',
@@ -65,12 +67,12 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
             Validator.phoneNumber(args.phoneNumber);
         }
 
-        let avatar: FileCreateInput;
+        let avatar: Prisma.FileCreateInput;
         if (args.avatar) {
             avatar = await FileService.upload(await args.avatar);
         }
 
-        let cover: FileCreateInput;
+        let cover: Prisma.FileCreateInput;
         if (args.cover) {
             cover = await FileService.upload(await args.cover);
         }
@@ -78,27 +80,27 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
         const user = await prisma.user.update({
             where: { id: ctx.user.id },
             data: {
-                ...args.nickName ? { nickName: { set: args.nickName } } : {},
-                ...args.introduction ? { introduction: { set: args.introduction } } : {},
-                ...args.gender ? { gender: { set: args.gender } } : {},
-                ...args.phoneNumber ? { phoneNumber: { set: args.phoneNumber } } : {},
-                ...args.birthday ? { birthday: { set: args.birthday } } : {},
-                ...args.latitude ? { latitude: { set: args.latitude } } : {},
-                ...args.longitude ? { longitude: { set: args.longitude } } : {},
-                ...args.longitude || args.latitude ? { address: { set: '' } } : {},
-                ...args.job ? { job: { set: args.job } } : {},
-                ...args.address ? { address: { set: args.address } } : {},
-                ...args.educationLevel ? { educationLevel: { set: args.educationLevel } } : {},
-                ...args.smoking ? { smoking: { set: args.smoking } } : {},
-                ...args.drinking ? { drinking: { set: args.drinking } } : {},
-                ...args.yourKids ? { yourKids: { set: args.yourKids } } : {},
-                ...args.lookingFors ? { lookingFors: { set: args.lookingFors } } : {},
-                ...args.religious ? { religious: { set: args.religious } } : {},
-                ...args.height ? { height: { set: args.height } } : {},
-                ...args.privateFields ? { privateFields: { set: args.privateFields } } : {},
-                ...args.hobbyIds ? { hobbies: { set: args.hobbyIds?.map(e => ({ id: e })) } } : {},
-                ...avatar ? { avatar: { create: avatar } } : {},
-                ...cover ? { cover: { create: cover } } : {}
+                ...(args.nickName ? { nickName: { set: args.nickName } } : {}),
+                ...(args.introduction ? { introduction: { set: args.introduction } } : {}),
+                ...(args.gender ? { gender: { set: args.gender } } : {}),
+                ...(args.phoneNumber ? { phoneNumber: { set: args.phoneNumber } } : {}),
+                ...(args.birthday ? { birthday: { set: args.birthday } } : {}),
+                ...(args.latitude ? { latitude: { set: args.latitude } } : {}),
+                ...(args.longitude ? { longitude: { set: args.longitude } } : {}),
+                ...(args.longitude || args.latitude ? { address: { set: '' } } : {}),
+                ...(args.job ? { job: { set: args.job } } : {}),
+                ...(args.address ? { address: { set: args.address } } : {}),
+                ...(args.educationLevel !== undefined ? { educationLevel: { set: args.educationLevel } } : {}),
+                ...(args.smoking !== undefined ? { smoking: { set: args.smoking } } : {}),
+                ...(args.drinking !== undefined ? { drinking: { set: args.drinking } } : {}),
+                ...(args.yourKids !== undefined ? { yourKids: { set: args.yourKids } } : {}),
+                ...(args.lookingFors !== undefined ? { lookingFors: { set: args.lookingFors } } : {}),
+                ...(args.religious !== undefined ? { religious: { set: args.religious } } : {}),
+                ...(args.height ? { height: { set: args.height } } : {}),
+                ...(args.privateFields ? { privateFields: { set: args.privateFields } } : {}),
+                ...(args.hobbyIds ? { hobbies: { set: args.hobbyIds?.map(e => ({ id: e })) } } : {}),
+                ...(avatar ? { avatar: { create: avatar } } : {}),
+                ...(cover ? { cover: { create: cover } } : {})
             }
         })
 
@@ -191,7 +193,7 @@ export const ConnectSocialNetworkMutation = mutationField('connectSocialNetwork'
         AuthService.authenticate(ctx);
         const socialData = await SocialNetworkService.login(args.type, args.accessToken);
 
-        const currentSocial = await prisma.socialProvider.findOne({ where: { id_type: socialData } });
+        const currentSocial = await prisma.socialProvider.findUnique({ where: { id_type: socialData } });
         if (currentSocial) {
             if (currentSocial.userId === ctx.user.id) {
                 return ctx.user;
@@ -244,7 +246,7 @@ export const RemoveUserImageMutation = mutationField('removeUserImage', {
     resolve: async (_root, args, ctx) => {
         AuthService.authenticate(ctx);
 
-        if (!await prisma.userImage.findOne({ where: { id: args.id } })) {
+        if (!(await prisma.userImage.findUnique({ where: { id: args.id } }))) {
             throw ErrorNotFound();
         }
 
@@ -265,7 +267,7 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
 
-        if (!await prisma.question.findOne({ where: { id: args.questionId } })) {
+        if (!(await prisma.question.findUnique({ where: { id: args.questionId } }))) {
             throw ErrorNotFound('Question not found');
         }
 
@@ -277,7 +279,7 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
         return await prisma.userImage.create({
             data: {
                 user: { connect: { id: ctx.user.id } },
-                ...args.backgroundImage ? { image: { create: await FileService.upload(await args.backgroundImage) } } : {},
+                ...(args.backgroundImage ? { image: { create: await FileService.upload(await args.backgroundImage) } } : {}),
                 sortOrder: imageCount + 1,
                 userAnswer: {
                     create: {
@@ -290,7 +292,7 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
                     },
                 }
             }
-        })
+        });
     }
 })
 
@@ -307,7 +309,7 @@ export const editAnswerMutation = mutationField('editAnswer', {
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
 
-        const userAnswer = await prisma.userAnswer.findOne({
+        const userAnswer = await prisma.userAnswer.findUnique({
             where: { id: args.answerId },
             include: { userImage: true }
         });
@@ -324,21 +326,21 @@ export const editAnswerMutation = mutationField('editAnswer', {
         return (await prisma.userAnswer.update({
             where: { id: args.answerId },
             data: {
-                ...args.color ? { color: { set: args.color } } : {},
-                ...args.textColor ? { textColor: { set: args.textColor } } : {},
-                ...args.gradient ? { gradient: { set: args.gradient } } : {},
-                ...args.content ? { content: { set: args.content } } : {},
-                ...image ? {
+                ...(args.color ? { color: { set: args.color } } : {}),
+                ...(args.textColor ? { textColor: { set: args.textColor } } : {}),
+                ...(args.gradient ? { gradient: { set: args.gradient } } : {}),
+                ...(args.content ? { content: { set: args.content } } : {}),
+                ...(image ? {
                     userImage: {
                         update: {
                             image: {
-                                ...userAnswer.userImage?.imageId ? {
+                                ...(userAnswer.userImage?.imageId ? {
                                     update: { ...image, id: userAnswer.userImage.imageId },
-                                } : { create: image }
+                                } : { create: image })
                             }
                         }
                     }
-                } : {},
+                } : {}),
             },
             include: { userImage: true }
         })).userImage;
@@ -391,7 +393,7 @@ export const updateUserStatusMutation = mutationField('updateUserStatus', {
                 data: { status: args.status }
             });
         } catch (e) {
-            if (!await prisma.user.findOne({ where: { id: args.id } })) {
+            if (!(await prisma.user.findUnique({ where: { id: args.id } }))) {
                 throw ErrorNotFound(Strings.error.userNotFound);
             }
             throw e;
