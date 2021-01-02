@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import faker from 'faker/locale/vi';
-import { Config } from "../../src/config";
+import { Config, DefaultConfig } from "../../src/config";
 
 export const defaultHobbies = [
     'Làm vườn hoa hoặc rau',
@@ -45,12 +45,20 @@ export const defaultHobbies = [
 export const seedAppConfig = async () => {
     const db = new PrismaClient();
     await Promise.all(
-        Object.keys(Config).map(async (e, i) => {
-            return await db.appConfig.create({
-                data: {
+        Object.keys(DefaultConfig).map(async (e) => {
+            return await db.appConfig.upsert({
+                create: {
                     id: e,
                     name: e,
-                    data: Object.values(Config)[i].value,
+                    description: (DefaultConfig as any)[e].description,
+                    data: (DefaultConfig as any)[e].value,
+                },
+                where: { id: e },
+                update: {
+                    id: e,
+                    name: e,
+                    description: (DefaultConfig as any)[e].description,
+                    data: (DefaultConfig as any)[e].value,
                 }
             })
         })

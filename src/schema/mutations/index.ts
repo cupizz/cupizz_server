@@ -1,18 +1,45 @@
 import { arg, idArg, mutationType, stringArg } from 'nexus'
+import { DefaultConfig } from '../../config'
 import { Permission } from '../../model/permission'
 import { prisma } from '../../server'
 import { AuthService, FileService, OnesignalService } from '../../service'
 
+export * from './appConfig.mutation'
 export * from './auth.mutation'
-export * from './message.mutation'
 export * from './file.mutation'
-export * from './user.mutation'
 export * from './forgotPass.mutation'
 export * from './helper.mutation'
-export * from './appConfig.mutation'
+export * from './message.mutation'
+export * from './user.mutation'
 
 export const mutations = mutationType({
     definition(t) {
+        t.field('adminReseedAppConfig', {
+            type: 'Boolean',
+            resolve: async (_root, _args, ctx) => {
+                AuthService.authorize(ctx, { values: [Permission.config.import] });
+                await Promise.all(
+                    Object.keys(DefaultConfig).map(async (e) => {
+                        return await prisma.appConfig.upsert({
+                            create: {
+                                id: e,
+                                name: e,
+                                description: (DefaultConfig as any)[e].description,
+                                data: (DefaultConfig as any)[e].value,
+                            },
+                            where: { id: e },
+                            update: {
+                                id: e,
+                                name: e,
+                                description: (DefaultConfig as any)[e].description,
+                                data: (DefaultConfig as any)[e].value,
+                            }
+                        })
+                    })
+                )
+                return true;
+            }
+        })
         t.field('adminSendNotification', {
             type: 'Boolean',
             args: {

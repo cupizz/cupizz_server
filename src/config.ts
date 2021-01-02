@@ -29,7 +29,7 @@ export type ConfigField = 'debugLog'
 
 export type ConfigType = Record<ConfigField, { value: any, description: string }>;
 
-const _Config: ConfigType = {
+export const DefaultConfig: ConfigType = {
     debugLog: { value: true, description: "Bật tắt console log" },
     loginTokenExpireTime: { value: 24 * 60, description: 'Thời gian hết hạn của token đăng nhập. (Tính theo phút)' },
     otpExpireTime: { value: 1, description: 'Thời gian hết hạn của token OTP. (Tính theo phút)' },
@@ -52,10 +52,10 @@ const _Config: ConfigType = {
 
 export const loadConfig = async () => {
     const listConfig = await (new PrismaClient()).appConfig.findMany({ orderBy: { id: 'asc' } });
-    const result: any = _Config;
+    const result: any = {...DefaultConfig};
     listConfig.forEach(e => result[e.id] = { value: e.data, description: e.description });
     Config = result;
     return listConfig;
 }
 
-export let Config: ConfigType = _Config;
+export let Config: ConfigType = {...DefaultConfig};
