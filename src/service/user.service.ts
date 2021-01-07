@@ -111,6 +111,8 @@ class UserService {
                 role: { connect: { id: DefaultRole.trial.id } },
                 socialProvider: { create: payload },
                 pushNotiSetting: ['like', 'matching', 'newMessage', 'other'],
+                allowMatching: true,
+                isPrivate: false,
             }
         });
     }
@@ -297,11 +299,12 @@ class UserService {
                 if (res.statusCode != 200) throw new Error(res.body);
 
                 const decoded = JSON.parse(res.body);
-                const address = decoded.display_name;
+                const address = decoded.address;
+                const addressField: string[] = [address['city'], address['county'], address['state'], address['country']].filter(e => e !== null);
 
-                redis.setex(redisKey, 86400, address);
+                redis.setex(redisKey, 86400, addressField.join(', '));
 
-                return address;
+                return addressField.join(', ');
             } catch (error) {
                 logger(error);
                 return null;
@@ -356,7 +359,7 @@ class UserService {
             introduction: e.introduction ?? '',
             age: calculateAge(e.birthday) ?? -1,
             gender: Object.values(Gender).indexOf(e.gender),
-            height: e.height, 
+            height: e.height,
             x: e.latitude,
             y: e.longitude,
             smoking: Object.values(UsualType).indexOf(e.smoking),

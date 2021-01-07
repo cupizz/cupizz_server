@@ -25,9 +25,10 @@ class Validator {
             error = 'Password phải ít hơn 24 ký tự';
         } else if (password.length < 8) {
             error = 'Password phải từ 8 ký tự trở lên';
-        } else if (!regexp.test(password)) {
-            error = "Password chỉ bao gồm chữ, số và các ký tự @#\\$%&?!"
-        }
+        } 
+        // else if (!regexp.test(password)) {
+        //     error = "Password chỉ bao gồm chữ, số và các ký tự @#\\$%&?!"
+        // }
 
         if (throwError && error) {
             throw ValidationError(error);

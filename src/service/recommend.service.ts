@@ -180,9 +180,38 @@ class RecommendService {
             roleId: { not: { equals: DefaultRole.admin.id } },
 
             // Filter conditions
-            birthday: { lte: birthdayCondition.max, gte: birthdayCondition.min },
-            height: { lte: user.maxHeightPrefer || Config.maxHeight.value, gte: user.minHeightPrefer || Config.minHeight.value },
-            gender: { in: user.genderPrefer.length > 0 ? user.genderPrefer : Object.values(Gender) },
+            OR: [
+                {
+                    birthday: { lte: birthdayCondition.max, gte: birthdayCondition.min },
+                    height: { lte: user.maxHeightPrefer || Config.maxHeight.value, gte: user.minHeightPrefer || Config.minHeight.value },
+                },
+                {
+                    birthday: { lte: birthdayCondition.max, gte: birthdayCondition.min },
+                    height: { equals: null }
+                },
+                {
+                    birthday: { equals: null },
+                    height: { lte: user.maxHeightPrefer || Config.maxHeight.value, gte: user.minHeightPrefer || Config.minHeight.value },
+                },
+                {
+                    birthday: { equals: null },
+                    height: { equals: null }
+                }
+            ],
+            AND: [
+                {
+                    OR: [
+                        { gender: { in: user.genderPrefer.length > 0 ? user.genderPrefer : Object.values(Gender) }, },
+                        { gender: { equals: null }, },
+                    ]
+                },
+                {
+                    OR: [
+                        { coverId: { not: { equals: null } } },
+                        { avatarId: { not: { equals: null } } },
+                    ]
+                }
+            ],
             // TODO calculate distance
             allowMatching: true,
             isPrivate: false,

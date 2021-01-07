@@ -155,7 +155,12 @@ export const UserDataType = objectType({
         t.model('User').educationLevelsPrefer()
         t.model('User').theirKids()
         t.model('User').religiousPrefer()
-        t.model('User').avatar()
+        t.model('User').avatar({
+            resolve: async (root: any, args, ctx, info, origin) => {
+                const data = await origin(root, args, ctx, info);
+                return data ?? defaultAvatar(ctx)
+            }
+        })
         t.model('User').cover()
         t.model('User').role()
         t.model('User').dislikeCount({
