@@ -31,7 +31,7 @@ const _createUsers = async (json: any[]) => {
         let images = object['user']?.['photos'] as any[] ?? [];
         const avatar = images.length > 0 ? images.pop() : null;
         const cover = images.length > 1 ? images.pop() : null;
-        if (images.length === 0)
+        if (images.length === 0 && object['user']?.['gender'] === 1)
             images.push(
                 ...Array.from(Array(faker.random.number(9)).keys())
                     .map(_ => getRandomImage())
