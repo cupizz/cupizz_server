@@ -1,4 +1,4 @@
-import { arg, mutationField } from "nexus";
+import { arg, mutationField } from "@nexus/schema";
 import { AuthService } from "../../service";
 import { FileService } from "../../service/file.service";
 

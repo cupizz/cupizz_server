@@ -120,3 +120,5 @@ src/schema/generated
 temp
 .docker/*
 data
+
+prisma/seed/profiles.json

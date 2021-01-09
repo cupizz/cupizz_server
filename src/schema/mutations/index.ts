@@ -1,4 +1,4 @@
-import { arg, idArg, mutationType, stringArg } from 'nexus'
+import { arg, idArg, mutationType, stringArg } from '@nexus/schema'
 import { DefaultConfig } from '../../config'
 import { Permission } from '../../model/permission'
 import { prisma } from '../../server'
