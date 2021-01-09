@@ -129,16 +129,24 @@ class AuthService {
     }
 
     public async verifyUser(token: string) {
-        let decoded = {};
         try {
+            let decoded = {};
             decoded = jwt.verify(token ?? '', process.env.JWT_SECRET_KEY);
+
+            const payload: JwtAuthPayload = (typeof decoded === 'string') ? JSON.parse(decoded) : decoded;
+
+            const user = (await prisma.userDeviceToken.findUnique({
+                where: { token: token },
+                include: { user: { include: { role: true } } }
+            }))?.user;
+
+            if (user?.id === payload.userId) {
+                return user;
+            }
+            return null;
         } catch (e) {
             return null;
         }
-
-        const payload: JwtAuthPayload = (typeof decoded === 'string') ? JSON.parse(decoded) : decoded;
-
-        return await prisma.user.findUnique({ where: { id: payload.userId }, include: { role: true } });
     }
 
     public verify<T>(token: string): T {
