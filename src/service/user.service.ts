@@ -43,7 +43,7 @@ class UserService {
         token: string,
         otp?: string
     }> {
-        let socialProvider = (await prisma.socialProvider.findUnique({
+        let socialProvider = (await prisma.socialProvider.findOne({
             where: {
                 id_type: {
                     id: email,
@@ -81,7 +81,7 @@ class UserService {
 
         if (!payload?.type || !payload?.id) {
             throw ErrorTokenIncorrect;
-        } else if (await prisma.socialProvider.findUnique({
+        } else if (await prisma.socialProvider.findOne({
             where: {
                 id_type: {
                     type: payload.type,
@@ -125,7 +125,7 @@ class UserService {
         if (!myId || !otherId) { status = FriendStatusEnum.none; }
         else if (otherId === myId) { status = FriendStatusEnum.me; }
         else {
-            friend = await prisma.friend.findUnique({
+            friend = await prisma.friend.findOne({
                 where: {
                     senderId_receiverId: {
                         receiverId: myId,
@@ -137,7 +137,7 @@ class UserService {
             if (friend) {
                 status = friend.acceptedAt ? FriendStatusEnum.friend : FriendStatusEnum.received;
             } else {
-                friend = await prisma.friend.findUnique({
+                friend = await prisma.friend.findOne({
                     where: {
                         senderId_receiverId: {
                             senderId: myId,

@@ -1,6 +1,4 @@
-import { arg, booleanArg, floatArg, idArg, intArg, mutationField, stringArg } from "nexus";
-import { inputObjectType, NexusInputFieldConfig } from "nexus/dist/core";
-import { Prisma } from '@prisma/client';
+import { arg, booleanArg, floatArg, idArg, intArg, mutationField, stringArg } from "@nexus/schema";
 import Strings from "../../constants/strings";
 import { ClientError, ErrorIncorrectPassword, ErrorNotFound } from "../../model/error";
 import { Permission } from "../../model/permission";
@@ -11,7 +9,7 @@ import { RecommendService } from "../../service/recommend.service";
 import { SocialNetworkService } from "../../service/socialNetwork.service";
 import { PasswordHandler } from "../../utils/passwordHandler";
 import { Validator } from "../../utils/validator";
-import { logger } from "../../utils/logger";
+import { FileCreateInput } from "@prisma/client";
 
 export const changePasswordMutation = mutationField('changePassword', {
     type: 'Boolean',
@@ -67,12 +65,12 @@ export const UpdateProfileMutation = mutationField('updateProfile', {
             Validator.phoneNumber(args.phoneNumber);
         }
 
-        let avatar: Prisma.FileCreateInput;
+        let avatar: FileCreateInput;
         if (args.avatar) {
             avatar = await FileService.upload(await args.avatar);
         }
 
-        let cover: Prisma.FileCreateInput;
+        let cover: FileCreateInput;
         if (args.cover) {
             cover = await FileService.upload(await args.cover);
         }
@@ -193,7 +191,7 @@ export const ConnectSocialNetworkMutation = mutationField('connectSocialNetwork'
         AuthService.authenticate(ctx);
         const socialData = await SocialNetworkService.login(args.type, args.accessToken);
 
-        const currentSocial = await prisma.socialProvider.findUnique({ where: { id_type: socialData } });
+        const currentSocial = await prisma.socialProvider.findOne({ where: { id_type: socialData } });
         if (currentSocial) {
             if (currentSocial.userId === ctx.user.id) {
                 return ctx.user;
@@ -246,7 +244,7 @@ export const RemoveUserImageMutation = mutationField('removeUserImage', {
     resolve: async (_root, args, ctx) => {
         AuthService.authenticate(ctx);
 
-        if (!(await prisma.userImage.findUnique({ where: { id: args.id } }))) {
+        if (!(await prisma.userImage.findOne({ where: { id: args.id } }))) {
             throw ErrorNotFound();
         }
 
@@ -267,7 +265,7 @@ export const AnswerQuestionMutation = mutationField('answerQuestion', {
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
 
-        if (!(await prisma.question.findUnique({ where: { id: args.questionId } }))) {
+        if (!(await prisma.question.findOne({ where: { id: args.questionId } }))) {
             throw ErrorNotFound('Question not found');
         }
 
@@ -309,7 +307,7 @@ export const editAnswerMutation = mutationField('editAnswer', {
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
 
-        const userAnswer = await prisma.userAnswer.findUnique({
+        const userAnswer = await prisma.userAnswer.findOne({
             where: { id: args.answerId },
             include: { userImage: true }
         });
@@ -393,7 +391,7 @@ export const updateUserStatusMutation = mutationField('updateUserStatus', {
                 data: { status: args.status }
             });
         } catch (e) {
-            if (!(await prisma.user.findUnique({ where: { id: args.id } }))) {
+            if (!(await prisma.user.findOne({ where: { id: args.id } }))) {
                 throw ErrorNotFound(Strings.error.userNotFound);
             }
             throw e;
