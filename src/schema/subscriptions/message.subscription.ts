@@ -1,4 +1,4 @@
-import { idArg, intArg, stringArg, subscriptionField } from "@nexus/schema";
+import { idArg, subscriptionField } from "@nexus/schema";
 import { Conversation, Message } from "@prisma/client";
 import { withFilter } from "apollo-server-express";
 import SubscriptionKey from "../../constants/subscriptionKey";

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { SocialProviderCreateWithoutUserInput } from '@prisma/client'
 import request from 'request';
 import { ErrorUnAuthenticate, ClientError } from '../model/error';
 import Strings from '../constants/strings';
@@ -6,7 +6,7 @@ import { NexusGenEnums } from '../schema/generated/nexus';
 import { logger } from '../utils/logger';
 
 class SocialNetworkService {
-    public async login(type: NexusGenEnums['SocialProviderEnumType'], data: string): Promise<Prisma.SocialProviderCreateWithoutUserInput> {
+    public async login(type: NexusGenEnums['SocialProviderEnumType'], data: string): Promise<SocialProviderCreateWithoutUserInput> {
         switch (type) {
             case 'email':
                 throw new Error("Please use API registerEmail or login");
@@ -19,7 +19,7 @@ class SocialNetworkService {
         }
     }
 
-    private async _loginGoogle(accessToken: string): Promise<Prisma.SocialProviderCreateWithoutUserInput> {
+    private async _loginGoogle(accessToken: string): Promise<SocialProviderCreateWithoutUserInput> {
         try {
             const res = await new Promise<request.Response>((resolve, reject) => {
                 request.get({
@@ -56,7 +56,7 @@ class SocialNetworkService {
         }
     }
 
-    private async _loginFacebook(accessToken: string): Promise<Prisma.SocialProviderCreateWithoutUserInput> {
+    private async _loginFacebook(accessToken: string): Promise<SocialProviderCreateWithoutUserInput> {
         try {
             const res = await new Promise<request.Response>((resolve, reject) => {
                 request.get({

@@ -1,7 +1,5 @@
-import { arg, enumType, mutationField, objectType, stringArg } from "@nexus/schema";
-import { Config, ConstConfig } from "../../config";
+import { arg, mutationField, stringArg } from "@nexus/schema";
 import { JwtAuthPayload } from "../../model/jwtPayload";
-import { JwtRegisterPayload } from "../../model/registerPayload";
 import { DefaultRole } from "../../model/role";
 import { prisma } from "../../server";
 import { AuthService, UserService } from "../../service";

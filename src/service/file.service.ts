@@ -2,14 +2,14 @@ import * as request from 'request';
 import { FileUpload } from 'graphql-upload';
 import * as fs from 'fs';
 import uniqueId from 'uniqid';
-import { Prisma } from '@prisma/client';
 import { Config } from '../config';
 import { ClientError } from '../model/error';
 import Strings from '../constants/strings';
 import { logger } from '../utils/logger';
+import { FileCreateInput } from '@prisma/client';
 
 class FileService {
-    public async upload(file: FileUpload): Promise<Prisma.FileCreateInput> {
+    public async upload(file: FileUpload): Promise<FileCreateInput> {
         this._validateFile(file);
         const fileType = file.mimetype.split('/')[0];
         if (fileType === 'image') {
@@ -22,11 +22,11 @@ class FileService {
         }
     }
 
-    public async uploadMulti(files: FileUpload[]): Promise<Prisma.FileCreateInput[]> {
+    public async uploadMulti(files: FileUpload[]): Promise<FileCreateInput[]> {
         return Promise.all(files.map(e => this.upload(e)));
     }
 
-    public async uploadFromTemp(fileName: string): Promise<Prisma.FileCreateInput> {
+    public async uploadFromTemp(fileName: string): Promise<FileCreateInput> {
         const data = await this._uploadOneImageToImgur(fileName);
         logger('Uploaded from temp: ' + data.url + ' from ' + fileName);
         return {
@@ -35,7 +35,7 @@ class FileService {
         };
     }
 
-    public uploadMultiFromTemp(fileNames: string[]): Promise<Prisma.FileCreateInput[]> {
+    public uploadMultiFromTemp(fileNames: string[]): Promise<FileCreateInput[]> {
         return Promise.all(fileNames.map(e => this.uploadFromTemp(e)));
     }
 

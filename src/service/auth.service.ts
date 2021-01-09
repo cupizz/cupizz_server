@@ -135,7 +135,7 @@ class AuthService {
 
             const payload: JwtAuthPayload = (typeof decoded === 'string') ? JSON.parse(decoded) : decoded;
 
-            const user = (await prisma.userDeviceToken.findUnique({
+            const user = (await prisma.userDeviceToken.findOne({
                 where: { token: token },
                 include: { user: { include: { role: true } } }
             }))?.user;

@@ -1,4 +1,3 @@
-import { ResultValue } from 'nexus/dist/core';
 import { Friend, Gender, HaveKids, OnlineStatus, Religious, Role, User, UsualType } from '@prisma/client';
 import request from 'request';
 import { AuthService, NotificationService } from '.';
@@ -20,6 +19,7 @@ import { Validator } from '../utils/validator';
 import { RecommendService } from './recommend.service';
 import fs from 'fs';
 import { calculateAge } from '../utils/helper';
+import { ResultValue } from '@nexus/schema/dist/core';
 
 class UserService {
     public canAccessPrivateAccount(ctx: Context, targetUser: User) {
@@ -306,7 +306,7 @@ class UserService {
 
                 return addressField.join(', ');
             } catch (error) {
-                logger(error);
+                // logger(error);
                 return null;
             }
         }

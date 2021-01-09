@@ -1,4 +1,4 @@
-import { Gender, User, Prisma } from '@prisma/client';
+import { Gender, User, UserWhereInput } from '@prisma/client';
 import { AuthService, UserService } from '.';
 import { Config } from '../config';
 import Strings from '../constants/strings';
@@ -174,7 +174,7 @@ class RecommendService {
             max: new Date(now.getUTCFullYear() - (user.minAgePrefer || Config.minAge.value), 11, 31),
         };
 
-        const where: Prisma.UserWhereInput = {
+        const where: UserWhereInput = {
             // Omission conditions
             NOT: { OR: [userId, ...friendIds, ...user.dislikedUsers.map(e => e.dislikedUserId)].map(e => ({ id: { equals: e } })) },
             roleId: { not: { equals: DefaultRole.admin.id } },

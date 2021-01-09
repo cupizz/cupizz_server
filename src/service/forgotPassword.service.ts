@@ -1,16 +1,12 @@
 import { File } from '@prisma/client';
-import cuid from 'cuid';
 import { Config } from '../config';
-import Strings from '../constants/strings';
-import { Context } from '../context';
 import { ErrorEmailNotFound, ErrorOtpIncorrect, ErrorTokenIncorrect } from '../model/error';
-import { JwtAuthPayload } from '../model/jwtPayload';
-import { JwtForgotPassPayload, JwtRegisterPayload } from '../model/registerPayload';
+import { JwtForgotPassPayload } from '../model/registerPayload';
 import { prisma } from '../server';
 import OtpHandler from '../utils/otpHandler';
 import { PasswordHandler } from '../utils/passwordHandler';
 import { Validator } from '../utils/validator';
-import { AuthService, MailService } from './';
+import { AuthService } from './';
 
 class ForgotPassService {
     /**

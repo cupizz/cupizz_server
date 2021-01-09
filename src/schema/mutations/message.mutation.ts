@@ -1,4 +1,4 @@
-import { arg, idArg, intArg, mutationField, stringArg } from "@nexus/schema";
+import { arg, idArg, mutationField, stringArg } from "@nexus/schema";
 import { MessageService } from "../../service/message.service";
 
 export const CreateMessageMutation = mutationField(

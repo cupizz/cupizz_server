@@ -1,4 +1,4 @@
-import { Conversation, Message, Prisma } from '@prisma/client';
+import { Conversation, ConversationInclude, FileCreateInput, Message } from '@prisma/client';
 import { ForbiddenError } from 'apollo-server-express';
 import assert from 'assert';
 import { FileUpload } from 'graphql-upload';
@@ -14,7 +14,7 @@ import { AuthService } from './auth.service';
 import { FileService } from './file.service';
 
 class MessageService {
-    public async getConversation(ctx: Context, id: { otherUserId?: string, conversationId?: string }, include?: Prisma.ConversationInclude) {
+    public async getConversation(ctx: Context, id: { otherUserId?: string, conversationId?: string }, include?: ConversationInclude) {
         AuthService.authenticate(ctx);
         assert(id.conversationId != null || id.otherUserId != null, Strings.error.mustHaveConversationIdOrUserId);
         const memberIds = [ctx.user.id, ...(ctx.user.id !== id.otherUserId && id.otherUserId ? [id.otherUserId] : [])];
@@ -208,7 +208,7 @@ class MessageService {
         if (!conversation) throw ErrorNotFound();
 
         await this.canSendChat(ctx, conversation.id)
-        let files: Prisma.FileCreateInput[] = [];
+        let files: FileCreateInput[] = [];
         if (data.attachments) {
             files = await FileService.uploadMulti(data.attachments)
         }
@@ -373,7 +373,7 @@ class MessageService {
     }
 
     private static _blockingCreateConversation: boolean = false;
-    private async _createConversation(memberIds: string[], include?: Prisma.ConversationInclude) {
+    private async _createConversation(memberIds: string[], include?: ConversationInclude) {
         while (MessageService._blockingCreateConversation) {
             await new Promise(resolve => setTimeout(resolve, 100))
         }

@@ -1,3 +1,4 @@
-import { Prisma } from '@prisma/client';
-export type JwtRegisterPayload = Prisma.SocialProviderCreateWithoutUserInput;
+import { SocialProviderCreateWithoutUserInput } from "@prisma/client";
+
+export type JwtRegisterPayload = SocialProviderCreateWithoutUserInput;
 export type JwtForgotPassPayload = { email: string };
