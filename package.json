@@ -15,6 +15,7 @@
     "db:up": "dotenv -- prisma migrate up --experimental",
     "db:down": "dotenv -- prisma migrate down 1 --experimental",
     "seed": "dotenv -- ts-node ./prisma/seed",
+    "seedFile": "dotenv -- ts-node",
     "studio": "dotenv -- prisma studio"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "@types/node-fetch": "2.5.7",
     "apollo-server-express": "^2.17.0",
     "bcryptjs": "^2.4.3",
+    "big-json": "^3.1.0",
     "cli-progress": "^3.8.2",
     "cors": "^2.8.5",
     "cron": "^1.8.2",
