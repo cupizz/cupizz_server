@@ -202,7 +202,7 @@ class RecommendService {
                 {
                     OR: [
                         { gender: { in: user.genderPrefer.length > 0 ? user.genderPrefer : Object.values(Gender) }, },
-                        { gender: { equals: null }, },
+                        user.genderPrefer.includes('other') ? { gender: { equals: null }, } : {},
                     ]
                 },
                 {
