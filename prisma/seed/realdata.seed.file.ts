@@ -30,7 +30,7 @@ const _createUsers = async (json: any[]) => {
         const object = list[i];
         let images = object['user']?.['photos'] as any[] ?? [];
         const avatar = images.length > 0 ? images.pop() : null;
-        const cover = images.length > 1 ? images.pop() : null;
+        const cover = images.length > 0 ? images.pop() : null;
         if (images.length === 0 && object['user']?.['gender'] === 1)
             images.push(
                 ...Array.from(Array(faker.random.number(9)).keys())
@@ -43,7 +43,7 @@ const _createUsers = async (json: any[]) => {
                 nickName: object['user']?.['name'] ?? faker.name.findName(),
                 introduction: object['user']?.['bio'] ?? faker.lorem.sentence(),
                 password: PasswordHandler.encode(faker.lorem.word()),
-                birthday: new Date(object['user']?.['birth_date']) ?? faker.date.between("1980", "2010"),
+                birthday: object['user']?.['birth_date'] ? new Date(object['user']?.['birth_date']) : faker.date.between("1980", "2010"),
                 gender: object['user']?.['gender'] === 1 ? 'female' : object['user']?.['gender'] === 0 ? 'male' : 'other',
                 hobbies: {
                     connect: getRandomSubarray(allHobbies, faker.random.number(allHobbies.length - 1)).map(e => ({ id: e.id }))
