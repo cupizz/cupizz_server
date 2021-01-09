@@ -32,14 +32,14 @@ class RecommendService {
 
     public async dislikeUser(ctx: Context, targetUserId: string): Promise<void> {
         AuthService.authenticate(ctx);
-        if (!(await prisma.dislikedUser.findUnique({
+        if (!(await prisma.dislikedUser.findOne({
             where: {
                 userId_dislikedUserId: {
                     userId: ctx.user.id,
                     dislikedUserId: targetUserId
                 }
             }
-        })) && (await prisma.recommendableUser.findUnique({
+        })) && (await prisma.recommendableUser.findOne({
             where: {
                 userId_recommendableUserId: {
                     userId: ctx.user.id,
@@ -150,7 +150,7 @@ class RecommendService {
     }
 
     private async _getMatchingUsers(userId: string) {
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findOne({
             where: { id: userId },
             include: {
                 dislikedUsers: true,

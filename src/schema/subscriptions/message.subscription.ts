@@ -1,4 +1,4 @@
-import { idArg, intArg, stringArg, subscriptionField } from "nexus";
+import { idArg, intArg, stringArg, subscriptionField } from "@nexus/schema";
 import { Conversation, Message } from "@prisma/client";
 import { withFilter } from "apollo-server-express";
 import SubscriptionKey from "../../constants/subscriptionKey";
@@ -30,7 +30,7 @@ export const MessageSubscription = subscriptionField(
                 return (args.conversationId
                     ? root.conversationId === args.conversationId
                     : (args.senderId ? args.senderId === root.senderId || ctx.user.id === root.senderId : true))
-                    && !!(await prisma.conversationMember.findUnique({
+                    && !!(await prisma.conversationMember.findOne({
                         where: {
                             conversationId_userId: {
                                 conversationId: root.conversationId,
@@ -62,7 +62,7 @@ export const ConversationChangeSubscription = subscriptionField(
                 return pubsub.asyncIterator(SubscriptionKey.conversationChange);
             },
             async (root: Conversation, _args, ctx, _info) => {
-                return !!(await prisma.conversationMember.findUnique({
+                return !!(await prisma.conversationMember.findOne({
                     where: {
                         conversationId_userId: {
                             conversationId: root.id,

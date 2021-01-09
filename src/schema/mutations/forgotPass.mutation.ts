@@ -1,4 +1,4 @@
-import { mutationField, objectType, stringArg } from "nexus";
+import { mutationField, objectType, stringArg } from "@nexus/schema";
 import { ForgotPassService } from "../../service/forgotPassword.service";
 
 export const forgotPasswordMutation = mutationField('forgotPassword', {

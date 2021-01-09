@@ -15,14 +15,17 @@
     "db:up": "dotenv -- prisma migrate up --experimental",
     "db:down": "dotenv -- prisma migrate down 1 --experimental",
     "seed": "dotenv -- ts-node ./prisma/seed",
+    "seedFile": "dotenv -- ts-node",
     "studio": "dotenv -- prisma studio"
   },
   "dependencies": {
-    "@prisma/cli": "2.13.1",
-    "@prisma/client": "2.13.1",
+    "@nexus/schema": "^0.18.0",
+    "@prisma/cli": "2.8.1",
+    "@prisma/client": "2.8.1",
     "@types/node-fetch": "2.5.7",
     "apollo-server-express": "^2.17.0",
     "bcryptjs": "^2.4.3",
+    "big-json": "^3.1.0",
     "cli-progress": "^3.8.2",
     "cors": "^2.8.5",
     "cron": "^1.8.2",
@@ -32,8 +35,7 @@
     "graphql-iso-date": "^3.6.1",
     "graphql-upload": "11.0.0",
     "jsonwebtoken": "^8.5.1",
-    "nexus": "^1.0.0",
-    "nexus-plugin-prisma": "^0.27.0",
+    "nexus-plugin-prisma": "^0.21.0",
     "nodemailer": "^6.4.11",
     "onesignal-node": "^3.2.0",
     "redis": "^3.0.2",
@@ -43,7 +45,6 @@
     "uniqid": "^5.2.0"
   },
   "devDependencies": {
-    "@prisma/codemods": "^0.6.3",
     "@types/bcryptjs": "^2.4.2",
     "@types/cli-progress": "^3.8.0",
     "@types/faker": "^5.1.2",

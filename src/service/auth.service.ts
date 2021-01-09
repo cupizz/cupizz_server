@@ -20,7 +20,7 @@ class PermissionFilter {
 
 class AuthService {
     public async login(type: SocialProviderType, id: string, password?: string, deviceId?: string): Promise<{ token: string, info: User }> {
-        let user = (await prisma.socialProvider.findUnique({
+        let user = (await prisma.socialProvider.findOne({
             where: { id_type: { id, type } },
             include: { user: true }
         }))?.user;

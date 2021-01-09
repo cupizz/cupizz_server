@@ -1,5 +1,5 @@
-import { mutationField } from "nexus";
-import { inputObjectType, NexusInputFieldConfig } from "nexus/dist/core";
+import { mutationField, inputObjectType } from "@nexus/schema";
+import { NexusInputFieldConfig } from "@nexus/schema/dist/core";
 import { ConfigField } from "../../config";
 import { AppConfigService } from "../../service/appConfig.service";
 

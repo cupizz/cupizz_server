@@ -41,11 +41,11 @@ class NotificationService {
     }
 
     public async sendNewMessageNofity(conversationId: string, messageId: string): Promise<NotificationPayload | null> {
-        const conversation = await prisma.conversation.findUnique({
+        const conversation = await prisma.conversation.findOne({
             where: { id: conversationId },
             include: { members: { include: { user: true }, where: { isCurrentlyInChat: false } } }
         })
-        const message = await prisma.message.findUnique({
+        const message = await prisma.message.findOne({
             where: { id: messageId },
             include: { sender: { include: { avatar: true } } }
         })
@@ -108,7 +108,7 @@ class NotificationService {
     public async markAsReadNotification(ctx: Context, notificationId: string) {
         // Validation
         AuthService.authenticate(ctx);
-        if ((await prisma.notification.findUnique({
+        if ((await prisma.notification.findOne({
             where: { id: notificationId },
             include: { receivers: true }
         })).receivers.findIndex(e => e.receiverId === ctx.user.id) < 0) {

@@ -1,4 +1,4 @@
-import { booleanArg, idArg, intArg, objectType, queryField, stringArg } from "nexus";
+import { booleanArg, idArg, intArg, objectType, queryField, stringArg } from "@nexus/schema";
 import { ForbiddenError } from "apollo-server-express";
 import assert from "assert";
 import { Config } from "../../config";
@@ -44,7 +44,7 @@ export const conversationQuery = queryField('conversation', {
         assert(args.conversationId || args.userId, Strings.error.mustHaveConversationIdOrUserId);
 
         if (args.conversationId) {
-            const conversation = await prisma.conversation.findUnique({
+            const conversation = await prisma.conversation.findOne({
                 where: { id: args.conversationId },
                 include: { members: true }
             })
