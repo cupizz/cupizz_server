@@ -20,6 +20,7 @@ export const seedRealUser = async () => {
 
 const _createUsers = async (json: any[]) => {
     const db = new PrismaClient();
+    const allHobbies = await db.hobbyValue.findMany();
     const userProcessBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     let seededUser = 0;
     const list: any[] = Object.values(json);
@@ -27,11 +28,14 @@ const _createUsers = async (json: any[]) => {
 
     for (let i = 0; i < list.length; i++) {
         const object = list[i];
-        const allHobbies = await db.hobbyValue.findMany();
-        const images = object['user']?.['photos'] as any[] ?? [];
-        const avatar = images.length > 0 ? images[0] : null;
-        const cover = images.length > 1 ? images[1] : null;
-        if (images.length > 1) images.slice(0, 2); else if (images.length > 1) images.slice(0, 1)
+        let images = object['user']?.['photos'] as any[] ?? [];
+        const avatar = images.length > 0 ? images.pop() : null;
+        const cover = images.length > 1 ? images.pop() : null;
+        if (images.length === 0)
+            images.push(
+                ...Array.from(Array(faker.random.number(9)).keys())
+                    .map(_ => getRandomImage())
+            )
         const city = object?.['user']?.['city']?.['name'];
 
         const data: UserCreateArgs = {
