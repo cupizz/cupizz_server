@@ -69,14 +69,17 @@ class ForgotPassService {
             throw ErrorOtpIncorrect;
         }
 
-        await prisma.socialProvider.update({
+        const sns = await prisma.socialProvider.update({
             where: { id_type: { type: 'email', id: payload.email } },
             data: {
                 user: { update: { password: PasswordHandler.encode(newPass) } }
             }
         })
 
-
+        // Logout all device
+        await prisma.userDeviceToken.deleteMany({
+            where: { userId: sns.userId }
+        })
     }
 }
 

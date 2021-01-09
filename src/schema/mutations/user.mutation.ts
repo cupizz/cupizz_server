@@ -29,7 +29,11 @@ export const changePasswordMutation = mutationField('changePassword', {
 
         await prisma.user.update({
             where: { id: ctx.user.id },
-            data: { password: PasswordHandler.encode(args.newPass) }
+            data: {
+                password: PasswordHandler.encode(args.newPass),
+                // Logout all device
+                userDeviceTokens: { deleteMany: { userId: ctx.user.id } }
+            }
         })
 
         return true;
