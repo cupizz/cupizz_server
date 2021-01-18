@@ -101,7 +101,7 @@ export const PublicQueries = queryType({
             ordering: true,
             pagination: true,
             resolve: (root, args, ctx, info, origin) => {
-                AuthService.authorize(ctx, {values: [Permission.question.list]});
+                AuthService.authorize(ctx, { values: [Permission.question.list] });
                 return origin(root, args, ctx, info);
             }
         })
@@ -136,6 +136,32 @@ export const PublicQueries = queryType({
                     where: { userId: ctx.user.id },
                     sum: { unreadMessageCount: true }
                 })).sum?.unreadMessageCount ?? 0;
+            }
+        })
+        t.field('unreadReceiveFriendCount', {
+            type: 'Int',
+            resolve: async (_root, _args, ctx) => {
+                AuthService.authenticate(ctx);
+                return await prisma.friend.count({
+                    where: {
+                        receiverId: { equals: ctx.user.id },
+                        acceptedAt: { equals: null },
+                        readSent: { equals: false }
+                    }
+                });
+            }
+        })
+        t.field('unreadAcceptedFriendCount', {
+            type: 'Int',
+            resolve: async (_root, _args, ctx) => {
+                AuthService.authenticate(ctx);
+                return await prisma.friend.count({
+                    where: {
+                        senderId: { equals: ctx.user.id },
+                        acceptedAt: { not: { equals: null } },
+                        readAccepted: { equals: false }
+                    }
+                });
             }
         })
         t.crud.qnAs({

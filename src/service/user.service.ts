@@ -177,6 +177,38 @@ class UserService {
         }
     }
 
+    public async readFriend(ctx: Context, targetUserId: string) {
+        AuthService.authenticate(ctx);
+        const friendData = await this.getFriendStatus(ctx.user.id, targetUserId);
+        switch (friendData.status) {
+            case FriendStatusEnum.received:
+                await prisma.friend.update({
+                    where: {
+                        senderId_receiverId: {
+                            receiverId: ctx.user.id,
+                            senderId: targetUserId
+                        }
+                    },
+                    data: { readSent: true },
+                })
+                break;
+            case FriendStatusEnum.friend:
+                if (friendData.data.senderId === ctx.user.id) {
+
+                    await prisma.friend.update({
+                        where: {
+                            senderId_receiverId: {
+                                senderId: ctx.user.id,
+                                receiverId: targetUserId
+                            }
+                        },
+                        data: { readAccepted: true },
+                    });
+                }
+                break;
+        }
+    }
+
     public async addFriend(currentUserId: string, targetUserId: string, isSuperLike: boolean = false): Promise<NexusGenAllTypes['FriendType']> {
         const friendData = await this.getFriendStatus(currentUserId, targetUserId);
         switch (friendData.status) {
@@ -187,7 +219,9 @@ class UserService {
                     data: {
                         receiver: { connect: { id: targetUserId } },
                         sender: { connect: { id: currentUserId } },
-                        isSuperLike: isSuperLike
+                        isSuperLike: isSuperLike,
+                        readSent: false,
+                        readAccepted: false,
                     },
                     include: { sender: { include: { avatar: true } }, receiver: true }
                 });

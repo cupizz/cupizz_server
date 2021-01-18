@@ -361,6 +361,18 @@ export const AddFriendMutation = mutationField('addFriend', {
     }
 })
 
+export const readFriendRequestMutation = mutationField('readFriendRequest', {
+    type: 'Boolean',
+    args: {
+        userId: idArg({ nullable: false, description: 'Id của user muốn kết bạn' }),
+    },
+    resolve: async (_root, args, ctx, _info) => {
+        AuthService.authenticate(ctx);
+        await UserService.readFriend(ctx, args.userId)
+        return true;
+    }
+})
+
 export const RemoveFriendMutation = mutationField('removeFriend', {
     type: 'Boolean',
     args: {

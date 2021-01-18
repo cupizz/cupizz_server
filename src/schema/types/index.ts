@@ -298,6 +298,8 @@ export const FriendDataType = objectType({
         t.model('Friend').acceptedAt()
         t.model('Friend').updatedAt()
         t.model('Friend').isSuperLike()
+        t.model('Friend').readSent()
+        t.model('Friend').readAccepted()
         t.field('friend', {
             type: 'User',
             resolve: async (root: any, _args, ctx, _info) => {
