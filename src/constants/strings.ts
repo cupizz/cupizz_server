@@ -33,5 +33,7 @@ export default class Strings {
         notificationIsNotBelongToYou: 'Thông báo này không phải của bạn',
         mustHaveConversationIdOrUserId: 'Must have conversationId or userId',
         contentMustBeNotEmpty: 'Vui lòng nhập nội dung tin nhắn!',
+        cannotEditPostOfOtherUser: 'Không thể sửa bài viết của người khác',
+        cannotDeletePostOfOtherUser: 'Không thể xóa bài viết của người khác'
     }
 }
