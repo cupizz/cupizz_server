@@ -5,12 +5,15 @@ import { prisma } from '../../server';
 import { AuthService, UserService } from '../../service';
 import { universities } from '../../utils/universities';
 import { Validator } from '../../utils/validator';
+import { postSimpleQuery } from './post.query';
 export * from './message.query';
 export * from './user.query';
+export * from './post.query';
 
 
 export const PublicQueries = queryType({
     definition(t) {
+        postSimpleQuery(t);
         t.crud.appConfigs({ pagination: false })
         t.field('about', {
             type: objectType({

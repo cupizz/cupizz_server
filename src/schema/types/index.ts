@@ -550,8 +550,55 @@ export const PostType = objectType({
     name: 'Post',
     definition(t) {
         t.model.id()
+        t.model.content()
         t.model.category()
-        t.model.comment()
+        t.model.createdAt()
+        t.model.updatedAt()
+        t.model.deletedAt()
+        t.field('commentCount', {
+            type: 'Int',
+            nullable: true,
+            args: {
+                where: arg({ type: 'PostCommentWhereInput' }),
+            },
+            resolve: (root, args, ctx, _info) => {
+                AuthService.authenticate(ctx);
+                const isAdmin = AuthService.authorize(ctx, { values: [Permission.comment.list] }, false);
+                return prisma.comment.count({
+                    where: {
+                        ...args.where,
+                        postId: root.id,
+                        ...!isAdmin ? { deletedAt: {equals: null} } : {}
+                    }
+                })
+            }
+        })
+        t.model.comment({
+            alias: 'comments',
+            pagination: true,
+            ordering: { index: true, updatedAt: true },
+            filtering: { createdAt: true, index: true, id: true, parentId: true },
+            resolve: (root: any, args, ctx) => {
+                AuthService.authenticate(ctx);
+                const isAdmin = AuthService.authorize(ctx, { values: [Permission.comment.list] }, false);
+                return prisma.comment.findMany({
+                    take: args.take,
+                    skip: args.skip,
+                    orderBy: args.orderBy,
+                    where: {
+                        ...args.where,
+                        postId: root.id,
+                        ...!isAdmin ? { deletedAt: {equals: null} } : {}
+                    }
+                })
+            }
+        })
+        t.field('isMyPost', {
+            type: 'Boolean',
+            resolve: (root: any, _args, ctx) => {
+                return root.createdById === ctx.user?.id;
+            }
+        })
     }
 })
 
@@ -569,10 +616,10 @@ export const CommentType = objectType({
     definition(t) {
         t.model.id()
         t.model.index()
+        t.model.content()
         t.model.post()
         t.model.reply()
         t.model.parentComment()
-        t.model.content()
         t.model.createdAt()
     }
 })
