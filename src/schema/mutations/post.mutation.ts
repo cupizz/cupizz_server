@@ -105,23 +105,25 @@ export const UpdatePostMutation = mutationField(
             content: stringArg(),
         },
         resolve: async (_root, args, ctx, _info) => {
+            AuthService.authenticate(ctx);
             assert(args.content !== "", Strings.error.contentMustBeNotEmpty)
 
-            if (!await prisma.post.findOne({ where: { id: args.id } })) {
+            const post = await prisma.post.findOne({ where: { id: args.id } });
+            if (!post) {
                 throw ErrorNotFound('Post not found');
+            } else if (post.createdById !== ctx.user.id && !AuthService.authorize(ctx, { values: [Permission.post.update] }, false)) {
+                throw new ForbiddenError(Strings.error.unAuthenticate);
             } else if (args.categoryId && !(await prisma.postCategory.findOne({ where: { id: args.categoryId } }))) {
                 throw ErrorNotFound('Category not found');
             }
 
-            const post = await prisma.post.update({
+            return await prisma.post.update({
                 where: { id: args.id },
                 data: {
                     ...args.categoryId ? { category: { connect: { id: args.categoryId } } } : {},
                     content: args.content,
                 }
             })
-
-            return post;
         }
     }
 )
@@ -165,17 +167,17 @@ export const CommentPostMutation = mutationField(
         },
         resolve: async (_root, args, ctx, _info) => {
             AuthService.authenticate(ctx);
-    
+
             assert(args.content !== "", Strings.error.contentMustBeNotEmpty);
             const commentCount = (await prisma.comment.findFirst({ where: { postId: { equals: args.postId } }, orderBy: { index: 'desc' } }))?.index ?? 0;
-    
+
             let parentComment;
             if (args.parentCommentIndex) {
                 parentComment = await prisma.comment.findFirst({ where: { index: args.parentCommentIndex, postId: args.postId } });
-    
+
                 if (!parentComment) throw ErrorNotFound("Parent comment is not found.")
             }
-    
+
             const comment = await prisma.comment.create({
                 data: {
                     content: args.content,
@@ -185,7 +187,7 @@ export const CommentPostMutation = mutationField(
                     createdBy: { connect: { id: ctx.user.id } }
                 }
             })
-    
+
             return comment;
         }
     }
@@ -208,7 +210,7 @@ export const updateCommentMutation = mutationField(
             let parentComment;
             if (args.parentCommentIndex) {
                 parentComment = await prisma.comment.findFirst({ where: { index: args.parentCommentIndex, postId: comment.postId } });
-    
+
                 if (!parentComment) throw ErrorNotFound("Parent comment is not found.")
             }
 
@@ -246,7 +248,7 @@ export const deleteCommentMutation = mutationField(
             } else if (comment.createdById !== ctx?.user?.id && !AuthService.authorize(ctx, { values: [Permission.comment.delete] }, false)) {
                 throw new ForbiddenError(Strings.error.unAuthenticate);
             }
- 
+
             comment = await prisma.comment.delete({
                 where: { id: args.id },
             })
