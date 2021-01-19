@@ -298,7 +298,7 @@ class MessageService {
             })
             const members = (await prisma.conversationMember.update({
                 where: { conversationId_userId: { userId: ctx.user.id, conversationId: conversation.id } },
-                data: { isCurrentlyInChat: false },
+                data: { isCurrentlyInChat: isInChat },
                 include: { conversation: { include: { members: true } } }
             })).conversation.members.filter(e => e.userId != ctx.user.id);
 
