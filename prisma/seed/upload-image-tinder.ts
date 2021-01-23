@@ -16,42 +16,47 @@ export const reuploadTinderImages = async () => {
     let process = 0;
     processBar.start(images.length, process);
 
-    await Promise.all(images.map(async (image) => {
-        // Check image is accessable
-        if (!await checkImageHealth(image.url)) {
-            // Update with a random image
-            const newImage = getRandomImage();
-            await db.file.update({
-                where: { id: image.id },
-                data: { url: newImage, thumbnail: newImage }
-            })
-        } else {
-            try {
-                // Upload images
-                const result = await new Promise<cloudinary.UploadApiResponse>((res, rej) => {
-                    cloudinary.v2.uploader.upload(
-                        image.url,
-                        {
-                            folder: 'tinder_images',
-                        },
-                        (e, result) => {
-                            if (e) rej(e);
-                            else {
-                                res(result);
-                            }
-                        })
-                })
-                // Update db
+    var i, j, temparray, chunk = 10;
+    for (i = 0, j = images.length; i < j; i += chunk) {
+        temparray = images.slice(i, i + chunk);
+        await Promise.all(temparray.map(async (image) => {
+            // Check image is accessable
+            if (!await checkImageHealth(image.url)) {
+                // Update with a random image
+                const newImage = getRandomImage();
                 await db.file.update({
                     where: { id: image.id },
-                    data: { url: result.url, thumbnail: result.url }
+                    data: { url: newImage, thumbnail: newImage }
                 })
-            } catch (e) {
-                console.log(`\nError in image ${image.id} (${image.url}): ${JSON.stringify(e)}`);
+            } else {
+                try {
+                    // Upload images
+                    const result = await new Promise<cloudinary.UploadApiResponse>((res, rej) => {
+                        cloudinary.v2.uploader.upload(
+                            image.url,
+                            {
+                                folder: 'tinder_images',
+                            },
+                            (e, result) => {
+                                if (e) rej(e);
+                                else {
+                                    res(result);
+                                }
+                            })
+                    })
+                    // Update db
+                    await db.file.update({
+                        where: { id: image.id },
+                        data: { url: result.url, thumbnail: result.url }
+                    })
+                } catch (e) {
+                    console.log(`\nError in image ${image.id} (${image.url}): ${JSON.stringify(e)}`);
+                }
             }
-        }
-        processBar.update(++process)
-    }))
+            processBar.update(++process)
+        }))
+        // do whatever
+    }
 
     processBar.stop();
     console.log('Done');
