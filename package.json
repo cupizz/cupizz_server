@@ -27,6 +27,7 @@
     "bcryptjs": "^2.4.3",
     "big-json": "^3.1.0",
     "cli-progress": "^3.8.2",
+    "cloudinary": "^1.23.0",
     "cors": "^2.8.5",
     "cron": "^1.8.2",
     "dotenv-cli": "^3.2.0",

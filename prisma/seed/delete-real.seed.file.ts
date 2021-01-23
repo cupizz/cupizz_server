@@ -133,6 +133,16 @@ export const deleteRealUser = async () => {
         }
     })
     console.log(`Deleted ${count.count} users`);
+    count = await db.file.deleteMany({
+        where: {
+            messageId: { equals: null },
+            userAvatar: { none: { id: { gt: '' } } },
+            userCover: { none: { id: { gt: '' } } },
+            userImage: { none: { id: { gt: '' } } },
+            messageAttachment: { none: { messageId: { gt: '' } } },
+        }
+    })
+    console.log(`Deleted ${count.count} files are not used`);
 };
 
 deleteRealUser();
