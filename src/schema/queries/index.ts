@@ -143,12 +143,16 @@ export const PublicQueries = queryType({
         })
         t.field('unreadReceiveFriendCount', {
             type: 'Int',
-            resolve: async (_root, _args, ctx) => {
+            args: {
+                justSuperLike: booleanArg({ default: true })
+            },
+            resolve: async (_root, args, ctx) => {
                 AuthService.authenticate(ctx);
                 return await prisma.friend.count({
                     where: {
                         receiverId: { equals: ctx.user.id },
                         acceptedAt: { equals: null },
+                        isSuperLike: { equals: args.justSuperLike || undefined },
                         readSent: { equals: false }
                     }
                 });

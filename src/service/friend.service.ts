@@ -4,7 +4,7 @@ import { NexusGenEnums } from '../schema/generated/nexus';
 import { prisma } from '../server';
 
 class FriendService {
-    public async getFriendsSortAge(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number): Promise<Friend[]> {
+    public async getFriendsSortAge(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number, isSuperLike?: boolean): Promise<Friend[]> {
         let where: FriendWhereInput;
         switch (type) {
             case 'friend':
@@ -13,19 +13,22 @@ class FriendService {
                         { senderId: { equals: ctx.user.id } },
                         { receiverId: { equals: ctx.user.id } },
                     ],
-                    NOT: [{ acceptedAt: null }]
+                    NOT: [{ acceptedAt: null }],
+                   isSuperLike,
                 }
                 break;
             case 'received':
                 where = {
                     receiverId: { equals: ctx.user.id },
-                    acceptedAt: null
+                    acceptedAt: null,
+                   isSuperLike,
                 }
                 break;
             case 'sent':
                 where = {
                     senderId: { equals: ctx.user.id },
-                    acceptedAt: null
+                    acceptedAt: null,
+                   isSuperLike,
                 }
                 break;
             default:
@@ -34,6 +37,7 @@ class FriendService {
                         { senderId: { equals: ctx.user.id } },
                         { receiverId: { equals: ctx.user.id } },
                     ],
+                   isSuperLike,
                 };
                 break;
         }
@@ -52,28 +56,28 @@ class FriendService {
         }).slice(startIndex, startIndex + pageSize)
     }
 
-    public async getFriendsSortLogin(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number): Promise<Friend[]> {
+    public async getFriendsSortLogin(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number, isSuperLike?: boolean): Promise<Friend[]> {
         let where: UserWhereInput;
         switch (type) {
             case 'friend':
                 where = {
                     OR: [
-                        { senderFriend: { some: { receiverId: { equals: ctx.user.id }, NOT: { acceptedAt: null } } } },
-                        { receiverFriend: { some: { senderId: { equals: ctx.user.id }, NOT: { acceptedAt: null } } } },
-                    ]
+                        { senderFriend: { some: { receiverId: { equals: ctx.user.id }, NOT: { acceptedAt: null }, isSuperLike } } },
+                        { receiverFriend: { some: { senderId: { equals: ctx.user.id }, NOT: { acceptedAt: null }, isSuperLike } } },
+                    ],
                 }
                 break;
             case 'received':
-                where = { senderFriend: { some: { receiverId: { equals: ctx.user.id }, acceptedAt: null } } };
+                where = { senderFriend: { some: { receiverId: { equals: ctx.user.id }, acceptedAt: null, isSuperLike } } };
                 break;
             case 'sent':
-                where = { receiverFriend: { some: { senderId: { equals: ctx.user.id }, acceptedAt: null } } };
+                where = { receiverFriend: { some: { senderId: { equals: ctx.user.id }, acceptedAt: null, isSuperLike } } };
                 break;
             default:
                 where = {
                     OR: [
-                        { senderFriend: { some: { receiverId: { equals: ctx.user.id } } } },
-                        { receiverFriend: { some: { senderId: { equals: ctx.user.id } } } },
+                        { senderFriend: { some: { receiverId: { equals: ctx.user.id }, isSuperLike } } },
+                        { receiverFriend: { some: { senderId: { equals: ctx.user.id }, isSuperLike } } },
                     ],
                 };
                 break;
@@ -97,7 +101,7 @@ class FriendService {
             include: { receiver: true, sender: true },
         });
 
-        console.log(friends.sort((a, b) => a.showActive === b.showActive ? 0 : a.showActive ? -1 : 1).map(e => ({a: e.showActive, b: e.lastOnline})))
+        console.log(friends.sort((a, b) => a.showActive === b.showActive ? 0 : a.showActive ? -1 : 1).map(e => ({ a: e.showActive, b: e.lastOnline })))
 
         return friends.sort((a, b) => a.showActive === b.showActive ? 0 : a.showActive ? -1 : 1)
             .map(e => friendsData.find(f => {
@@ -109,7 +113,7 @@ class FriendService {
             }))
     }
 
-    public async getFriendsSortNew(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number): Promise<Friend[]> {
+    public async getFriendsSortNew(ctx: Context, type: NexusGenEnums['FriendTypeEnumInput'], page: number, pageSize: number, isSuperLike?: boolean): Promise<Friend[]> {
         let where: FriendWhereInput;
         switch (type) {
             case 'friend':
@@ -118,19 +122,22 @@ class FriendService {
                         { senderId: { equals: ctx.user.id } },
                         { receiverId: { equals: ctx.user.id } },
                     ],
-                    NOT: [{ acceptedAt: null }]
+                    NOT: [{ acceptedAt: null }],
+                   isSuperLike,
                 }
                 break;
             case 'received':
                 where = {
                     receiverId: { equals: ctx.user.id },
-                    acceptedAt: null
+                    acceptedAt: null,
+                   isSuperLike,
                 }
                 break;
             case 'sent':
                 where = {
                     senderId: { equals: ctx.user.id },
-                    acceptedAt: null
+                    acceptedAt: null,
+                   isSuperLike,
                 }
                 break;
             default:
@@ -139,6 +146,7 @@ class FriendService {
                         { senderId: { equals: ctx.user.id } },
                         { receiverId: { equals: ctx.user.id } },
                     ],
+                   isSuperLike,
                 };
                 break;
         }
