@@ -49,7 +49,7 @@ class AuthService {
                         // Xóa các device bị trùng, và token hết hạn
                         deleteMany: {
                             OR: [
-                                deviceId ? { userId: user.id, deviceId } : {},
+                                ...deviceId ? [{ userId: user.id, deviceId }] : [],
                                 { expireAt: { lt: new Date() } }
                             ]
                         },
