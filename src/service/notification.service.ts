@@ -9,7 +9,7 @@ import { AuthService } from './auth.service';
 import { OnesignalService } from './onesignal.service';
 
 class NotificationService {
-    public async sendLikeOrMatchingNotify(type: 'like' | 'matching', fromUser: User & { avatar: File }, toUser: User): Promise<NotificationPayload | null> {
+    public async sendLikeOrMatchingNotify(type: 'like' | 'matching', fromUser: User & { avatar: File }, toUser: User, isSuperLike: boolean): Promise<NotificationPayload | null> {
         const notification = await prisma.notification.create({
             data: {
                 type,
@@ -19,8 +19,10 @@ class NotificationService {
         })
 
         const content = type === 'like'
-            ? Strings.notification.newLikeContent(fromUser.nickName)
-            : Strings.notification.newMatchContent(fromUser.nickName);
+            ? (isSuperLike
+                ? Strings.notification.newSuperLikeContent(fromUser.nickName)
+                : Strings.notification.newLikeContent(await prisma.friend.count({ where: { isSuperLike: false, readSent: false, receiverId: toUser.id } }))
+            ) : Strings.notification.newMatchContent(fromUser.nickName);
 
         if (
             type === 'like' && toUser.pushNotiSetting.includes('like')
@@ -31,9 +33,9 @@ class NotificationService {
                 content,
                 [toUser.id],
                 notification,
-                {
+                type === 'like' && isSuperLike || type === 'matching' ? {
                     largeIcon: fromUser.avatar?.url
-                }
+                } : {}
             )
         }
 

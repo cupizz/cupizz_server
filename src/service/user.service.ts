@@ -226,7 +226,7 @@ class UserService {
                     include: { sender: { include: { avatar: true } }, receiver: true }
                 });
                 RecommendService.regenerateRecommendableUsers(currentUserId)
-                NotificationService.sendLikeOrMatchingNotify('like', sentData.sender, sentData.receiver)
+                NotificationService.sendLikeOrMatchingNotify('like', sentData.sender, sentData.receiver, isSuperLike)
                 this.updateLikeDislikeCount(targetUserId);
                 return { status: 'sent', data: sentData }
             case FriendStatusEnum.sent:
@@ -243,7 +243,7 @@ class UserService {
                     data: { acceptedAt: new Date() },
                     include: { sender: true, receiver: { include: { avatar: true } } }
                 })
-                NotificationService.sendLikeOrMatchingNotify('matching', friendData.receiver, friendData.sender)
+                NotificationService.sendLikeOrMatchingNotify('matching', friendData.receiver, friendData.sender, isSuperLike)
                 return { status: 'friend', data: sentData }
             case FriendStatusEnum.friend:
                 throw new Error(Strings.error.youWereBothFriendOfEachOther);

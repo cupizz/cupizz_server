@@ -2,7 +2,8 @@ export default class Strings {
     static inDevelopment = 'Tính năng đang phát triển';
     
     static notification = {
-        newLikeContent: (fromUserName: string) => `${fromUserName} đã thích bạn`,
+        newLikeContent: (totalLike: number) => `Đã có ${totalLike} người thích bạn. Hãy tích cực quẹt phải để tìm người ấy đi nào!`,
+        newSuperLikeContent: (fromUserName: string) => `${fromUserName} đã super thích bạn`,
         newMatchContent: (fromUserName: string) => `Bạn và ${fromUserName} đã ghép đôi thành công`,
         newMessageTitle: (fromUserName: string) => `${fromUserName}`
     }
