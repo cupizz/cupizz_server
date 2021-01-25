@@ -1,4 +1,4 @@
-import { arg, enumType, intArg, objectType, queryField, stringArg } from "@nexus/schema";
+import { arg, booleanArg, enumType, intArg, objectType, queryField, stringArg } from "@nexus/schema";
 import { Config } from "../../config";
 import { ErrorNotFound } from "../../model/error";
 import { prisma } from "../../server";
@@ -86,7 +86,8 @@ export const FriendsV2Query = queryField('friendsV2', {
     args: {
         type: arg({ type: 'FriendTypeEnumInput' }),
         orderBy: arg({ type: 'FriendSortEnumInput' }),
-        page: intArg({ nullable: true })
+        page: intArg({ nullable: true }),
+        isSuperLike: booleanArg(),
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authenticate(ctx);
@@ -95,13 +96,13 @@ export const FriendsV2Query = queryField('friendsV2', {
 
         switch (args.orderBy) {
             case 'login':
-                data = await FriendService.getFriendsSortLogin(ctx, args.type, args.page, pageSize);
+                data = await FriendService.getFriendsSortLogin(ctx, args.type, args.page, pageSize, args.isSuperLike);
                 break;
             case 'age':
-                data = await FriendService.getFriendsSortAge(ctx, args.type, args.page, pageSize);
+                data = await FriendService.getFriendsSortAge(ctx, args.type, args.page, pageSize, args.isSuperLike);
                 break;
             default:
-                data = await FriendService.getFriendsSortNew(ctx, args.type, args.page, pageSize);
+                data = await FriendService.getFriendsSortNew(ctx, args.type, args.page, pageSize, args.isSuperLike);
                 break;
         }
 
