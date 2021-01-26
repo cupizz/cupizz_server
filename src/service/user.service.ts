@@ -1,4 +1,6 @@
+import { ResultValue } from '@nexus/schema/dist/core';
 import { Friend, Gender, HaveKids, OnlineStatus, Religious, Role, User, UsualType } from '@prisma/client';
+import assert from 'assert';
 import request from 'request';
 import { AuthService, NotificationService } from '.';
 import { Config } from '../config';
@@ -12,14 +14,12 @@ import { DefaultRole } from '../model/role';
 import { NexusGenAllTypes } from '../schema/generated/nexus';
 import { FriendStatusEnum } from '../schema/types';
 import { prisma, pubsub, redis } from '../server';
+import { calculateAge } from '../utils/helper';
 import { logger } from '../utils/logger';
 import OtpHandler from '../utils/otpHandler';
 import { PasswordHandler } from '../utils/passwordHandler';
 import { Validator } from '../utils/validator';
 import { RecommendService } from './recommend.service';
-import fs from 'fs';
-import { calculateAge } from '../utils/helper';
-import { ResultValue } from '@nexus/schema/dist/core';
 
 class UserService {
     public canAccessPrivateAccount(ctx: Context, targetUser: User) {
@@ -209,7 +209,13 @@ class UserService {
         }
     }
 
-    public async addFriend(currentUserId: string, targetUserId: string, isSuperLike: boolean = false): Promise<NexusGenAllTypes['FriendType']> {
+    public async addFriend(currentUser: User, targetUserId: string, isSuperLike: boolean = false): Promise<NexusGenAllTypes['FriendType']> {
+        try {
+            assert(isSuperLike && currentUser.remainingSuperLike > 0 || !isSuperLike);
+        } catch (_) {
+            throw ClientError('Bạn đã hết lượt siêu thích hôm nay. Hãy thử lại vào ngày mai!')
+        }
+        const currentUserId = currentUser.id;
         const friendData = await this.getFriendStatus(currentUserId, targetUserId);
         switch (friendData.status) {
             case FriendStatusEnum.me:
@@ -228,6 +234,14 @@ class UserService {
                 RecommendService.regenerateRecommendableUsers(currentUserId)
                 NotificationService.sendLikeOrMatchingNotify('like', sentData.sender, sentData.receiver, isSuperLike)
                 this.updateLikeDislikeCount(targetUserId);
+                if (isSuperLike) {
+                    await prisma.user.update({
+                        where: { id: currentUserId },
+                        data: {
+                            remainingSuperLike: currentUser.remainingSuperLike - 1
+                        }
+                    })
+                }
                 return { status: 'sent', data: sentData }
             case FriendStatusEnum.sent:
                 RecommendService.regenerateRecommendableUsers(currentUserId)

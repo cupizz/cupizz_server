@@ -357,7 +357,7 @@ export const AddFriendMutation = mutationField('addFriend', {
     },
     resolve: async (_root, args, ctx, _info) => {
         AuthService.authorize(ctx, { values: [Permission.friend.create] });
-        return await UserService.addFriend(ctx.user.id, args.userId, args.isSuperLike)
+        return await UserService.addFriend(ctx.user, args.userId, args.isSuperLike)
     }
 })
 

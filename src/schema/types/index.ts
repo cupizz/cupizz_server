@@ -177,6 +177,23 @@ export const UserDataType = objectType({
                 return null
             }
         })
+        t.field('remainingSuperLike', {
+            type: 'Int', nullable: true,
+            resolve: async (root: any, _args, ctx) => {
+                if (!UserService.canAccessPrivateAccount(ctx, root)) return null;
+                if ((root.remainingSuperLikeUpdatedAt as Date).getDate() !== new Date().getDate()) {
+                    await prisma.user.update({
+                        where: { id: root.id },
+                        data: {
+                            remainingSuperLike: 5,
+                            remainingSuperLikeUpdatedAt: new Date(),
+                        }
+                    })
+                    return 5;
+                }
+                return root.remainingSuperLike;
+            }
+        })
         t.model('User').userImages({
             pagination: false, resolve: async (root: any, args, ctx) => {
                 return root.userImages;
