@@ -5,7 +5,8 @@ export const defaultAvatar = (ctx: Context): File => ({ id: "0", type: 'image', 
 
 export const ConstConfig = {
     port: process.env.PORT || 2020,
-    listSeparateSymbol: '|'
+    listSeparateSymbol: '|',
+    apiBaseURL: '/api'
 }
 
 export type ConfigField = 'debugLog'

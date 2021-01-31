@@ -1,3 +1,4 @@
+import 'module-alias/register';
 import { PrismaClient } from '@prisma/client'
 import { ApolloServer, ForbiddenError, PubSub } from 'apollo-server-express'
 import bodyParser from 'body-parser'
@@ -16,6 +17,7 @@ import { DefaultRole } from './model/role'
 import { schema } from './schema'
 import { AuthService, UserService } from './service'
 import { logger } from './utils/logger'
+import BaseRouter from './routes';
 
 export const pubsub = new PubSub();
 export const prisma = new PrismaClient({
@@ -89,6 +91,7 @@ async function main() {
       return res.status(400).json(e);
     }
   })
+  app.use(ConstConfig.apiBaseURL, BaseRouter);
   const server = createServer(app);
 
   server.listen(PORT, async () => {
@@ -134,4 +137,4 @@ async function main() {
   });
 }
 
-main();
+main().then();
