@@ -14,4 +14,4 @@ RUN yarn generate
 
 EXPOSE 1998
 
-CMD ["yarn", "start"]
+CMD ["yarn", "dev"]

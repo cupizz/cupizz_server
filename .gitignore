@@ -123,3 +123,5 @@ data
 
 prisma/seed/profiles.json
 prisma/seed/processed-profile.json
+
+.idea/

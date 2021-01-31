@@ -6,3 +6,4 @@ export * from './socialNetwork.service';
 export * from './file.service';
 export * from './notification.service';
 export * from './mail.service';
+export * from './googleAnalytics.service';

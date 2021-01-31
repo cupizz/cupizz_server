@@ -6,6 +6,13 @@
         "lib": ["esnext"],
         "esModuleInterop": true,
         "strictNullChecks": false,
-        "target": "ES5"
-    }
+        "target": "ES5",
+        "baseUrl": "./",
+        "moduleResolution": "node",
+        "paths": {
+            "@cores/*": ["src/cores/*"],
+        }
+    },
+    "include": ["src/**/*.ts", "spec/**/*.ts"],
+    "exclude": ["src/public/"]
 }
