@@ -1,4 +1,5 @@
 import { booleanArg, intArg, mutationField, stringArg } from "@nexus/schema";
+import { arg, ObjectDefinitionBlock } from "@nexus/schema/dist/core";
 import { ForbiddenError } from "apollo-server-express";
 import assert from "assert";
 import Strings from "../../constants/strings";
@@ -6,6 +7,51 @@ import { ClientError, ErrorNotFound } from "../../model/error";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
 import { AuthService } from "../../service";
+
+export const simplePostMutation = (t: ObjectDefinitionBlock<'Mutation'>) => {
+    t.field('likePost', {
+        type: 'LikeType',
+        args: {
+            postId: intArg({ required: true }),
+            type: arg({ type: 'LikeType' })
+        },
+        async resolve(_root, args, ctx) {
+            AuthService.authenticate(ctx);
+            const post = await prisma.post.findOne({
+                where: { id: args.postId },
+            })
+            if (!post) throw ErrorNotFound()
+            const data = await prisma.userLikedPost.upsert({
+                where: { userId_postId: { postId: post.id, userId: ctx.user.id } },
+                create: {
+                    post: { connect: { id: post.id } },
+                    user: { connect: { id: ctx.user.id } },
+                    createdAt: new Date(),
+                    type: args.type,
+                },
+                update: { type: args.type, createdAt: new Date() }
+            })
+            return data.type;
+        }
+    })
+    t.field('unlikePost', {
+        type: 'Boolean',
+        args: {
+            postId: intArg({ required: true }),
+        },
+        async resolve(_root, args, ctx) {
+            AuthService.authenticate(ctx);
+            const likeData = await prisma.userLikedPost.findOne({
+                where: { userId_postId: { postId: args.postId, userId: ctx.user.id } },
+            })
+            if (!likeData) return false;
+            await prisma.userLikedPost.delete({
+                where: { userId_postId: { postId: args.postId, userId: ctx.user.id } },
+            })
+            return true;
+        }
+    })
+}
 
 export const CreatePostCategoryMutation = mutationField(
     'createPostCategory',

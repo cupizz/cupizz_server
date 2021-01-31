@@ -1,0 +1,228 @@
+{
+  "version": "0.3.14-fixed",
+  "steps": [
+    {
+      "tag": "CreateEnum",
+      "enum": "LikeType",
+      "values": [
+        "like",
+        "love",
+        "wow",
+        "haha",
+        "angry",
+        "sad"
+      ]
+    },
+    {
+      "tag": "CreateModel",
+      "model": "UserLikedPost"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserLikedPost",
+      "field": "user",
+      "type": "User",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "user"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "user"
+        },
+        "directive": "relation"
+      },
+      "argument": "fields",
+      "value": "[userId]"
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "user"
+        },
+        "directive": "relation"
+      },
+      "argument": "references",
+      "value": "[id]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserLikedPost",
+      "field": "post",
+      "type": "Post",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "post"
+        },
+        "directive": "relation"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "post"
+        },
+        "directive": "relation"
+      },
+      "argument": "fields",
+      "value": "[postId]"
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "post"
+        },
+        "directive": "relation"
+      },
+      "argument": "references",
+      "value": "[id]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserLikedPost",
+      "field": "userId",
+      "type": "String",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserLikedPost",
+      "field": "postId",
+      "type": "Int",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserLikedPost",
+      "field": "type",
+      "type": "LikeType",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "type"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "type"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "like"
+    },
+    {
+      "tag": "CreateField",
+      "model": "UserLikedPost",
+      "field": "createdAt",
+      "type": "DateTime",
+      "arity": "Required"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "createdAt"
+        },
+        "directive": "default"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Field",
+          "model": "UserLikedPost",
+          "field": "createdAt"
+        },
+        "directive": "default"
+      },
+      "argument": "",
+      "value": "now()"
+    },
+    {
+      "tag": "CreateDirective",
+      "location": {
+        "path": {
+          "tag": "Model",
+          "model": "UserLikedPost"
+        },
+        "directive": "id"
+      }
+    },
+    {
+      "tag": "CreateArgument",
+      "location": {
+        "tag": "Directive",
+        "path": {
+          "tag": "Model",
+          "model": "UserLikedPost"
+        },
+        "directive": "id"
+      },
+      "argument": "",
+      "value": "[userId, postId]"
+    },
+    {
+      "tag": "CreateField",
+      "model": "User",
+      "field": "UserLikedPost",
+      "type": "UserLikedPost",
+      "arity": "List"
+    },
+    {
+      "tag": "CreateField",
+      "model": "Post",
+      "field": "UserLikedPost",
+      "type": "UserLikedPost",
+      "arity": "List"
+    }
+  ]
+}

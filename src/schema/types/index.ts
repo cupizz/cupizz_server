@@ -1,7 +1,7 @@
-import { arg, enumType, inputObjectType, objectType } from "@nexus/schema";
-import { ConversationMember, Gender, MustHaveField, OnlineStatus, PrivateField, SocialProviderType, User, FileType, EducationLevel, UsualType, HaveKids, LookingFor, Religious, NotificationType } from "@prisma/client";
+import { arg, enumType, inputObjectType, intArg, objectType } from "@nexus/schema";
+import { ConversationMember, Gender, MustHaveField, OnlineStatus, PrivateField, SocialProviderType, User, FileType, EducationLevel, UsualType, HaveKids, LookingFor, Religious, NotificationType, LikeType } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
-import { defaultAvatar } from "../../config";
+import { Config, defaultAvatar } from "../../config";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
 import { AuthService, MessageService, UserService } from "../../service";
@@ -87,6 +87,11 @@ export const OnlineStatusEnumType = enumType({
 export const notificationType = enumType({
     name: 'NotificationType',
     members: Object.keys(NotificationType)
+})
+
+export const likeType = enumType({
+    name: 'LikeType',
+    members: Object.keys(LikeType)
 })
 
 export const UserType = objectType({
@@ -469,7 +474,7 @@ export const ConversationDataType = objectType({
         t.field('onlineStatus', {
             type: 'OnlineStatus', nullable: true,
             resolve: async (root: any, _args, ctx, _info) => {
-                if(!ctx.user?.showActive) return null;
+                if (!ctx.user?.showActive) return null;
                 const otherMembers = ((root.members ?? []) as (ConversationMember & { user: User })[])
                     .filter(e => e.userId !== ctx.user?.id);
 
@@ -495,7 +500,7 @@ export const ConversationDataType = objectType({
         t.field('lastOnline', {
             type: 'DateTime', nullable: true,
             resolve: async (root: any, _args, ctx, _info) => {
-                if(!ctx.user?.showActive) return null;
+                if (!ctx.user?.showActive) return null;
                 const otherMembers = ((root.members ?? []) as (ConversationMember & { user: User })[])
                     .filter(e => e.userId !== ctx.user?.id);
                 if ((otherMembers).length === 1 && otherMembers[0].user.showActive) {
@@ -585,7 +590,7 @@ export const PostType = objectType({
                     where: {
                         ...args.where,
                         postId: root.id,
-                        ...!isAdmin ? { deletedAt: {equals: null} } : {}
+                        ...!isAdmin ? { deletedAt: { equals: null } } : {}
                     }
                 })
             }
@@ -605,7 +610,7 @@ export const PostType = objectType({
                     where: {
                         ...args.where,
                         postId: root.id,
-                        ...!isAdmin ? { deletedAt: {equals: null} } : {}
+                        ...!isAdmin ? { deletedAt: { equals: null } } : {}
                     }
                 })
             }
@@ -614,6 +619,47 @@ export const PostType = objectType({
             type: 'Boolean',
             resolve: (root: any, _args, ctx) => {
                 return root.createdById === ctx.user?.id;
+            }
+        })
+        t.field('myLikedPostType', {
+            type: 'LikeType',
+            async resolve(root, _args, ctx) {
+                if (!AuthService.authenticate(ctx, false)) return null;
+                return (await prisma.userLikedPost.findOne({
+                    where: { userId_postId: { userId: ctx.user.id, postId: root.id } }
+                }))?.type;
+            }
+        })
+        t.field('likeCount', {
+            type: 'Int',
+            args: {
+                type: arg({ type: 'LikeType' })
+            },
+            async resolve(root, args) {
+                return await prisma.userLikedPost.count({
+                    where: {
+                        postId: root.id,
+                        type: args.type,
+                    }
+                })
+            }
+        })
+        t.field('usersLiked', {
+            type: 'User',
+            args: {
+                page: intArg({ default: 1 })
+            },
+            list: true,
+            nullable: false,
+            resolve: async (root, args) => {
+                const page = args.page ?? 1;
+                const pageSize = Config.defaultPageSize.value ?? 10;
+                return (await prisma.userLikedPost.findMany({
+                    where: { postId: root.id },
+                    include: { user: true },
+                    take: pageSize,
+                    skip: pageSize * (page - 1),
+                })).map(e => e.user)
             }
         })
     }
