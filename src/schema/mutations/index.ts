@@ -3,6 +3,7 @@ import { DefaultConfig } from '../../config'
 import { Permission } from '../../model/permission'
 import { prisma } from '../../server'
 import { AuthService, FileService, OnesignalService } from '../../service'
+import { simplePostMutation } from './post.mutation'
 
 export * from './appConfig.mutation'
 export * from './auth.mutation'
@@ -15,6 +16,7 @@ export * from './post.mutation'
 
 export const mutations = mutationType({
     definition(t) {
+        simplePostMutation(t);
         t.field('adminReseedAppConfig', {
             type: 'Boolean',
             resolve: async (_root, _args, ctx) => {

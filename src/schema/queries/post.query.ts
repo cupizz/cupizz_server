@@ -1,6 +1,6 @@
 import { inputObjectType, intArg, queryField } from "@nexus/schema";
 import { arg, ObjectDefinitionBlock } from "@nexus/schema/dist/core";
-import { Post, PostCategory } from "@prisma/client";
+import { Post } from "@prisma/client";
 import { Config } from "../../config";
 import { ErrorNotFound } from "../../model/error";
 import { Permission } from "../../model/permission";
