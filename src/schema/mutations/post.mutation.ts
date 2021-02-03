@@ -59,6 +59,7 @@ export const CreatePostCategoryMutation = mutationField(
         type: 'PostCategory',
         args: {
             value: stringArg({ nullable: false }),
+            color: stringArg({ default: 'ffffff' })
         },
         resolve: async (_root, args, ctx, _info) => {
             AuthService.authorize(ctx, { values: [Permission.postCategory.create] });
@@ -66,6 +67,7 @@ export const CreatePostCategoryMutation = mutationField(
             const cat = await prisma.postCategory.create({
                 data: {
                     value: args.value,
+                    color: args.color,
                 }
             })
 

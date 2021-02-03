@@ -669,8 +669,8 @@ export const PostCategoryType = objectType({
     name: 'PostCategory',
     definition(t) {
         t.model.id()
-        t.model.Post()
         t.model.value()
+        t.model.color()
     }
 })
 
