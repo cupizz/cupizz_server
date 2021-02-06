@@ -1,5 +1,5 @@
 import { inputObjectType, intArg, queryField } from "@nexus/schema";
-import { arg, ObjectDefinitionBlock } from "@nexus/schema/dist/core";
+import { arg, ObjectDefinitionBlock, objectType } from "@nexus/schema/dist/core";
 import { Post } from "@prisma/client";
 import { Config } from "../../config";
 import { ErrorNotFound } from "../../model/error";
@@ -33,8 +33,13 @@ export function postSimpleQuery(t: ObjectDefinitionBlock<'Query'>) {
 }
 
 export const postsQuery = queryField('posts', {
-    type: 'Post',
-    list: true,
+    type: objectType({
+        name: 'PostsOutput',
+        definition(t) {
+            t.field('data', { type: 'Post', list: true })
+            t.field('isLastPage', { type: 'Boolean' })
+        }
+    }),
     args: {
         page: intArg({ default: 1 }),
         where: inputObjectType({
@@ -56,7 +61,7 @@ export const postsQuery = queryField('posts', {
         AuthService.authenticate(ctx);
         const pageSize: number = Config.defaultPageSize?.value || 10;
 
-        return await prisma.post.findMany({
+        const data = await prisma.post.findMany({
             take: pageSize,
             skip: pageSize * ((args.page ?? 1) - 1),
             orderBy: args.orderBy,
@@ -67,5 +72,6 @@ export const postsQuery = queryField('posts', {
                 ...args?.where?.isMyPost ? { createdById: { equals: ctx.user.id } } : {}
             }
         });
+        return { data, isLastPage: data.length < pageSize }
     }
 })
