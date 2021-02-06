@@ -83,7 +83,7 @@ export const UpdatePostCategoryMutation = mutationField(
         args: {
             id: stringArg({ nullable: false }),
             value: stringArg(),
-            isValid: booleanArg()
+            color: stringArg(),
         },
         resolve: async (_root, args, ctx, _info) => {
             AuthService.authorize(ctx, { values: [Permission.postCategory.update] });
@@ -92,6 +92,7 @@ export const UpdatePostCategoryMutation = mutationField(
                 where: { id: args.id },
                 data: {
                     value: args.value,
+                    color: args.color,
                 }
             })
 
