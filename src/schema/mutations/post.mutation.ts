@@ -1,4 +1,4 @@
-import { booleanArg, intArg, mutationField, stringArg } from "@nexus/schema";
+import { intArg, mutationField, stringArg } from "@nexus/schema";
 import { arg, ObjectDefinitionBlock } from "@nexus/schema/dist/core";
 import { ForbiddenError } from "apollo-server-express";
 import assert from "assert";
@@ -127,7 +127,7 @@ export const CreatePostMutation = mutationField(
             content: stringArg({ nullable: false }),
         },
         resolve: async (_root, args, ctx, _info) => {
-            AuthService.authorize(ctx, { values: [Permission.post.create] });
+            AuthService.authenticate(ctx);
             assert(args.content !== "", Strings.error.contentMustBeNotEmpty)
 
             const post = await prisma.post.create({
