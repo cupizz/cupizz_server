@@ -10,7 +10,7 @@ import { AuthService } from "../../service";
 
 export const simplePostMutation = (t: ObjectDefinitionBlock<'Mutation'>) => {
     t.field('likePost', {
-        type: 'LikeType',
+        type: 'Post',
         args: {
             postId: intArg({ required: true }),
             type: arg({ type: 'LikeType' })
@@ -29,13 +29,14 @@ export const simplePostMutation = (t: ObjectDefinitionBlock<'Mutation'>) => {
                     createdAt: new Date(),
                     type: args.type,
                 },
-                update: { type: args.type, createdAt: new Date() }
+                update: { type: args.type, createdAt: new Date() },
+                include: { post: true }
             })
-            return data.type;
+            return data.post;
         }
     })
     t.field('unlikePost', {
-        type: 'Boolean',
+        type: 'Post',
         args: {
             postId: intArg({ required: true }),
         },
@@ -43,12 +44,14 @@ export const simplePostMutation = (t: ObjectDefinitionBlock<'Mutation'>) => {
             AuthService.authenticate(ctx);
             const likeData = await prisma.userLikedPost.findOne({
                 where: { userId_postId: { postId: args.postId, userId: ctx.user.id } },
+                include: { post: true },
             })
-            if (!likeData) return false;
-            await prisma.userLikedPost.delete({
+            if (!likeData) return likeData.post;
+            const data = await prisma.userLikedPost.delete({
                 where: { userId_postId: { postId: args.postId, userId: ctx.user.id } },
+                include: { post: true },
             })
-            return true;
+            return data.post;
         }
     })
 }
