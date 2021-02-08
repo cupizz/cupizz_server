@@ -688,12 +688,18 @@ export const CommentType = objectType({
         t.model.isIncognito()
         t.field('createdBy', {
             type: 'User',
-            async resolve(root: any, _args, ctx) {
-                if (ctx.user?.id === root.createdById || !root.isIncognito) {
+            async resolve(root: any, _args) {
+                if (!root.isIncognito) {
                     const result = await prisma.user.findOne({ where: { id: root.createdById } });
                     return result
                 }
                 return null;
+            }
+        })
+        t.field('isMyComment', {
+            type: 'Boolean',
+            resolve: (root: any, _, ctx) => {
+                return root.createdById === ctx.user?.id;
             }
         })
     }
