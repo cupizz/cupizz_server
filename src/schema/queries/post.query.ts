@@ -11,7 +11,7 @@ export function postSimpleQuery(t: ObjectDefinitionBlock<'Query'>) {
     t.crud.post({
         resolve: async (root, args, ctx, info, origin: any) => {
             const data: Post = await origin(root, args, ctx, info);
-            if (!data?.deletedAt) {
+            if (data?.deletedAt) {
                 throw ErrorNotFound();
             }
             return data;
