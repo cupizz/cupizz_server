@@ -606,6 +606,7 @@ export const PostType = objectType({
                 return prisma.comment.findMany({
                     take: args.take,
                     skip: args.skip,
+                    cursor: args.cursor,
                     orderBy: args.orderBy,
                     where: {
                         ...args.where,
