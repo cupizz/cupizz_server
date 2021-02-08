@@ -1,5 +1,5 @@
 import { intArg, mutationField, stringArg } from "@nexus/schema";
-import { arg, ObjectDefinitionBlock } from "@nexus/schema/dist/core";
+import { arg, booleanArg, ObjectDefinitionBlock } from "@nexus/schema/dist/core";
 import { ForbiddenError } from "apollo-server-express";
 import assert from "assert";
 import Strings from "../../constants/strings";
@@ -215,6 +215,7 @@ export const CommentPostMutation = mutationField(
         args: {
             postId: intArg({ nullable: false }),
             content: stringArg({ nullable: false }),
+            isIncognito: booleanArg({ default: true }),
             parentCommentIndex: intArg(),
         },
         resolve: async (_root, args, ctx, _info) => {
@@ -236,7 +237,8 @@ export const CommentPostMutation = mutationField(
                     index: commentCount + 1,
                     post: { connect: { id: args.postId } },
                     ...parentComment ? { parentComment: { connect: { id: parentComment.id } } } : {},
-                    createdBy: { connect: { id: ctx.user.id } }
+                    createdBy: { connect: { id: ctx.user.id } },
+                    isIncognito: args.isIncognito,
                 }
             })
 

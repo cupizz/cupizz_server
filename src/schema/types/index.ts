@@ -685,6 +685,17 @@ export const CommentType = objectType({
         t.model.reply()
         t.model.parentComment()
         t.model.createdAt()
+        t.model.isIncognito()
+        t.field('createdBy', {
+            type: 'User',
+            async resolve(root: any, _args, ctx) {
+                if (ctx.user?.id === root.createdById || !root.isIncognito) {
+                    const result = await prisma.user.findOne({ where: { id: root.createdById } });
+                    return result
+                }
+                return null;
+            }
+        })
     }
 })
 
