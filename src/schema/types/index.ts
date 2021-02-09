@@ -577,6 +577,7 @@ export const PostType = objectType({
         t.model.createdAt()
         t.model.updatedAt()
         t.model.deletedAt()
+        t.model.images()
         t.field('commentCount', {
             type: 'Int',
             nullable: true,

@@ -6,7 +6,7 @@ import Strings from "../../constants/strings";
 import { ClientError, ErrorNotFound } from "../../model/error";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
-import { AuthService } from "../../service";
+import { AuthService, FileService } from "../../service";
 
 export const simplePostMutation = (t: ObjectDefinitionBlock<'Mutation'>) => {
     t.field('likePost', {
@@ -128,16 +128,21 @@ export const CreatePostMutation = mutationField(
         args: {
             categoryId: stringArg({ nullable: false }),
             content: stringArg({ nullable: false }),
+            images: arg({ type: 'Upload', list: true, default: [] })
         },
         resolve: async (_root, args, ctx, _info) => {
             AuthService.authenticate(ctx);
             assert(args.content !== "", Strings.error.contentMustBeNotEmpty)
+            assert(!args.images || args.images.length <= 4, 'Chỉ được đăng tối đa 4 hình.')
+
+            const imageFiles = await Promise.all(args.images ?? [])
 
             const post = await prisma.post.create({
                 data: {
                     category: { connect: { id: args.categoryId } },
                     content: args.content,
-                    createdBy: { connect: { id: ctx.user.id } }
+                    createdBy: { connect: { id: ctx.user.id } },
+                    images: { create: await FileService.uploadMulti(imageFiles) }
                 }
             })
 
