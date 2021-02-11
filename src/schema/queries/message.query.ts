@@ -7,6 +7,14 @@ import Strings from "../../constants/strings";
 import { prisma } from "../../server";
 import { AuthService, MessageService } from "../../service";
 
+export const MyAnonymousChatQuery = queryField('myAnonymousChat', {
+    type: 'Conversation',
+    resolve: async (_root, _args, ctx, _info) => {
+        AuthService.authenticate(ctx);
+        return await MessageService.getAnonymousChat(ctx.user.id);
+    }
+})
+
 export const MyConversationsQuery = queryField('myConversations', {
     type: objectType({
         name: 'MyConversationOutput',
@@ -24,7 +32,8 @@ export const MyConversationsQuery = queryField('myConversations', {
         const data = await prisma.conversation.findMany({
             where: {
                 members: { some: { userId: ctx.user.id } },
-                isHidden: { equals: false }
+                isHidden: { equals: false },
+                isAnonymousChat: { equals: false },
             },
             orderBy: { updatedAt: 'desc' },
             take: pageSize,

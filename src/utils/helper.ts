@@ -80,3 +80,25 @@ export function compareDate(date1: Date, date2: Date): number {
     // Check if the first is less than second
     if (d1 < d2) return -1;
 }
+
+export function arraysEqual(_arr1: string[], _arr2: string[]) {
+    if (
+        !Array.isArray(_arr1)
+        || !Array.isArray(_arr2)
+        || _arr1.length !== _arr2.length
+    ) {
+        return false;
+    }
+
+    // .concat() is used so the original arrays are unaffected
+    const arr1 = _arr1.concat().sort();
+    const arr2 = _arr2.concat().sort();
+
+    for (let i = 0; i < arr1.length; i++) {
+        if (arr1[i] !== arr2[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}

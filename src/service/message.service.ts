@@ -2,18 +2,22 @@ import { Conversation, ConversationInclude, FileCreateInput, Message } from '@pr
 import { ForbiddenError } from 'apollo-server-express';
 import assert from 'assert';
 import { FileUpload } from 'graphql-upload';
+import { arraysEqual } from '../utils/helper';
 import { NotificationService } from '.';
 import { Config } from '../config';
 import Strings from '../constants/strings';
 import SubscriptionKey from '../constants/subscriptionKey';
 import { Context } from '../context';
 import { ClientError, ErrorNotFound } from '../model/error';
-import { prisma } from '../server';
+import { prisma, pubsub } from '../server';
 import { logger } from '../utils/logger';
 import { AuthService } from './auth.service';
 import { FileService } from './file.service';
+import { Permission } from '../model/permission';
 
 class MessageService {
+    private static _creatingAnonymousChats: (string[])[] = [];
+
     public async getConversation(ctx: Context, id: { otherUserId?: string, conversationId?: string }, include?: ConversationInclude) {
         AuthService.authenticate(ctx);
         assert(id.conversationId != null || id.otherUserId != null, Strings.error.mustHaveConversationIdOrUserId);
@@ -28,6 +32,7 @@ class MessageService {
         } else {
             const conversations = await prisma.conversation.findMany({
                 where: {
+                    isAnonymousChat: false,
                     members: {
                         every: { userId: { in: memberIds } },
                     }
@@ -56,12 +61,54 @@ class MessageService {
         return conversation;
     }
 
+    public async getAnonymousChat(userId: string) {
+        return await prisma.conversation.findFirst({
+            where: {
+                isAnonymousChat: true,
+                members: {
+                    some: { userId }
+                },
+            },
+            orderBy: { createdAt: 'desc' }
+        })
+    }
+
+    public async findAndCreateAnonymousChat(ctx: Context) {
+        AuthService.authenticate(ctx);
+        // Check if current user is in a anonymous chat.
+        let conversation = await this.getAnonymousChat(ctx.user.id);
+        if (!conversation) {
+            // Find user that finding anonymous chat too and not in another anonymous chat
+            const otherUser = await prisma.user.findFirst({
+                where: {
+                    id: { not: ctx.user.id },
+                    isFindingAnonymousChat: true,
+                    conversationMembers: {
+                        every: { conversation: { isAnonymousChat: false } }
+                    }
+                }
+            })
+
+            // If have user create anonymous chat
+            if (otherUser) {
+                conversation = await this._createAnonymousChat(ctx.user.id, otherUser.id);
+            }
+        }
+
+        if (conversation) {
+            pubsub.publish(SubscriptionKey.findAnonymousChat, conversation);
+        } else {
+            NotificationService.sendSomeOneFindingAnonymousChat();
+        }
+    }
+
     public async searchConversation(ctx: Context, keyword: string, page?: number)
         : Promise<{ data: (Conversation & { messages: Message[] })[], isLastPage: boolean }> {
         AuthService.authenticate(ctx);
         const pageSize: number = Config.defaultPageSize.value || 10;
         const data = await prisma.conversation.findMany({
             where: {
+                isAnonymousChat: false,
                 messages: { some: { message: { contains: keyword } } },
                 members: { some: { userId: { equals: ctx.user.id } } }
             },
@@ -281,8 +328,8 @@ class MessageService {
         } else {
             const conversation = await this.getConversation(ctx, {
                 conversationId: id.conversationId, otherUserId: id.otherUserId
-            })
-            const members = (await prisma.conversationMember.update({
+            });
+            (await prisma.conversationMember.update({
                 where: { conversationId_userId: { userId: ctx.user.id, conversationId: conversation.id } },
                 data: { isCurrentlyInChat: isInChat },
                 include: { conversation: { include: { members: true } } }
@@ -291,6 +338,35 @@ class MessageService {
             if (isInChat) logger(`User ${ctx.user.id} is in chat ${conversation.id}.`)
             else logger(`User ${ctx.user.id} is out chat ${conversation.id}.`)
         }
+    }
+
+    public async deleteConversation(ctx: Context, conversationId: string) {
+        AuthService.authenticate(ctx);
+        const conversation = await prisma.conversation.findOne({
+            where: { id: conversationId },
+            include: { members: true }
+        });
+
+        if (conversation.members.findIndex(e => e.userId === ctx.user.id) < 0) {
+            AuthService.authorize(ctx, { values: [Permission.chat.delete] })
+        }
+
+        return await this._deleteConversation(conversationId);
+    }
+
+    private async _deleteConversation(conversationId: string) {
+        await this._deleteAllMessage(conversationId);
+        await prisma.conversationMember.deleteMany({ where: { conversationId } });
+        return await prisma.conversation.delete({ where: { id: conversationId } })
+    }
+
+    private async _deleteAllMessage(conversationId: string) {
+        await FileService.deleteFiles({
+            where: { Message: { conversationId } }
+        })
+        return await prisma.message.deleteMany({
+            where: { conversationId }
+        })
     }
 
     private async _markAsReadMessage(ctx: Context, messageId: string) {
@@ -380,6 +456,56 @@ class MessageService {
         } finally {
             MessageService._blockingCreateConversation = false;
         }
+    }
+
+    private async _createAnonymousChat(userId: string, otherUserId: string) {
+        if (await this.getAnonymousChat(userId) || await this.getAnonymousChat(otherUserId)) {
+            throw ClientError('Can not create anonymous chat.');
+        }
+
+        const memberIds = [userId, otherUserId];
+        let conversation: Conversation;
+
+        do {
+            if (MessageService._creatingAnonymousChats.filter((e) => arraysEqual(e, memberIds)).length > 0) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            conversation = await prisma.conversation.findFirst({
+                where: {
+                    isAnonymousChat: true,
+                    members: {
+                        every: { userId: { in: memberIds } },
+                    }
+                }
+            })
+
+            if (!conversation) {
+                if (MessageService._creatingAnonymousChats.filter((e) => arraysEqual(e, memberIds)).length === 0) {
+                    try {
+                        // Block creating conversation to make sure that can not create 2 conversations have same member at the time.
+                        MessageService._creatingAnonymousChats.push(memberIds);
+                        conversation = await prisma.conversation.create({
+                            data: {
+                                isAnonymousChat: true,
+                                members: {
+                                    create: memberIds.map(e => ({
+                                        user: { connect: { id: e } },
+                                        isAdmin: true,
+                                    })),
+                                }
+                            },
+                        })
+                    } finally {
+                        MessageService._creatingAnonymousChats
+                            .filter((e) => arraysEqual(e, memberIds))
+                            .map((_, i) => MessageService._creatingAnonymousChats.splice(i, 1))
+                    }
+                }
+            }
+        } while (!conversation && MessageService._creatingAnonymousChats.filter((e) => arraysEqual(e, memberIds)).length > 0)
+
+        return conversation;
     }
 }
 

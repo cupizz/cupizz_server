@@ -79,3 +79,40 @@ export const ConversationChangeSubscription = subscriptionField(
         },
     }
 )
+
+export const findAnonymousChatSubscription = subscriptionField(
+    "findAnonymousChat",
+    {
+        type: 'Conversation',
+        subscribe: (root, args, ctx, info) => withCancel((withFilter(
+            (_root, _args, ctx, _info) => {
+                AuthService.authenticate(ctx);
+                prisma.user.update({
+                    where: { id: ctx.user.id },
+                    data: { isFindingAnonymousChat: true }
+                }).then(() => {
+                    MessageService.findAndCreateAnonymousChat(ctx);
+                })
+                return pubsub.asyncIterator(SubscriptionKey.findAnonymousChat);
+            },
+            async (root: Conversation, _args, ctx, _info) => {
+                return root.isAnonymousChat && !!(await prisma.conversationMember.findOne({
+                    where: {
+                        conversationId_userId: {
+                            conversationId: root.id,
+                            userId: ctx.user.id
+                        }
+                    }
+                }));
+            }
+        ))(root, args, ctx, info), async () => {
+            await prisma.user.update({
+                where: { id: ctx.user.id },
+                data: { isFindingAnonymousChat: false }
+            })
+        }),
+        resolve: (payload) => {
+            return payload;
+        },
+    }
+)

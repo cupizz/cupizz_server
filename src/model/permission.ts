@@ -67,15 +67,6 @@ class FriendPermission extends PermissionByModule {
     };
 }
 
-class ChatPermission extends PermissionByModule {
-    constructor() {
-        super('chat')
-    }
-    toArray(): string[] {
-        return [this.create];
-    };
-}
-
 class Permission extends ByModule {
     public config = new PermissionByModule('config');
     public user = new PermissionByModule('user');
@@ -87,7 +78,7 @@ class Permission extends ByModule {
     public comment = new PermissionByModule('comment');
     public postCategory = new PermissionByModule('postCategory');
     public friend = new FriendPermission();
-    public chat = new ChatPermission();
+    public chat = new PermissionByModule('chat');
 
     public toArray(): string[] {
         let array: string[] = [];

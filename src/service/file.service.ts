@@ -1,12 +1,13 @@
-import * as request from 'request';
-import { FileUpload } from 'graphql-upload';
+import { FileCreateInput, FileDeleteManyArgs } from '@prisma/client';
 import * as fs from 'fs';
+import { FileUpload } from 'graphql-upload';
+import * as request from 'request';
 import uniqueId from 'uniqid';
 import { Config } from '../config';
-import { ClientError } from '../model/error';
 import Strings from '../constants/strings';
+import { ClientError } from '../model/error';
+import { prisma } from '../server';
 import { logger } from '../utils/logger';
-import { FileCreateInput } from '@prisma/client';
 
 class FileService {
     public async upload(file: FileUpload): Promise<FileCreateInput> {
@@ -69,16 +70,24 @@ class FileService {
         })
     }
 
+    public async deleteFile(fileId: string) {
+        // TODO delete file on storage
+        return await prisma.file.delete({
+            where: { id: fileId }
+        })
+    }
+
+    public async deleteFiles(args: FileDeleteManyArgs) {
+        const files = await prisma.file.findMany(args);
+        // TODO delete file on storage
+        return await prisma.file.deleteMany(args);
+    }
+
     private async _validateFile(file: FileUpload) {
         const fileType = file?.mimetype?.split('/')?.[0];
-        const fileExt = file?.mimetype?.split('/')?.[1];
 
         if (fileType != 'image')
             throw new Error(`File type ${file.mimetype} does not support`);
-    }
-
-    private _uploadManyImageToImgur(tempFileNames: string[]): Promise<{ url: string, thumbnail: string }[]> {
-        return Promise.all(tempFileNames.map(e => this._uploadOneImageToImgur(e)))
     }
 
     private async _uploadOneImageToImgur(tempFileName: string): Promise<{ url: string, thumbnail: string }> {
@@ -121,7 +130,7 @@ class FileService {
         const url = decoded?.data?.link ?? '';
 
         fs.unlinkSync(tempFilePath);
-        
+
         return {
             url,
             thumbnail: this._getImgurThumbnail(url)
@@ -142,4 +151,4 @@ class FileService {
 }
 
 const _ = new FileService();
-export { _ as FileService }
+export { _ as FileService };

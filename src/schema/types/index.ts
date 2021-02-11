@@ -201,7 +201,7 @@ export const UserDataType = objectType({
             }
         })
         t.model('User').userImages({
-            pagination: false, resolve: async (root: any, args, ctx) => {
+            pagination: false, resolve: async (root: any) => {
                 return root.userImages;
             }
         })
@@ -424,6 +424,7 @@ export const ConversationType = objectType({
                 );
             }
         })
+        t.model.isAnonymousChat()
         t.field('data', {
             type: 'ConversationData',
             resolve: async (root, _args, _ctx, _info) => {
@@ -476,6 +477,7 @@ export const ConversationDataType = objectType({
     definition(t) {
         t.model("Conversation").name({
             resolve: async (root: any, args, ctx, info, origin) => {
+                if (root.isAnonymousChat) return 'Người lạ';
                 const data = await origin(root, args, ctx, info);
                 return data || (root.members as (ConversationMember & { user: User })[])
                     .filter(e => e.userId !== ctx.user.id)
@@ -486,6 +488,7 @@ export const ConversationDataType = objectType({
         t.field('images', {
             type: 'File', list: true, nullable: false,
             resolve: async (root: any, _args, ctx, _info) => {
+                if (root.isAnonymousChat) return [defaultAvatar(ctx)];
                 const data = root.members
                     ?.filter((e: any) => e.user.avatar && (root.members?.length > 1 ? e.userId !== ctx.user.id : true))
                     ?.map((e: any) => e.user.avatar ?? defaultAvatar(ctx)) ?? [];
@@ -562,7 +565,17 @@ export const PersonalConversationDataType = objectType({
 export const ConversationMemberType = objectType({
     name: 'ConversationMember',
     definition(t) {
-        t.model.user()
+        t.field('user', {
+            type: 'User',
+            async resolve(root: any) {
+                const conversation = await prisma.conversation.findOne({
+                    where: { id: root.conversationId }
+                })
+                return conversation.isAnonymousChat ? null : await prisma.user.findOne({
+                    where: { id: root.userId }
+                })
+            }
+        })
         t.model.createdAt()
         t.model.lastReadMessage()
     }
@@ -577,7 +590,15 @@ export const MessageType = objectType({
         t.model.createdAt()
         t.model.updatedAt()
         t.model.attachments({ pagination: false })
-        t.model.sender()
+        t.model.isAnonymousChat()
+        t.field('sender', {
+            type: 'User',
+            async resolve(root: any) {
+                return root.isAnonymousChat ? null : await prisma.user.findOne({
+                    where: { id: root.senderId }
+                })
+            }
+        })
     }
 })
 
