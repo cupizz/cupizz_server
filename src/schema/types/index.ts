@@ -107,17 +107,15 @@ export const UserType = objectType({
             nullable: false,
             resolve: async (root, _args, ctx, _info): Promise<any> => {
                 const friendType = await UserService.getFriendStatus(ctx.user?.id, root.id);
-                return {
-                    ...(await prisma.user.findOne({
-                        where: { id: root.id },
-                        include: {
-                            userImages: {
-                                orderBy: { sortOrder: 'asc' }
-                            },
+                const user = await prisma.user.findOne({
+                    where: { id: root.id },
+                    include: {
+                        userImages: {
+                            orderBy: { sortOrder: 'asc' }
                         },
-                    })),
-                    friendType,
-                };
+                    },
+                });
+                return { ...user, friendType };
             }
         })
     }
