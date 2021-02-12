@@ -17,6 +17,17 @@ export function postSimpleQuery(t: ObjectDefinitionBlock<'Query'>) {
             return data;
         }
     })
+    t.crud.posts({
+        alias: 'adminPosts',
+        filtering: true,
+        ordering: true,
+        pagination: true,
+        resolve: async (root, args, ctx, info, origin: any) => {
+            AuthService.authorize(ctx, { values: [Permission.post.list] })
+            const data = await origin(root, args, ctx, info);
+            return data;
+        }
+    })
     t.crud.postCategory()
     t.crud.postCategories()
     t.field('adminPostCount', {

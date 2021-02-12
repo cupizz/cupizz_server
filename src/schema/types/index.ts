@@ -578,6 +578,15 @@ export const PostType = objectType({
         t.model.updatedAt()
         t.model.deletedAt()
         t.model.images()
+        t.field('createdBy', {
+            type: 'User',
+            async resolve(root: any, _, ctx) {
+                if (AuthService.authorize(ctx, { values: [Permission.post.list] }, false)) {
+                    return await prisma.user.findOne({ where: { id: root.createdById } })
+                }
+                return null
+            }
+        })
         t.field('commentCount', {
             type: 'Int',
             nullable: true,
