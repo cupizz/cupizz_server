@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { StringFieldUpdateOperationsInput } from "@prisma/client";
 import { Config } from "../config";
 import Strings from "../constants/strings";
 import { ValidationError } from "../model/error";
@@ -55,7 +55,7 @@ class Validator {
         return value === FriendStatusEnum.friend || value === FriendStatusEnum.me;
     }
 
-    public phoneNumber(value: string | Prisma.StringFieldUpdateOperationsInput, throwError: boolean = true): string {
+    public phoneNumber(value: string | StringFieldUpdateOperationsInput, throwError: boolean = true): string {
         let error: string;
         const regexp = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
         const _value = typeof value === 'string' ? value : value.set;

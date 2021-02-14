@@ -1,6 +1,7 @@
-import { arg, enumType, inputObjectType, intArg, objectType } from "@nexus/schema";
-import { ConversationMember, Gender, MustHaveField, OnlineStatus, PrivateField, SocialProviderType, User, FileType, EducationLevel, UsualType, HaveKids, LookingFor, Religious, NotificationType, LikeType } from "@prisma/client";
+import { arg, enumType, inputObjectType, intArg, objectType, stringArg } from "@nexus/schema";
+import { ConversationMember, EducationLevel, FileType, Gender, HaveKids, LikeType, LookingFor, MustHaveField, NotificationType, OnlineStatus, PrivateField, Religious, SocialProviderType, User, UsualType } from "@prisma/client";
 import { GraphQLUpload } from "apollo-server-express";
+import { Validator } from "../../utils/validator";
 import { Config, defaultAvatar } from "../../config";
 import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
@@ -403,6 +404,26 @@ export const ConversationType = objectType({
     definition(t) {
         t.model.id()
         t.model.members()
+        t.field('messages', {
+            type: 'MessagesOutputV2',
+            args: {
+                cursor: stringArg(),
+                take: intArg({ default: 20 }),
+                skip: intArg(),
+                focusMessageId: stringArg({ description: 'Nếu arg này tồn tại thì arg cursor ko có tác dụng' }),
+            },
+            resolve: async (root, args, ctx) => {
+                Validator.maxPagination(args.take)
+                return await MessageService.getMessagesV2(
+                    ctx,
+                    { conversationId: root.id },
+                    args.cursor,
+                    args.take,
+                    args.skip,
+                    args.focusMessageId,
+                );
+            }
+        })
         t.field('data', {
             type: 'ConversationData',
             resolve: async (root, _args, _ctx, _info) => {

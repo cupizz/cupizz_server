@@ -137,41 +137,28 @@ class MessageService {
         ctx: Context,
         id: { conversationId?: string, otherUserId?: string },
         cursor?: string,
-        getNewer: boolean = false,
+        take?: number,
+        skip?: number,
         focusMessageId?: string
     ): Promise<{ data: Message[], isLastPage: boolean }> {
         assert(id.otherUserId || id.conversationId, Strings.error.mustHaveConversationIdOrUserId)
         AuthService.authenticate(ctx);
 
-        const pageSize = 20;
         let messages: Message[] = [];
         let focusMessage = !focusMessageId
             ? null : await prisma.message.findOne({ where: { id: focusMessageId } });
 
-        let conversation;
-        if (id.conversationId) {
-            conversation = await prisma.conversation.findOne({
-                where: { id: id.conversationId },
-                include: { members: true }
-            })
-
-            if (!conversation.members.map(e => e.userId).includes(ctx.user.id)) {
-                throw new ForbiddenError(Strings.error.unAuthorize);
-            }
-        } else {
-            conversation = await this.getConversation(ctx, { otherUserId: id.otherUserId });
-        }
+        let conversation = await this.getConversation(ctx, id);
 
         if (focusMessage) {
             // Lấy ra tin nhắn làm cursor
             const beforeFocusMessage = await prisma.message.findMany({
                 where: { createdAt: { gt: focusMessage.createdAt } },
                 orderBy: { createdAt: 'asc' },
-                take: Math.round(pageSize / 2),
+                take: Math.round(take / 2),
             });
 
             cursor = beforeFocusMessage.pop().id ?? cursor;
-            getNewer = false;
             await this._markAsReadMessage(ctx, focusMessage.id);
         } else {
             const newestMessageId = (await this.getNewestMessage(conversation.id))?.id;
@@ -184,13 +171,12 @@ class MessageService {
             where: { conversationId: conversation?.id },
             orderBy: { createdAt: 'desc' },
             cursor: cursor ? { id: cursor } : undefined,
-            take: (pageSize + 1) * (getNewer ? -1 : 1),
-            skip: 1
+            take, skip,
         })
 
-        const isLastPage = getNewer ? false : messages.length <= pageSize;
+        const isLastPage = messages.length < take;
 
-        return { data: messages.splice(0, pageSize), isLastPage };
+        return { data: messages, isLastPage };
     }
 
     public async sendMessage(ctx: Context, data: {

@@ -1,6 +1,7 @@
 import { booleanArg, idArg, intArg, objectType, queryField, stringArg } from "@nexus/schema";
 import { ForbiddenError } from "apollo-server-express";
 import assert from "assert";
+import { Validator } from "../../utils/validator";
 import { Config } from "../../config";
 import Strings from "../../constants/strings";
 import { prisma } from "../../server";
@@ -96,16 +97,19 @@ export const messagesV2Query = queryField('messagesV2', {
     args: {
         conversationId: stringArg(),
         userId: idArg(),
-        cursor: idArg(),
-        getNewer: booleanArg({ default: false }),
-        focusMessageId: stringArg({ description: 'Nếu arg này tồn tại thì arg page ko có tác dụng' })
+        cursor: stringArg(),
+        take: intArg({ default: 20 }),
+        skip: intArg(),
+        focusMessageId: stringArg({ description: 'Nếu arg này tồn tại thì arg cursor ko có tác dụng' }),
     },
     resolve: async (_root, args, ctx, _info) => {
+        Validator.maxPagination(args.take)
         return await MessageService.getMessagesV2(
             ctx,
             { conversationId: args.conversationId, otherUserId: args.userId },
             args.cursor,
-            args.getNewer,
+            args.take,
+            args.skip,
             args.focusMessageId,
         );
     }
