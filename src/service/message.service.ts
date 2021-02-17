@@ -282,7 +282,7 @@ class MessageService {
 
     public async canSendChat(ctx: Context, conversationId: string, throwError: boolean = true): Promise<Boolean> {
         let result = true;
-        // result = AuthService.authorize(ctx, { values: [Permission.chat.create] }, throwError);
+        result = AuthService.authenticate(ctx, throwError);
 
         if (result) {
             const member = await prisma.conversationMember.findOne({
