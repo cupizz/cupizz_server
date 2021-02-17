@@ -5,7 +5,8 @@ services:
       context: .
       dockerfile: dev.dockerfile
     volumes:
-      - .:/usr/src/app
+      - .:/cupizz:cached
+    command: sleep infinity
     env_file:
       - .env
     links:
