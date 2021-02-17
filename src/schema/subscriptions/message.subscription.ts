@@ -62,7 +62,7 @@ export const ConversationChangeSubscription = subscriptionField(
                 return pubsub.asyncIterator(SubscriptionKey.conversationChange);
             },
             async (root: Conversation, _args, ctx, _info) => {
-                return !!(await prisma.conversationMember.findOne({
+                return !root.isAnonymousChat && !!(await prisma.conversationMember.findOne({
                     where: {
                         conversationId_userId: {
                             conversationId: root.id,
