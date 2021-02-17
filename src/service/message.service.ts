@@ -255,6 +255,7 @@ class MessageService {
                         sender: { connect: { id: ctx.user.id } },
                         conversation: { connect: { id: conversation.id } },
                         attachments: { create: files },
+                        isAnonymousChat: conversation.isAnonymousChat,
                     }
                 },
                 unreadMessageCount: 0,
