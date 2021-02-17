@@ -591,10 +591,13 @@ export const MessageType = objectType({
         t.model.isAnonymousChat()
         t.field('sender', {
             type: 'User',
-            async resolve(root: any) {
-                return root.isAnonymousChat ? null : await prisma.user.findOne({
-                    where: { id: root.senderId }
-                })
+            async resolve(root: any, _, ctx) {
+                AuthService.authenticate(ctx);
+                return root.isAnonymousChat && ctx.user.id != root.senderId
+                    ? null
+                    : await prisma.user.findOne({
+                        where: { id: root.senderId }
+                    })
             }
         })
     }
