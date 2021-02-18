@@ -92,6 +92,10 @@ class MessageService {
             // If have user create anonymous chat
             if (otherUser) {
                 conversation = await this._createAnonymousChat(ctx.user.id, otherUser.id);
+                await prisma.user.updateMany({
+                    where: { id: { in: [ctx.user.id, otherUser.id] } },
+                    data: { isFindingAnonymousChat: false }
+                })
             }
         }
 
