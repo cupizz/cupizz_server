@@ -5,6 +5,7 @@ import { prisma } from "../../server";
 import { AuthService } from "../../service";
 import { FriendService } from "../../service/friend.service";
 import { RecommendService } from "../../service/recommend.service";
+import { OnlineStatusEnumType } from "../types";
 
 export const MeQuery = queryField('me', {
     type: 'User',
@@ -30,7 +31,13 @@ export const userQuery = queryField('user', {
 })
 
 export const NotOfflineFriendsQuery = queryField('notOfflineFriends', {
-    type: 'OnlineUserOutput',
+    type: objectType({
+        name: 'OnlineUserOutput',
+        definition(t) {
+            t.field('status', { type: OnlineStatusEnumType, nullable: false })
+            t.field('user', { type: 'User', nullable: false })
+        }
+    }),
     list: true,
     resolve: async (_root, _args, ctx, _info) => {
         AuthService.authenticate(ctx);

@@ -169,10 +169,6 @@ class UserService {
             }
         })
         if (status) {
-            pubsub.publish(
-                SubscriptionKey.onlineFriend, {
-                    status: status, user: user
-                } as ResultValue<'Subscription', 'onlineUser'>)
             logger(`${user.nickName}(${user.id}) ${status}`);
         }
     }

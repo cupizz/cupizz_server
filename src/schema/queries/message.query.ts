@@ -1,11 +1,30 @@
-import { booleanArg, idArg, intArg, objectType, queryField, stringArg } from "@nexus/schema";
+import { idArg, intArg, objectType, queryField, stringArg } from "@nexus/schema";
+import { ObjectDefinitionBlock } from "@nexus/schema/dist/core";
 import { ForbiddenError } from "apollo-server-express";
 import assert from "assert";
-import { Validator } from "../../utils/validator";
-import { Config } from "../../config";
+import { Config, ConstConfig } from "../../config";
 import Strings from "../../constants/strings";
 import { prisma } from "../../server";
 import { AuthService, MessageService } from "../../service";
+import { Validator } from "../../utils/validator";
+
+export const messageSimpleQuery = (t: ObjectDefinitionBlock<'Query'>) => {
+    t.field('callConnectTimeOut', {
+        type: 'Int',
+        resolve: () => 15000
+    })
+    t.field('callRingingTimeOut', {
+        type: 'Int',
+        resolve: () => ConstConfig.callRingingTime,
+    })
+    t.crud.message({
+        async resolve(root, args, ctx, info, origin) {
+            const message: any = await origin(root, args, ctx, info);
+            await MessageService.isMemberOfConversation(ctx, message?.conversationId);
+            return message;
+        }
+    })
+}
 
 export const MyAnonymousChatQuery = queryField('myAnonymousChat', {
     type: 'Conversation',

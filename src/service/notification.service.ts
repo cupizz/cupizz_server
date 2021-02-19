@@ -43,7 +43,7 @@ class NotificationService {
         return notification;
     }
 
-    public async sendNewMessageNofity(conversationId: string, messageId: string): Promise<NotificationPayload | null> {
+    public async sendNewMessageNotify(conversationId: string, messageId: string): Promise<NotificationPayload | null> {
         const conversation = await prisma.conversation.findOne({
             where: { id: conversationId },
             include: { members: { include: { user: true }, where: { isCurrentlyInChat: false } } }

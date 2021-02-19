@@ -1,7 +1,36 @@
-import { arg, idArg, mutationField, stringArg } from "@nexus/schema";
+import { arg, booleanArg, idArg, mutationField, stringArg } from "@nexus/schema";
 import { NotificationService } from "../../service";
 import { prisma } from "../../server";
 import { MessageService } from "../../service/message.service";
+
+export const acceptCallMutation = mutationField(
+    'acceptCall',
+    {
+        type: 'Boolean',
+        args: {
+            messageId: stringArg(),
+        },
+        resolve: async (_root, args, ctx, _info) => {
+            await MessageService.acceptCall(ctx, args.messageId);
+            return true;
+        }
+    }
+)
+
+export const endCallMutation = mutationField(
+    'endCall',
+    {
+        type: 'Boolean',
+        args: {
+            messageId: stringArg({ required: true }),
+            isDev: booleanArg(),
+        },
+        resolve: async (_root, args, ctx, _info) => {
+            await MessageService.endCall(ctx, args.messageId, args.isDev);
+            return true;
+        }
+    }
+)
 
 export const CreateMessageMutation = mutationField(
     'sendMessage',
@@ -34,7 +63,7 @@ export const deleteAnonymousChat = mutationField(
             const members = await prisma.conversationMember.findMany({
                 where: { conversationId: conversation.id }
             })
-            await MessageService.deleteConversation(ctx, conversation.id)
+            await MessageService.deleteConversation(ctx, { conversationId: conversation.id })
             await prisma.user.updateMany({
                 where: { id: { in: members.map(e => e.userId) } },
                 data: {
@@ -43,6 +72,28 @@ export const deleteAnonymousChat = mutationField(
             })
             NotificationService.sendDeleteAnonymousChat(members
                 .filter(e => e.userId !== ctx.user.id).map(e => e.userId));
+            return true;
+        }
+    }
+)
+
+export const deleteConversationMutation = mutationField(
+    'deleteConversation',
+    {
+        type: 'Boolean',
+        args: {
+            conversationId: stringArg(),
+            receiverId: idArg(),
+        },
+        resolve: async (_root, args, ctx, _info) => {
+            await MessageService.deleteConversation(
+                ctx,
+                {
+                    conversationId: args.conversationId,
+                    otherUserId: args.receiverId,
+                },
+            );
+
             return true;
         }
     }

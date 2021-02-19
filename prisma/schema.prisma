@@ -192,6 +192,9 @@ model User {
   remainingSuperLikeUpdatedAt DateTime               @default(now())
   UserLikedPost               UserLikedPost[]
   isFindingAnonymousChat      Boolean                @default(false)
+  // Dùng để chặn không cho người khác gọi khi đang ở trong 1 cuộc gọi
+  isInACall                   Boolean                @default(false)
+  endedCallMessages           Message[]
 }
 
 model UserDeviceToken {
@@ -331,6 +334,12 @@ model Message {
   lastReadMessageOfMember ConversationMember[]
   MessageAttachment       MessageAttachment[]
   isAnonymousChat         Boolean              @default(false)
+  // For call message
+  isCallMessage           Boolean              @default(false)
+  startedCallAt           DateTime?
+  endedCallAt             DateTime?
+  endedBy                 User?                @relation(fields: [endedById], references: [id])
+  endedById               String?
 }
 
 model MessageAttachment {
