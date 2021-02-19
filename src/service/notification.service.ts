@@ -123,6 +123,25 @@ class NotificationService {
         return notification;
     }
 
+    public async sendNewAnonymousChat(toUserIds: string[]) {
+        const allTitles = [
+            'Đã tìm thấy người để tâm sự rồi!',
+            'Bạn đã được kết nối với một người lạ trong Trò chuyện ẩn danh. Nhắn tin ngay!',
+        ]
+        const title = allTitles[Math.floor(Math.random() * allTitles.length)];
+
+        await this.sendOtherNofity(
+            null, 
+            title, 
+            toUserIds, 
+            {
+                type: 'other',
+                code: 'newAnonymousChat',
+            })
+
+        logger(`Sent new anonymous chat to user ${toUserIds}.`)
+    }
+
     public async sendDeleteAnonymousChat(toUserIds: string[]) {
         const allTitles = [
             'Partner trò chuyện ẩn danh với bạn đã chọn phương án nghỉ chơi.',
@@ -130,22 +149,19 @@ class NotificationService {
         ]
         const title = allTitles[Math.floor(Math.random() * allTitles.length)];
 
-        OnesignalService.sendToUserIds(
-            null,
-            title,
-            toUserIds,
+        await this.sendOtherNofity(
+            null, 
+            title, 
+            toUserIds, 
             {
                 type: 'other',
-                refUserId: null,
                 code: 'deleteAnonymousChat',
-            },
-            {}
-        );
+            })
 
         logger(`Sent delete anonymous chat to user ${toUserIds}.`)
     }
 
-    public async sendOtherNofity(title: string, content: string, receiverIds: string[]): Promise<NotificationPayload | null> {
+    public async sendOtherNofity(title: string, content: string, receiverIds: string[], payload?: NotificationPayload) {
         const receivers = await prisma.user.findMany({ where: { id: { in: receiverIds } } })
         const receiverPushIds = receivers
             .filter(e => e.pushNotiSetting.includes('other'))
@@ -156,6 +172,7 @@ class NotificationService {
                 type: 'other',
                 title: title,
                 content: content,
+                ...payload?.refUserId ? { refUser: { connect: { id: payload.refUserId } } } : {},
                 receivers: {
                     create: receiverPushIds.map(e => ({ receiver: { connect: { id: e } } }))
                 },
@@ -166,7 +183,7 @@ class NotificationService {
             title,
             content,
             receiverPushIds,
-            notification,
+            payload ?? notification,
             {}
         );
 

@@ -96,6 +96,7 @@ class MessageService {
                     where: { id: { in: [ctx.user.id, otherUser.id] } },
                     data: { isFindingAnonymousChat: false }
                 })
+                NotificationService.sendNewAnonymousChat([ctx.user.id, otherUser.id]);
             }
         }
 
