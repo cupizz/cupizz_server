@@ -110,8 +110,8 @@ class NotificationService {
         })
 
         OnesignalService.sendToUserIds(
-            title,
             null,
+            title,
             receiverPushIds,
             notification,
             {}
@@ -120,6 +120,28 @@ class NotificationService {
         logger('Sent notification about someone finding anonymous chat.')
 
         return notification;
+    }
+
+    public async sendDeleteAnonymousChat(toUserIds: string[]) {
+        const allTitles = [
+            'Partner trò chuyện ẩn danh với bạn đã chọn phương án nghỉ chơi.',
+            'Trò chuyện ẩn danh: Đối phương đã ngưng trò chuyện'
+        ]
+        const title = allTitles[Math.floor(Math.random() * allTitles.length)];
+
+        OnesignalService.sendToUserIds(
+            null,
+            title,
+            toUserIds,
+            {
+                type: 'other',
+                refUserId: null,
+                code: 'deleteAnonymousChat',
+            },
+            {}
+        );
+
+        logger(`Sent delete anonymous chat to user ${toUserIds}.`)
     }
 
     public async sendOtherNofity(title: string, content: string, receiverIds: string[]): Promise<NotificationPayload | null> {
