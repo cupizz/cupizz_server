@@ -63,7 +63,8 @@ class NotificationService {
 
         const notificationData: NotificationPayload = {
             type: 'newMessage',
-            refUserId: message.senderId,
+            code: 'newAnonymousMessage',
+            refUserId: message.isAnonymousChat ? null : message.senderId,
             refConversationId: conversationId,
         }
 
@@ -117,7 +118,7 @@ class NotificationService {
             {}
         );
 
-	logger(`Sent notification about someone finding anonymous chat to ${receiverPushIds.length}.`)
+        logger(`Sent notification about someone finding anonymous chat to ${receiverPushIds.length}.`)
 
         return notification;
     }
