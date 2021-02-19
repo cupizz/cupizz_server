@@ -8,7 +8,7 @@ export const reuploadTinderImages = async () => {
     console.log('Loading all tinder image in server...');
     const db = new PrismaClient();
     const images = await db.file.findMany({
-        where: { url: { contains: 'tinder' } }
+        where: { url: { contains: 'gotinder.com' } }
     })
     console.log(`Loaded ${images.length} images`);
 

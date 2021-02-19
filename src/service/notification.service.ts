@@ -117,7 +117,7 @@ class NotificationService {
             {}
         );
 
-        logger('Sent notification about someone finding anonymous chat.')
+	logger(`Sent notification about someone finding anonymous chat to ${receiverPushIds.length}.`)
 
         return notification;
     }
