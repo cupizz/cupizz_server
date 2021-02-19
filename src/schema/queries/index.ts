@@ -136,7 +136,7 @@ export const PublicQueries = queryType({
             resolve: async (_root, _args, ctx) => {
                 AuthService.authenticate(ctx);
                 return (await prisma.conversationMember.aggregate({
-                    where: { userId: ctx.user.id },
+                    where: { userId: ctx.user.id, conversation: { isAnonymousChat: false } },
                     sum: { unreadMessageCount: true }
                 })).sum?.unreadMessageCount ?? 0;
             }
