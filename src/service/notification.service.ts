@@ -68,12 +68,12 @@ class NotificationService {
         }
 
         OnesignalService.sendToUserIds(
-            message.message ? Strings.notification.newMessageTitle(message.sender.nickName) : null,
-            message.message ?? Strings.notification.newMessageTitle(message.sender.nickName),
+            message.message ? Strings.notification.newMessageTitle(message.isAnonymousChat ? 'Trò chuyện ẩn danh' : message.sender.nickName) : null,
+            message.message ?? Strings.notification.newMessageTitle(message.isAnonymousChat ? 'Trò chuyện ẩn danh' : message.sender.nickName),
             receiverPushIds,
             notificationData,
             {
-                largeIcon: message.sender.avatar?.url
+                largeIcon: message.isAnonymousChat ? null : message.sender.avatar?.url
             },
         );
 
