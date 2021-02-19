@@ -1,4 +1,5 @@
 import { arg, idArg, mutationField, stringArg } from "@nexus/schema";
+import { prisma } from "../../server";
 import { MessageService } from "../../service/message.service";
 
 export const CreateMessageMutation = mutationField(
@@ -19,6 +20,27 @@ export const CreateMessageMutation = mutationField(
                     attachments: await Promise.all(args.attachments)
                 } : {})
             });
+        }
+    }
+)
+
+export const deleteAnonymousChat = mutationField(
+    'deleteAnonymousChat',
+    {
+        type: 'Boolean',
+        resolve: async (_root, _args, ctx, _info) => {
+            const conversation = await MessageService.getAnonymousChat(ctx.user.id);
+            const members = await prisma.conversationMember.findMany({
+                where: { conversationId: conversation.id }
+            })
+            await MessageService.deleteConversation(ctx, conversation.id)
+            await prisma.user.updateMany({
+                where: { id: { in: members.map(e => e.userId) } },
+                data: {
+                    isFindingAnonymousChat: false,
+                }
+            })
+            return true;
         }
     }
 )

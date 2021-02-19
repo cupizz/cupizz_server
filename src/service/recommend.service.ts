@@ -241,10 +241,8 @@ class RecommendService {
 
         if (user.birthday && user.height && user.latitude && user.longitude) {
             where = await this._recommendByModel(user, userId, friendIds);
-            if(!where){
-                where = await this._defaultRecommend(user, userId, friendIds);
-            }
-        } else {
+        }
+        if (!where) {
             where = await this._defaultRecommend(user, userId, friendIds);
         }
 
@@ -318,7 +316,7 @@ class RecommendService {
                         body: body,
                         json: true,
                     },
-                    function (error, response, body) {
+                    function (error, response) {
                         if (error) {
                             reject(error)
                         } else {
@@ -337,7 +335,7 @@ class RecommendService {
             }
             return null;
         } catch (e) {
-            logger(e)
+            logger('Get recommend from model failed: ' + e);
             return null;
         }
     }

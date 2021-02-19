@@ -3,7 +3,7 @@
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = "***"
 }
 
 generator client {
@@ -66,7 +66,6 @@ enum NotificationType {
   like
   matching
   newMessage
-  otherFindingAnonymousChat // Thông báo khi có người khác cũng đang tìm người nhắn tin ẩn danh
   other
 }
 
@@ -191,7 +190,6 @@ model User {
   remainingSuperLike          Int                    @default(5)
   remainingSuperLikeUpdatedAt DateTime               @default(now())
   UserLikedPost               UserLikedPost[]
-  isFindingAnonymousChat      Boolean                @default(false)
 }
 
 model UserDeviceToken {

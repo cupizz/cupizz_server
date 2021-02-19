@@ -1,5 +1,6 @@
 import { File, User } from '@prisma/client';
 import { ForbiddenError } from 'apollo-server-express';
+import { logger } from '../utils/logger';
 import Strings from '../constants/strings';
 import { Context } from '../context';
 import { ErrorNotFound } from '../model/error';
@@ -77,6 +78,48 @@ class NotificationService {
         );
 
         return notificationData;
+    }
+
+    public async sendSomeOneFindingAnonymousChat(): Promise<NotificationPayload | null> {
+        const receivers = await prisma.user.findMany({
+            where: {
+                isFindingAnonymousChat: false,
+                conversationMembers: {
+                    every: { conversation: { isAnonymousChat: false } }
+                },
+            }
+        })
+        const receiverPushIds = receivers
+            .filter(e => e.pushNotiSetting.includes('otherFindingAnonymousChat'))
+            .map(e => e.id)
+
+        const allTitles = [
+            'Ai đó đang cần tìm người bầu bạn. Bạn có muốn tâm sự cùng họ?',
+            'Có người muốn nói chuyện với bạn. Nhắn tin ngay!'
+        ]
+        const title = allTitles[Math.floor(Math.random() * allTitles.length)];
+
+        const notification = await prisma.notification.create({
+            data: {
+                type: 'otherFindingAnonymousChat',
+                title,
+                receivers: {
+                    create: receiverPushIds.map(e => ({ receiver: { connect: { id: e } } }))
+                },
+            }
+        })
+
+        OnesignalService.sendToUserIds(
+            title,
+            null,
+            receiverPushIds,
+            notification,
+            {}
+        );
+
+        logger('Sent notification about someone finding anonymous chat.')
+
+        return notification;
     }
 
     public async sendOtherNofity(title: string, content: string, receiverIds: string[]): Promise<NotificationPayload | null> {
