@@ -1,4 +1,5 @@
 import { arg, idArg, mutationField, stringArg } from "@nexus/schema";
+import { NotificationService } from "src/service";
 import { prisma } from "../../server";
 import { MessageService } from "../../service/message.service";
 
@@ -40,6 +41,8 @@ export const deleteAnonymousChat = mutationField(
                     isFindingAnonymousChat: false,
                 }
             })
+            NotificationService.sendDeleteAnonymousChat(members
+                .filter(e => e.userId !== ctx.user.id).map(e => e.userId));
             return true;
         }
     }

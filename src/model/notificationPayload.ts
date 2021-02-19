@@ -2,6 +2,7 @@ import { NotificationType } from "@prisma/client";
 
 export default class NotificationPayload {
     type: NotificationType
-    refUserId: string;
+    code?: string;
+    refUserId?: string;
     refConversationId?: string;
 }
