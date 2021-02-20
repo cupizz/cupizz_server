@@ -392,7 +392,7 @@ class MessageService {
             if (message.startedCallAt) {
                 return 'ended';
             } else {
-                if (message.endedById !== currentUserId) {
+                if (message.endedById !== message.senderId) {
                     return 'rejected';
                 } else {
                     return 'missing';
@@ -411,15 +411,15 @@ class MessageService {
                 const millis = message.endedCallAt.getTime() - message.startedCallAt.getTime();
                 var minutes = Math.floor(millis / 60000);
                 var seconds = (millis % 60000) / 1000;
-                return 'Called in ' + minutes + ":" + (Math.round(seconds) < 10 ? '0' : '') + seconds.toFixed(0);
+                return 'Đã gọi trong ' + minutes + ":" + (Math.round(seconds) < 10 ? '0' : '') + seconds.toFixed(0);
             case 'inCall':
-                return 'In call';
+                return 'Đang trong cuộc gọi';
             case 'missing':
-                return 'Missing call';
+                return 'Cuộc gọi nhỡ';
             case 'rejected':
-                return 'Rejected';
+                return 'Đã từ chối cuộc gọi';
             case 'ringing':
-                return 'Calling...'
+                return 'Đang gọi...'
             default:
                 return message.message;
         }
@@ -434,7 +434,7 @@ class MessageService {
 
     public async canSendChat(ctx: Context, conversationId: string, throwError: boolean = true): Promise<Boolean> {
         let result = false;
-        result = AuthService.authorize(ctx, { values: [Permission.chat.create] }, throwError);
+        result = AuthService.authenticate(ctx);
 
         if (result) {
             result = await this.isMemberOfConversation(ctx, conversationId, throwError);

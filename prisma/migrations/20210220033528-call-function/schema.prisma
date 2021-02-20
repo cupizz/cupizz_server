@@ -1,0 +1,468 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url = "***"
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["transactionApi"]
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum FileType {
+  image
+  video
+}
+
+enum SocialProviderType {
+  email
+  facebook
+  google
+  instagram
+}
+
+enum OnlineStatus {
+  online
+  away
+  offline
+}
+
+enum PrivateField {
+  birthday
+  introduction
+  gender
+  hobbies
+  phoneNumber
+  job
+  height
+  address
+  educationLevel
+  smoking
+  drinking
+  yourKids
+  lookingFor
+  religious
+}
+
+enum MustHaveField {
+  age
+  height
+  distance
+  gender
+  educationLevel
+  theirKids
+  religious
+}
+
+enum NotificationType {
+  like
+  matching
+  newMessage
+  otherFindingAnonymousChat // Thông báo khi có người khác cũng đang tìm người nhắn tin ẩn danh
+  other
+}
+
+enum UserStatus {
+  enabled
+  disabled
+}
+
+enum EducationLevel {
+  highSchool
+  college
+  gradSchool
+}
+
+enum UsualType {
+  never
+  occasionally
+  often
+}
+
+enum HaveKids {
+  dontHave
+  have
+}
+
+enum LookingFor {
+  chatting
+  friendship
+  somethingCasual
+  longtermRelationship
+}
+
+enum Religious {
+  agnostic
+  atheist
+  buddhist
+  catholic
+  christian
+  hindu
+  jewish
+  muslim
+  sikh
+  spiritual
+  other
+}
+
+enum LikeType {
+  like
+  love
+  wow
+  haha
+  angry
+  sad
+}
+
+model User {
+  id                          String                 @id @default(uuid())
+  password                    String?
+  nickName                    String
+  introduction                String?
+  birthday                    DateTime?
+  gender                      Gender?
+  hobbies                     HobbyValue[]
+  phoneNumber                 String?
+  job                         String?
+  height                      Int?
+  longitude                   Float?
+  latitude                    Float?
+  address                     String?
+  educationLevel              EducationLevel?
+  smoking                     UsualType?
+  drinking                    UsualType?
+  yourKids                    HaveKids?
+  lookingFors                 LookingFor[]
+  religious                   Religious?
+  privateFields               PrivateField[]
+  minAgePrefer                Int                    @default(18)
+  maxAgePrefer                Int                    @default(30)
+  minHeightPrefer             Int                    @default(150)
+  maxHeightPrefer             Int                    @default(180)
+  genderPrefer                Gender[]
+  distancePrefer              Int                    @default(100)
+  educationLevelsPrefer       EducationLevel[]
+  theirKids                   HaveKids?
+  religiousPrefer             Religious[]
+  mustHaveFields              MustHaveField[]
+  allowMatching               Boolean                @default(true)
+  isPrivate                   Boolean                @default(false)
+  showActive                  Boolean                @default(true)
+  pushNotiSetting             NotificationType[]
+  avatar                      File?                  @relation("avatar", fields: [avatarId], references: [id])
+  avatarId                    String?
+  cover                       File?                  @relation("cover", fields: [coverId], references: [id])
+  coverId                     String?
+  role                        Role                   @relation(fields: [roleId], references: [id])
+  roleId                      String
+  userImages                  UserImage[]
+  senderMessage               Message[]              @relation("senderMessage")
+  socialProvider              SocialProvider[]
+  senderFriend                Friend[]               @relation("senderFriend")
+  receiverFriend              Friend[]               @relation("receiverFriend")
+  onlineStatus                OnlineStatus           @default(offline)
+  lastOnline                  DateTime?
+  userAnswer                  UserAnswer[]
+  dislikedUsers               DislikedUser[]         @relation("dislikedUser")
+  beDislikedByUsers           DislikedUser[]         @relation("beDislikedByUser")
+  recommendableUser           RecommendableUser[]    @relation("recommendableUser")
+  recommendToUser             RecommendableUser[]    @relation("recommendToUser")
+  conversationMembers         ConversationMember[]
+  status                      UserStatus             @default(enabled)
+  statusUpdatedAt             DateTime               @default(now())
+  updatedAt                   DateTime               @updatedAt
+  createdAt                   DateTime               @default(now())
+  deletedAt                   DateTime?
+  userDeviceTokens            UserDeviceToken[]
+  refUserInNotifications      Notification[]         @relation("refUser")
+  receiverOfNotifications     NotificationReceiver[]
+  likeCount                   Int                    @default(0)
+  dislikeCount                Int                    @default(0)
+  Comment                     Comment[]
+  Post                        Post[]
+  remainingSuperLike          Int                    @default(5)
+  remainingSuperLikeUpdatedAt DateTime               @default(now())
+  UserLikedPost               UserLikedPost[]
+  isFindingAnonymousChat      Boolean                @default(false)
+  // Dùng để chặn không cho người khác gọi khi đang ở trong 1 cuộc gọi
+  isInACall                   Boolean                @default(false)
+  endedCallMessages           Message[]
+}
+
+model UserDeviceToken {
+  token    String   @id
+  user     User     @relation(fields: [userId], references: [id])
+  deviceId String?
+  userId   String
+  expireAt DateTime
+}
+
+model Question {
+  id         String       @id @default(cuid())
+  content    String
+  userAnswer UserAnswer[]
+  color      String       @default("000000")
+  textColor  String       @default("ffffff")
+  gradient   String[]
+}
+
+model UserAnswer {
+  id         String     @id @default(cuid())
+  question   Question   @relation(fields: [questionId], references: [id])
+  questionId String
+  color      String?
+  textColor  String?
+  gradient   String[]
+  content    String
+  createBy   User       @relation(fields: [createById], references: [id])
+  createById String
+  createAt   DateTime   @default(now())
+  userImage  UserImage?
+}
+
+model UserImage {
+  id           String      @id @default(cuid())
+  user         User        @relation(fields: [userId], references: [id])
+  userId       String
+  image        File?       @relation(fields: [imageId], references: [id])
+  imageId      String?
+  userAnswer   UserAnswer? @relation(fields: [userAnswerId], references: [id])
+  userAnswerId String?
+  sortOrder    Int         @default(0)
+  createdAt    DateTime    @default(now())
+}
+
+model SocialProvider {
+  id          String
+  type        SocialProviderType
+  user        User               @relation(fields: [userId], references: [id])
+  userId      String
+  email       String?
+  phoneNumber String?
+  name        String?
+  avatar      String?
+  gender      Gender?
+  birthday    DateTime?
+
+  @@id([id, type])
+}
+
+model Friend {
+  sender       User      @relation("senderFriend", fields: [senderId], references: [id])
+  receiver     User      @relation("receiverFriend", fields: [receiverId], references: [id])
+  senderId     String
+  receiverId   String
+  sentAt       DateTime  @default(now())
+  readSent     Boolean   @default(true)
+  acceptedAt   DateTime?
+  readAccepted Boolean   @default(true)
+  isSuperLike  Boolean   @default(false)
+  updatedAt    DateTime  @default(now()) @updatedAt
+
+  @@id([senderId, receiverId])
+}
+
+model File {
+  id                String              @id @default(cuid())
+  type              FileType
+  url               String
+  thumbnail         String?
+  userAvatar        User[]              @relation("avatar")
+  userImage         UserImage[]
+  messageAttachment MessageAttachment[]
+  Message           Message?            @relation(fields: [messageId], references: [id])
+  messageId         String?
+  userCover         User[]              @relation("cover")
+  Post              Post?               @relation(fields: [postId], references: [id])
+  postId            Int?
+}
+
+model Role {
+  id                  String   @id
+  name                String
+  description         String?
+  permissions         String[]
+  user                User[]
+  canAccessBackOffice Boolean  @default(false)
+}
+
+model Conversation {
+  id              String               @id @default(cuid())
+  name            String?
+  members         ConversationMember[]
+  messages        Message[]
+  isHidden        Boolean              @default(true)
+  isAnonymousChat Boolean              @default(false)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @default(now()) @updatedAt
+}
+
+model ConversationMember {
+  conversation       Conversation @relation(fields: [conversationId], references: [id])
+  conversationId     String
+  user               User         @relation(fields: [userId], references: [id])
+  userId             String
+  createdAt          DateTime     @default(now())
+  lastReadMessage    Message?     @relation(fields: [messageId], references: [id])
+  messageId          String?
+  unreadMessageCount Int          @default(0)
+  isAdmin            Boolean      @default(false)
+  isCurrentlyInChat  Boolean      @default(false)
+
+  @@id([conversationId, userId])
+}
+
+model Message {
+  id                      String               @id @default(cuid())
+  message                 String?
+  attachments             File[]
+  sender                  User                 @relation("senderMessage", fields: [senderId], references: [id])
+  senderId                String
+  conversation            Conversation         @relation(fields: [conversationId], references: [id])
+  conversationId          String
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  deletedAt               DateTime?
+  lastReadMessageOfMember ConversationMember[]
+  MessageAttachment       MessageAttachment[]
+  isAnonymousChat         Boolean              @default(false)
+  // For call message
+  isCallMessage           Boolean              @default(false)
+  startedCallAt           DateTime?
+  endedCallAt             DateTime?
+  endedBy                 User?                @relation(fields: [endedById], references: [id])
+  endedById               String?
+}
+
+model MessageAttachment {
+  message   Message @relation(fields: [messageId], references: [id])
+  file      File    @relation(fields: [fileId], references: [id])
+  messageId String
+  fileId    String
+
+  @@id([messageId, fileId])
+}
+
+model PostCategory {
+  id    String @id @default(cuid())
+  value String
+  color String @default("ffffff")
+  Post  Post[]
+}
+
+model Post {
+  id            Int             @id @default(autoincrement())
+  content       String
+  category      PostCategory    @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  comment       Comment[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+  createdBy     User            @relation(fields: [createdById], references: [id])
+  createdById   String
+  UserLikedPost UserLikedPost[]
+  images        File[]
+}
+
+model UserLikedPost {
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+  userId    String
+  postId    Int
+  type      LikeType @default(like)
+  createdAt DateTime @default(now())
+
+  @@id([userId, postId])
+}
+
+model Comment {
+  id            String    @id @default(cuid())
+  index         Int
+  parentComment Comment?  @relation("ReplyToComment", fields: [parentId], references: [id])
+  reply         Comment[] @relation("ReplyToComment")
+  parentId      String?
+  content       String
+  post          Post      @relation(fields: [postId], references: [id])
+  postId        Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  createdBy     User      @relation(fields: [createdById], references: [id])
+  createdById   String
+  isIncognito   Boolean   @default(true)
+
+  @@unique([postId, index])
+}
+
+model QnA {
+  id       Int    @id @default(autoincrement())
+  question String
+  answer   String
+}
+
+model AppConfig {
+  id          String  @id
+  name        String
+  description String?
+  data        Json
+}
+
+model DislikedUser {
+  user           User     @relation("dislikedUser", fields: [userId], references: [id])
+  dislikedUser   User     @relation("beDislikedByUser", fields: [dislikedUserId], references: [id])
+  userId         String
+  dislikedUserId String
+  dislikedAt     DateTime @default(now())
+
+  @@id([userId, dislikedUserId])
+}
+
+model RecommendableUser {
+  user                User     @relation("recommendableUser", fields: [userId], references: [id])
+  recommendableUser   User     @relation("recommendToUser", fields: [recommendableUserId], references: [id])
+  userId              String
+  recommendableUserId String
+  createdAt           DateTime @default(now())
+  index               Int      @default(0)
+
+  @@id([userId, recommendableUserId])
+}
+
+model HobbyValue {
+  id      String  @id @default(cuid())
+  index   Int     @unique @default(autoincrement())
+  value   String
+  isValid Boolean @default(true)
+  user    User[]
+}
+
+model Notification {
+  id        String                 @id @default(cuid())
+  type      NotificationType
+  refUser   User?                  @relation("refUser", fields: [refUserId], references: [id])
+  refUserId String?
+  title     String?
+  subtitle  String?
+  content   String?
+  receivers NotificationReceiver[]
+  createdAt DateTime               @default(now())
+}
+
+model NotificationReceiver {
+  notification   Notification @relation(fields: [notificationId], references: [id])
+  notificationId String
+  receiver       User         @relation(fields: [receiverId], references: [id])
+  receiverId     String
+  readAt         DateTime?
+
+  @@id([notificationId, receiverId])
+}
