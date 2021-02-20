@@ -637,7 +637,9 @@ export const MessageType = objectType({
             type: 'String',
             description: 'Chỉ tồn tại cho tin nhắn cuộc gọi và cuộc gọi đó phải chưa kết thúc',
             resolve: (root: any, _args, ctx) => {
-                return AgoraService.generateRtcToken(MessageService.getCallRoomId(ctx, root));
+                const roomId = MessageService.getCallRoomId(ctx, root);
+                if(!roomId) return null;
+                return AgoraService.generateRtcToken(roomId);
             }
         })
     }
