@@ -373,6 +373,7 @@ class MessageService {
     public getConversationName(currentUser: User, conversation: Conversation & { members: (ConversationMember & { user: User })[] }): string {
         return conversation.name || conversation.members
             .filter(e => e.userId !== currentUser.id)
+            .map(e => e.user.nickName)
             .join(', ') || 'Me';
     }
 
