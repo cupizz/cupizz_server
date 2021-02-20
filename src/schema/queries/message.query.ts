@@ -9,6 +9,10 @@ import { AuthService, MessageService } from "../../service";
 import { Validator } from "../../utils/validator";
 
 export const messageSimpleQuery = (t: ObjectDefinitionBlock<'Query'>) => {
+    t.field('agoraAppId', {
+        type: 'String',
+        resolve: () => process.env.AGORA_APP_ID
+    })
     t.field('callConnectTimeOut', {
         type: 'Int',
         resolve: () => 15000
