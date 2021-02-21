@@ -273,7 +273,7 @@ class MessageService {
         }
 
         return await this._sendMessage(ctx, {
-            conversationId: conversation.id,
+            conversation,
             message: data.message,
             attachments: files,
         });
@@ -318,7 +318,7 @@ class MessageService {
         logger(`${ctx.user.id} call in conversation ${conversation.id}`)
 
         const message = await this._sendMessage(ctx, {
-            conversationId: conversation.id,
+            conversation,
             isCallMessage: true,
         });
 
@@ -635,22 +635,23 @@ class MessageService {
     private async _sendMessage(
         ctx: Context,
         data: {
-            conversationId: string,
+            conversation: Conversation,
             message?: string,
             attachments?: FileCreateInput[],
             isCallMessage?: boolean,
         }
     ) {
         const res = (await prisma.conversationMember.update({
-            where: { conversationId_userId: { conversationId: data.conversationId, userId: ctx.user.id } },
+            where: { conversationId_userId: { conversationId: data.conversation.id, userId: ctx.user.id } },
             data: {
                 lastReadMessage: {
                     create: {
                         message: data.message,
                         sender: { connect: { id: ctx.user.id } },
-                        conversation: { connect: { id: data.conversationId } },
+                        conversation: { connect: { id: data.conversation.id } },
                         attachments: { create: data.attachments },
                         isCallMessage: data.isCallMessage,
+                        isAnonymousChat: data.conversation.isAnonymousChat,
                     }
                 },
                 unreadMessageCount: 0,
@@ -664,15 +665,15 @@ class MessageService {
             include: { lastReadMessage: { include: { sender: true } } }
         })).lastReadMessage;
 
-        await this._updateUnreadMessageCount(data.conversationId);
+        await this._updateUnreadMessageCount(data.conversation.id);
 
         if (!data.isCallMessage) {
-            NotificationService.sendNewMessageNotify(data.conversationId, res.id);
+            NotificationService.sendNewMessageNotify(data.conversation.id, res.id);
         }
 
         ctx.pubsub.publish(SubscriptionKey.newMessage, res);
         ctx.pubsub.publish(SubscriptionKey.messageChange, res);
-        prisma.conversation.findOne({ where: { id: data.conversationId } }).then((v) => {
+        prisma.conversation.findOne({ where: { id: data.conversation.id } }).then((v) => {
             if (v) {
                 ctx.pubsub.publish(SubscriptionKey.conversationChange, v);
             }
