@@ -783,8 +783,8 @@ export const CommentType = objectType({
         t.model.isIncognito()
         t.field('createdBy', {
             type: 'User',
-            async resolve(root: any, _args) {
-                if (!root.isIncognito) {
+            async resolve(root: any, _args, ctx) {
+                if (!root.isIncognito || AuthService.authorize(ctx, { values: [Permission.comment.list] }, false)) {
                     const result = await prisma.user.findOne({ where: { id: root.createdById } });
                     return result
                 }
