@@ -7,6 +7,7 @@ import { Permission } from "../../model/permission";
 import { prisma } from "../../server";
 import { AuthService, MessageService, UserService } from "../../service";
 import { calculateAge, calculateDistance, DistanceUnit } from "../../utils/helper";
+import { AgoraService } from "../../service/agora.service";
 
 export const Json = String;
 
@@ -93,6 +94,13 @@ export const notificationType = enumType({
 export const likeType = enumType({
     name: 'LikeType',
     members: Object.keys(LikeType)
+})
+
+export type CallStatus = 'ringing' | 'rejected' | 'missing' | 'inCall' | 'ended';
+
+export const CallStatusEnumType = enumType({
+    name: 'CallStatus',
+    members: ['ringing', 'rejected', 'missing', 'inCall', 'ended'],
 })
 
 export const UserType = objectType({
@@ -401,7 +409,7 @@ export const ConversationType = objectType({
     name: 'Conversation',
     definition(t) {
         t.model.id()
-        t.model.members()
+        t.model.members() // FIXME: hide members in anonymous chat
         t.field('messages', {
             type: 'MessagesOutputV2',
             args: {
@@ -476,11 +484,7 @@ export const ConversationDataType = objectType({
         t.model("Conversation").name({
             resolve: async (root: any, args, ctx, info, origin) => {
                 if (root.isAnonymousChat) return 'Người lạ';
-                const data = await origin(root, args, ctx, info);
-                return data || (root.members as (ConversationMember & { user: User })[])
-                    .filter(e => e.userId !== ctx.user.id)
-                    .map(e => e.user.nickName)
-                    .join(', ') || 'Me';
+                return MessageService.getConversationName(ctx.user, root);
             }
         })
         t.field('images', {
@@ -584,7 +588,12 @@ export const MessageType = objectType({
     definition(t) {
         t.model.id()
         t.model.conversation()
-        t.model.message()
+        t.model.message({
+            resolve: (root: any, _, ctx) => {
+                AuthService.authenticate(ctx);
+                return MessageService.getCallMessage(ctx.user.id, root);
+            }
+        })
         t.model.createdAt()
         t.model.updatedAt()
         t.model.attachments({ pagination: false })
@@ -598,6 +607,39 @@ export const MessageType = objectType({
                     : await prisma.user.findOne({
                         where: { id: root.senderId }
                     })
+            }
+        })
+        t.model.isCallMessage()
+        t.model.startedCallAt()
+        t.model.endedCallAt()
+        t.field('isCaller', {
+            type: 'Boolean',
+            resolve: async (root: any, _, ctx) => {
+                return root.senderId === ctx.user?.id;
+            }
+        })
+        t.field('callStatus', {
+            type: CallStatusEnumType,
+            nullable: true,
+            resolve(root: any, _args, ctx) {
+                AuthService.authenticate(ctx);
+                return MessageService.getCallStatus(ctx.user.id, root);
+            }
+        })
+        t.field('roomId', {
+            type: 'String',
+            description: 'Chỉ tồn tại cho tin nhắn cuộc gọi và cuộc gọi đó phải chưa kết thúc',
+            resolve: (root: any, _args, ctx) => {
+                return MessageService.getCallRoomId(ctx, root);
+            }
+        })
+        t.field('agoraToken', {
+            type: 'String',
+            description: 'Chỉ tồn tại cho tin nhắn cuộc gọi và cuộc gọi đó phải chưa kết thúc',
+            resolve: (root: any, _args, ctx) => {
+                const roomId = MessageService.getCallRoomId(ctx, root);
+                if(!roomId) return null;
+                return AgoraService.generateRtcToken(roomId);
             }
         })
     }

@@ -15,6 +15,7 @@ export const ErrorTrialExpired = ClientError(Strings.error.trialExpired);
 export const ErrorLockedAccount =  new ApolloError(Strings.error.lockedAccount, 'LOCKED_ACCOUNT');
 
 export const ErrorNotFound = (message?: string) => ClientError(`${message ? message : 'NOTFOUND'}`)
+export const ErrorConversationNotFound = (message?: string) => ClientError(`NOTFOUND${message ? ': ' + message : ''}`)
 export const ErrorUnAuthenticate = (message?: string) => new AuthenticationError(message || Strings.error.unAuthenticate);
 
 export class ForbiddenError extends AuthenticationError {

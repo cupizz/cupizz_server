@@ -35,6 +35,7 @@ export default class Strings {
         mustHaveConversationIdOrUserId: 'Must have conversationId or userId',
         contentMustBeNotEmpty: 'Vui lòng nhập nội dung tin nhắn!',
         cannotEditPostOfOtherUser: 'Không thể sửa bài viết của người khác',
-        cannotDeletePostOfOtherUser: 'Không thể xóa bài viết của người khác'
+        cannotDeletePostOfOtherUser: 'Không thể xóa bài viết của người khác',
+        canNotDeleteConversation: 'Không thể xóa cuộc trò chuyện',
     }
 }
