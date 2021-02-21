@@ -638,7 +638,7 @@ export const MessageType = objectType({
             description: 'Chỉ tồn tại cho tin nhắn cuộc gọi và cuộc gọi đó phải chưa kết thúc',
             resolve: (root: any, _args, ctx) => {
                 const roomId = MessageService.getCallRoomId(ctx, root);
-                if(!roomId) return null;
+                if (!roomId) return null;
                 return AgoraService.generateRtcToken(roomId);
             }
         })
@@ -740,6 +740,7 @@ export const PostType = objectType({
                 })
             }
         })
+        t.model.UserLikedPost({ alias: 'usersLikedPost' })
         t.field('usersLiked', {
             type: 'User',
             args: {
@@ -758,6 +759,14 @@ export const PostType = objectType({
                 })).map(e => e.user)
             }
         })
+    }
+})
+
+export const UserLikedPost = objectType({
+    name: 'UserLikedPost',
+    definition(t) {
+        t.model.user()
+        t.model.createdAt()
     }
 })
 
