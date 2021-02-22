@@ -63,7 +63,7 @@ class NotificationService {
 
         const notificationData: NotificationPayload = {
             type: 'newMessage',
-            code: 'newAnonymousMessage',
+            code: message.isAnonymousChat ? 'newAnonymousMessage' : null,
             refUserId: message.isAnonymousChat ? null : message.senderId,
             refConversationId: conversationId,
         }
